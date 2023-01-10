@@ -35,11 +35,35 @@ static char* rl_gets() {
 
   line_read = readline("(nemu) ");
 
-  if (line_read && *line_read) {
+  if (line_read && *line_read) {  
     add_history(line_read);
   }
 
   return line_read;
+}
+
+static int cmd_si(char *args){
+  char *arg = strtok(NULL , " ");
+  int i;
+  if(arg == NULL) { i=1; }
+  else { i = *arg - '0';} 
+  cpu_exec(i);
+  return 0;
+}
+
+static int cmd_info(char *args){
+  char *arg = strtok(NULL , " ");
+  if( arg == NULL) { printf("please choose to print r-regs or w-watchpoints\n"); }
+  else {
+  if( *arg == 'r' ){
+   isa_reg_display(); }
+  else if( *arg == 'w'){
+   isa_reg_display(); }
+  else 
+    { printf("Unknown command"); }
+  printf("\n");
+  }
+   return 0;
 }
 
 static int cmd_c(char *args) {
@@ -49,6 +73,7 @@ static int cmd_c(char *args) {
 
 
 static int cmd_q(char *args) {
+  nemu_state.state = NEMU_QUIT;
   return -1;
 }
 
@@ -64,7 +89,8 @@ static struct {
   { "q", "Exit NEMU", cmd_q },
 
   /* TODO: Add more commands */
-
+  { "si","execute n steps",cmd_si },
+  { "info" , "print reg ", cmd_info },
 };
 
 #define NR_CMD ARRLEN(cmd_table)
@@ -125,6 +151,7 @@ void sdb_mainloop() {
     int i;
     for (i = 0; i < NR_CMD; i ++) {
       if (strcmp(cmd, cmd_table[i].name) == 0) {
+//           printf("cmd_table[i].name = %s",cmd_table[i].name);
         if (cmd_table[i].handler(args) < 0) { return; }
         break;
       }
