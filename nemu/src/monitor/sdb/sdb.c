@@ -55,10 +55,9 @@ static int cmd_info(char *args){
   char *arg = strtok(NULL , " ");
   if( *arg == 'r' ){
    isa_reg_display(); }
-  else if( *arg == 'w'){
+  if( *arg == 'w'){
    isa_reg_display(); }
-  if(arg == NULL) {
-      printf("Unknown command"); }
+  if(arg == NULL) { printf("Unknown command"); }
    return 0;
 }
 
