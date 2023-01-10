@@ -125,7 +125,7 @@ void sdb_mainloop() {
     int i;
     for (i = 0; i < NR_CMD; i ++) {
       if (strcmp(cmd, cmd_table[i].name) == 0) {
-           printf("cmd_table[i].name = %s",cmd_table[i].name);
+//           printf("cmd_table[i].name = %s",cmd_table[i].name);
         if (cmd_table[i].handler(args) < 0) { return; }
         break;
       }
