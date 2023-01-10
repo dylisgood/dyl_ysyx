@@ -53,10 +53,15 @@ static int cmd_si(char *args){
 
 static int cmd_info(char *args){
   char *arg = strtok(NULL , " ");
+  if( arg == NULL) { printf("no messege"); }
+  else {
   if( *arg == 'r' ){
    isa_reg_display(); }
-  if( *arg == 'w'){
+  else if( *arg == 'w'){
    isa_reg_display(); }
+  else 
+    { printf("Unkown message"); }
+  }
    return 0;
 }
 
