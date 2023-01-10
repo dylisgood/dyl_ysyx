@@ -43,6 +43,9 @@ static char* rl_gets() {
 }
 
 static int cmd_si(char *args){
+  char *arg = strtok(NULL , " ");
+//  int i = *args - '0'; 
+  printf("*arg = %d\n",*arg);
   cpu_exec(1);
   return 0;
 }
