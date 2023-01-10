@@ -57,7 +57,7 @@ static int cmd_info(char *args){
    isa_reg_display(); }
   else if( *arg == 'w'){
    isa_reg_display(); }
-  else if(arg == NULL) {
+  if(arg == NULL) {
       printf("Unknown command"); }
    return 0;
 }
