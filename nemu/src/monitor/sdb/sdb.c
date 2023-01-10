@@ -42,8 +42,13 @@ static char* rl_gets() {
   return line_read;
 }
 
-static int cmd_c(char *args) {
+static int cmd_si(char *args){
   cpu_exec(1);
+  return 0;
+}
+
+static int cmd_c(char *args) {
+  cpu_exec(-1);
   return 0;
 }
 
@@ -66,7 +71,7 @@ static struct {
   { "q", "Exit NEMU", cmd_q },
 
   /* TODO: Add more commands */
-
+  { "si","execute n steps",cmd_si },
 };
 
 #define NR_CMD ARRLEN(cmd_table)
