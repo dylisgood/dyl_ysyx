@@ -18,7 +18,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "sdb.h"
-#include <memory/vaddr.h>
+#include <memory/paddr.h>
 
 static int is_batch_mode = false;
 
@@ -76,7 +76,7 @@ static int cmd_x(char *args) {
     arg = strtok(NULL , " ");
     int addr = atoi(arg);
     printf("addr = %d\n", addr); 
-    vaddr_read(addr,8); 
+    paddr_read(addr,8); 
   }
   return 0;
 }
