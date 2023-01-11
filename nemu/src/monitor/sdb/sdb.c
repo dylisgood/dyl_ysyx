@@ -70,7 +70,7 @@ static int cmd_x(char *args) {
   char *arg = strtok(NULL , " ");
   if( arg == NULL ) {printf("please add N and exp");  }
   else {
-    int i = *arg - '0';
+    int i = atoi(arg);
     printf("i = %d\n" , i);
     arg = strtok(NULL , " ");
     int addr = *arg - '0';
