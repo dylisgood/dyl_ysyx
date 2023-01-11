@@ -66,6 +66,18 @@ static int cmd_info(char *args){
    return 0;
 }
 
+static int cmd_x(char *args) {
+  char *arg = strtok(NULL , " ");
+  if( arg == NULL ) {printf("please add N and exp");  }
+  else {
+//    int i = arg - '0';
+    printf("arg1 = %s" , arg);
+    arg = strtok(NULL , " ");
+    printf("arg2 = %s", arg); 
+  }
+  return 0;
+}
+
 static int cmd_c(char *args) {
   cpu_exec(-1);
   return 0;
@@ -91,6 +103,7 @@ static struct {
   /* TODO: Add more commands */
   { "si","execute n steps",cmd_si },
   { "info" , "print reg ", cmd_info },
+  { "x" , "Scan memory" ,cmd_x}, 
 };
 
 #define NR_CMD ARRLEN(cmd_table)
