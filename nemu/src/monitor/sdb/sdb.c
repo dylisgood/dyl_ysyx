@@ -70,10 +70,12 @@ static int cmd_x(char *args) {
   char *arg = strtok(NULL , " ");
   if( arg == NULL ) {printf("please add N and exp");  }
   else {
-//    int i = arg - '0';
-    printf("arg1 = %s" , arg);
+    int i = *arg - '0';
+    printf("i = %d\n" , i);
     arg = strtok(NULL , " ");
-    printf("arg2 = %s", arg); 
+    int addr = *arg - '0';
+    printf("addr = %d\n", addr); 
+    
   }
   return 0;
 }
