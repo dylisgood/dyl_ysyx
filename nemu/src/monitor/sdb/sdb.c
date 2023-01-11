@@ -73,7 +73,7 @@ static int cmd_x(char *args) {
     int i = atoi(arg);
     printf("i = %d\n" , i);
     arg = strtok(NULL , " ");
-    int addr = *arg - '0';
+    int addr = atoi(arg);
     printf("addr = %d\n", addr); 
     
   }
