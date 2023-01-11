@@ -71,12 +71,13 @@ static int cmd_x(char *args) {
   char *arg = strtok(NULL , " ");
   if( arg == NULL ) {printf("please add N and exp");  }
   else {
-    int i = atoi(arg);
-    printf("i = %d\n" , i);
+    int N = atoi(arg);
+    printf("N = %d\n" , N);
     arg = strtok(NULL , " ");
     int addr = atoi(arg);
     printf("addr = %d\n", addr); 
-    vaddr_read(addr,8); 
+    for(int i=0; i < N; i++) {
+    vaddr_read(addr + i,8); }
   }
   return 0;
 }
