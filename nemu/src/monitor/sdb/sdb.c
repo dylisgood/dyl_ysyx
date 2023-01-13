@@ -78,8 +78,8 @@ static int cmd_x(char *args) {
     expr(arg,success);
     int addr = atoi(arg);
     printf("addr = %d\n", addr); 
-    for(int i=0; i < N; i++) {
-    vaddr_read(addr + i,8); }
+ //   for(int i=0; i < N; i++) {
+//    vaddr_read(addr + i,8); }
   }
   return 0;
 }
