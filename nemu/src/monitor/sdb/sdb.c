@@ -74,6 +74,8 @@ static int cmd_x(char *args) {
     int N = atoi(arg);
     printf("N = %d\n" , N);
     arg = strtok(NULL , " ");
+    bool *success = false;
+    expr(arg,success);
     int addr = atoi(arg);
     printf("addr = %d\n", addr); 
     for(int i=0; i < N; i++) {
