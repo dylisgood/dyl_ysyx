@@ -38,6 +38,7 @@ static struct rule {
 
   {" +", TK_NOTYPE},    // spaces
   {"\\+", '+'},         // plus
+  {"\\-", '-'},         // minus
   {"==", TK_EQ},        // equal
 };
 
@@ -119,7 +120,7 @@ word_t expr(char *e, bool *success) {
   }
 
   /* TODO: Insert codes to evaluate the expression. */
-  TODO();
+ // TODO();
 
   return 0;
 }
