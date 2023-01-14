@@ -101,12 +101,10 @@ static bool make_token(char *e) {
          * to record the token in the array `tokens'. For certain types
          * of tokens, some extra actions should be performed.
          */
-        if(rules[i].token_type == TK_NOTYPE)
-        {  printf("I checked kongge");  }
         tokens[j].type = rules[i].token_type;
         if(rules[i].token_type == NUM)
         {    strcpy(tokens[j].str,substr_start); }
-        printf("j = %d,  str= %s \n", j, tokens[j].str); 
+             printf("j = %d,  str= %s \n", j, tokens[j].str); 
           j++;
 //        switch (rules[i].token_type) {
 //          default: TODO();
