@@ -73,7 +73,7 @@ static int cmd_x(char *args) {
   else {
     int N = atoi(arg);
     printf("N = %d\n" , N);
-    arg = strtok(NULL , " ");
+    arg = strtok(NULL , "\0");
     bool *success = false;
     expr(arg,success);
     int addr = atoi(arg);
