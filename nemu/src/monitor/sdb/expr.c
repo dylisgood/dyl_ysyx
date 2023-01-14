@@ -103,7 +103,7 @@ static bool make_token(char *e) {
  
         if(rules[i].token_type != NUM || e[position + 1] == '\0')
         {
-            if(NUM_FLAG == 1) {
+            if(NUM_FLAG == 1 || rules[i].token_type == NUM) {
                if( e[position + 1] != '\0'){
                    strncpy(tokens[j-1].str,substr_num,NUM_number);}
                 else { strcpy(tokens[j-1].str,substr_num);} 
