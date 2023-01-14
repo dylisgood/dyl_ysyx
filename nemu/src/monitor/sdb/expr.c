@@ -105,7 +105,7 @@ static bool make_token(char *e) {
         if(rules[i].token_type == NUM)
         {    strcpy(tokens[j].str,substr_start); }
         j++;
-        printf("j = %d,  str= %s\n", j, substr_start); 
+        printf("j = %d,  str= %s\n", j, tokens[j].str); 
 //        switch (rules[i].token_type) {
 //          default: TODO();
 //        }
