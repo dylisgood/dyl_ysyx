@@ -93,7 +93,7 @@ static bool make_token(char *e) {
 
         Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
             i, rules[i].regex, position, substr_len, substr_len, substr_start);
-        printf("I regonize the flag: %s, with len  :  %.*s ", rules[i].regex,substr_len,substr_start);
+        printf("I regonize the flag: %s, with len  :  %.*s \n", rules[i].regex,substr_len,substr_start);
         position += substr_len;
 
         /* TODO: Now a new token is recognized with rules[i]. Add codes
@@ -101,7 +101,8 @@ static bool make_token(char *e) {
          * of tokens, some extra actions should be performed.
          */
         tokens[j].type = rules[i].token_type;
-        j++; 
+        j++;
+        printf("j = %d\n",j); 
 //        switch (rules[i].token_type) {
 //          default: TODO();
 //        }
