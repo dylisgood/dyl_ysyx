@@ -111,14 +111,16 @@ static bool make_token(char *e) {
                tokens[j].type = rules[i].token_type;
                 }
            }
-           if(NUM_FLAG == 1 && e[position + 1] != '\0'){
+           else if(NUM_FLAG == 1 && e[position + 1] != '\0'){
               strncpy(tokens[j-1].str,substr_num,NUM_number);
               tokens[j-1].type = NUM;
-           }   
-           NUM_FLAG = 0;
-           NUM_number  = 0;
+              NUM_FLAG = 0;
+              NUM_number =0;
+           } 
+           else {  
            tokens[j].type = rules[i].token_type;
            if(rules[i].token_type != TK_NOTYPE) { j++; }
+           }
         }
         else if(rules[i].token_type == NUM && e[position + 1] != '\0')
         { 
