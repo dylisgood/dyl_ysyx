@@ -104,8 +104,8 @@ static bool make_token(char *e) {
         tokens[j].type = rules[i].token_type;
         if(rules[i].token_type == NUM)
         {    strcpy(tokens[j].str,"888"); }
-        j++;
         printf("j = %d,  str= %s \n", j, tokens[j].str); 
+          j++;
 //        switch (rules[i].token_type) {
 //          default: TODO();
 //        }
