@@ -108,10 +108,12 @@ static bool make_token(char *e) {
            {
              strncpy(tokens[j-1].str,substr_num,NUM_number);
              tokens[j-1].type = rules[i-1].token_type;
+             printf("j = %d,  str= %s \n", j-1, tokens[j-1].str); 
            }   
            NUM_FLAG = 0;
            NUM_number  = 0;
            tokens[j].type = rules[i].token_type;
+           printf("j = %d,  str= %s \n", j, tokens[j].str); 
            j++;
         }
         else if(rules[i].token_type == NUM)
@@ -120,7 +122,6 @@ static bool make_token(char *e) {
             NUM_number ++;
             NUM_FLAG = 1;
         }
-        printf("j = %d,  str= %s \n", j, tokens[j].str); 
 //        switch (rules[i].token_type) {
 //          default: TODO();
 //      }
