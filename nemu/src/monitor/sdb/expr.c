@@ -113,7 +113,7 @@ static bool make_token(char *e) {
            tokens[j].type = rules[i].token_type;
            if(rules[i].token_type != TK_NOTYPE) { j++; }
         }
-        else if(rules[i].token_type == NUM)
+        else if(rules[i].token_type == NUM && e[position + 1] != '\0')
         { 
             if(!NUM_FLAG) { substr_num = substr_start; j++; }  
             NUM_number ++;
