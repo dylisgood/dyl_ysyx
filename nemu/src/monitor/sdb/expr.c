@@ -105,13 +105,15 @@ static bool make_token(char *e) {
         {
            if(e[position + 1] == '\0' && rules[i].token_type == NUM)
            {
-             if(NUM_FLAG){ strcpy(tokens[j-1].str,substr_num);}
-             else { strcpy(tokens[j].str,substr_start); }
+             if(NUM_FLAG){ strcpy(tokens[j-1].str,substr_num);
+                           tokens[j-1].type = NUM;}
+             else { strcpy(tokens[j].str,substr_start); 
                tokens[j].type = rules[i].token_type;
+                }
            }
            if(NUM_FLAG == 1){
               strncpy(tokens[j-1].str,substr_num,NUM_number);
-              tokens[j-1].type = rules[i-1].token_type;
+              tokens[j-1].type = NUM;
            }   
            NUM_FLAG = 0;
            NUM_number  = 0;
