@@ -101,23 +101,24 @@ static bool make_token(char *e) {
          * of tokens, some extra actions should be performed.
          */
  
-        if(rules[i].token_type != NUM || e[position + 1] == '\0')
-        {
-            if(NUM_FLAG == 1 || rules[i].token_type == NUM) {
-               if( e[position + 1] != '\0'){
-                   strncpy(tokens[j-1].str,substr_num,NUM_number);}
-                else { strcpy(tokens[j-1].str,substr_num);} 
-              tokens[j-1].type = NUM;
-              NUM_FLAG = 0;
-              NUM_number =0;
+        if(rules[i].token_type != NUM){  
+            if(NUM_FLAG == 1){ 
+               strncpy(tokens[j-1].str,substr_num,NUM_number);
+               tokens[j-1].type = NUM;
+               NUM_FLAG = 0;
+               NUM_number =0;
               }
            
            tokens[j].type = rules[i].token_type;
            if(rules[i].token_type != TK_NOTYPE) { j++; }
         }
-        else if(rules[i].token_type == NUM && e[position + 1] != '\0')
+        else if(rules[i].token_type == NUM || e[position + 1] == '\0')
         { 
             if(!NUM_FLAG) { substr_num = substr_start; j++; }  
+             if((e[position + 1] == '\0') &&(rules[i].token_type == NUM)) {
+              strcpy(tokens[j-1].str,substr_num);
+              tokens[j-1].type = NUM;
+              }
             NUM_number ++;
             NUM_FLAG = 1;
         }
