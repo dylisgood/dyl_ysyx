@@ -82,14 +82,15 @@ static bool make_token(char *e) {
   regmatch_t pmatch;
   int j=0;
   nr_token = 0;
-
+  int  NUM_number = 0;
+  int  NUM_FLAG = 0;
   while (e[position] != '\0') {
-     
     /* Try all rules one by one. */
     for (i = 0; i < NR_REGEX; i ++) {
       if (regexec(&re[i], e + position, 1, &pmatch, 0) == 0 && pmatch.rm_so == 0) {
         char *substr_start = e + position;
         int substr_len = pmatch.rm_eo;
+        char *substr_num;
 
         Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
             i, rules[i].regex, position, substr_len, substr_len, substr_start);
@@ -100,13 +101,26 @@ static bool make_token(char *e) {
          * to record the token in the array `tokens'. For certain types
          * of tokens, some extra actions should be performed.
          */
-        tokens[j].type = rules[i].token_type;
-        if(rules[i].token_type == NUM)
-        {  
-             strncpy(tokens[j].str,substr_start,substr_len);
+ 
+        if(rules[i].token_type != NUM)
+        {
+           if(NUM_FLAG == 1)
+           {
+             strncpy(tokens[j-1].str,substr_num,NUM_number);
+             tokens[j-1].type = rules[i-1].token_type;
+           }   
+           NUM_FLAG = 0;
+           NUM_number  = 0;
+           tokens[j].type = rules[i].token_type;
+           j++;
+        }
+        else if(rules[i].token_type == NUM)
+        { 
+            if(!NUM_FLAG) { substr_num = substr_start; j++; }  
+            NUM_number ++;
+            NUM_FLAG = 1;
         }
         printf("j = %d,  str= %s \n", j, tokens[j].str); 
-        j++;
 //        switch (rules[i].token_type) {
 //          default: TODO();
 //      }
