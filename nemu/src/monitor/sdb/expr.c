@@ -36,7 +36,7 @@ static struct rule {
    * Pay attention to the precedence level of different rules.
    */
 
-  {" ", TK_NOTYPE},    // spaces
+  {" +", TK_NOTYPE},    // spaces
   {"\\+", '+'},         // plus
   {"\\-", '-'},         // minus
   {"\\*", '*'},         // multip
@@ -83,7 +83,7 @@ static bool make_token(char *e) {
   int j=0;
   nr_token = 0;
 
-  while (e[position] != '\0') {
+  while (e[position] != '\0' && e[position] != ' ') {
      
     /* Try all rules one by one. */
     for (i = 0; i < NR_REGEX; i ++) {
