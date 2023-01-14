@@ -111,7 +111,7 @@ static bool make_token(char *e) {
            NUM_FLAG = 0;
            NUM_number  = 0;
            tokens[j].type = rules[i].token_type;
-           j++;
+           if(rules[i].token_type != TK_NOTYPE) { j++; }
         }
         else if(rules[i].token_type == NUM)
         { 
