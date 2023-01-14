@@ -142,7 +142,7 @@ static bool make_token(char *e) {
     }
   }
   for(int h = 0;h < j; h++){
-       printf("j = %d,  str= %s \n", h, tokens[h].str); 
+       printf("j = %d, type = %d,  str= %s \n", h,tokens[h].type, tokens[h].str); 
      }
   return true;
 }
