@@ -116,7 +116,7 @@ static bool make_token(char *e) {
         { 
             if(!NUM_FLAG && rules[i].token_type == NUM) { substr_num = substr_start; j++; }  
              if((e[position + 1] == '\0') &&(rules[i].token_type == NUM)) {
-              strcpy(tokens[j-1].str,substr_num);
+             // strcpy(tokens[j-1].str,substr_num);
               tokens[j-1].type = NUM;
               }
              else if((e[position + 1] == '\0') &&(rules[i].token_type != NUM)) {
