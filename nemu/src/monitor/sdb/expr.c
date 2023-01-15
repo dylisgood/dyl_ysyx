@@ -101,7 +101,7 @@ static bool make_token(char *e) {
          * of tokens, some extra actions should be performed.
          */
  
-        if(rules[i].token_type != NUM && e[position + 1] != '\0'){  
+        if(rules[i].token_type != NUM ){  
             if(NUM_FLAG == 1){ 
                strncpy(tokens[j-1].str,substr_num,NUM_number);
                tokens[j-1].type = NUM;
