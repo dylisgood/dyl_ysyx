@@ -112,15 +112,15 @@ static bool make_token(char *e) {
            tokens[j].type = rules[i].token_type;
            if(rules[i].token_type != TK_NOTYPE) { j++; }
         }
-        else if(rules[i].token_type == NUM || e[position + 1] == '\0')
+        else if(rules[i].token_type == NUM || e[position] == '\0')
         { 
             if(!NUM_FLAG && rules[i].token_type == NUM) { substr_num = substr_start; j++; }  
-            if(e[position + 1] == '\0' && rules[i].token_type == NUM ) {
+            if(e[position] == '\0' && rules[i].token_type == NUM ) {
                  strcpy(tokens[j-1].str,substr_num);
                  tokens[j-1].type = NUM;
                  printf("i enter ther\n");
               }
-            else if((e[position + 1] == '\0') &&(rules[i].token_type != NUM)) {
+            else if((e[position] == '\0') &&(rules[i].token_type != NUM)) {
                 tokens[j].type = rules[i].token_type;
                } 
              NUM_number ++;
