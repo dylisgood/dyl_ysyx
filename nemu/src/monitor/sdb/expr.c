@@ -118,7 +118,7 @@ static bool make_token(char *e) {
             if(e[position + 1] == '\0' && rules[i].token_type == NUM ) {
                  strcpy(tokens[j-1].str,substr_num);
                  tokens[j-1].type = NUM;
-                 printf("i enter ther");
+                 printf("i enter ther\n");
               }
             else if((e[position + 1] == '\0') &&(rules[i].token_type != NUM)) {
                 tokens[j].type = rules[i].token_type;
