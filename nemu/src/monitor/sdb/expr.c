@@ -126,6 +126,7 @@ static bool make_token(char *e) {
              NUM_number ++;
              NUM_FLAG = 1;
         }
+     
 //        switch (rules[i].token_type) {
 //          default: TODO();
 //      }
@@ -153,7 +154,7 @@ word_t expr(char *e, bool *success) {
   }
 
   /* TODO: Insert codes to evaluate the expression. */
- // TODO();
+   TODO();
 
   return 0;
 }
