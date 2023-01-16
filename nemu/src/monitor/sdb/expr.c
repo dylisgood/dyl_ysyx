@@ -180,13 +180,14 @@ bool check_op(int count){
 //check the count tokens whether in bracket or not
 bool check_bracket(int count , int q){
   int i=0,j=0;
-  for(i = 0; i < count; i++){
-    if(tokens[i].type == '('){ i++; }
-    if(tokens[j].type == ')'){ i--; }
+  int cnt;
+  for(cnt = 0; cnt < count; cnt++){
+    if(tokens[cnt].type == '('){ i++; }
+    if(tokens[cnt].type == ')'){ i--; }
   }
-  for(i = count + 1; i <= q; i++) {
-    if(tokens[i].type == '(') { j++; };
-    if(tokens[i].type == ')') { j--; }; 
+  for(cnt = count + 1; cnt <= q; cnt++) {
+    if(tokens[cnt].type == '(') { j++; };
+    if(tokens[cnt].type == ')') { j--; }; 
   }
   
   if(i==j && i!=0 && j!=0)  { return true; }
