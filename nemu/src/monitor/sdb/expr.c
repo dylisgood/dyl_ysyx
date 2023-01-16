@@ -149,7 +149,7 @@ static bool make_token(char *e) {
 }
 bool check_parentheses(int p, int q){
   int c;
-  int i=0,j=0;
+  int i=0;
  // int kuohao_left[10],kuohao_right[10];
     if(tokens[p].type == '(' && tokens[q].type == ')')  {
        for(c = p; c <= q; c ++) {
@@ -159,11 +159,13 @@ bool check_parentheses(int p, int q){
         }
         else if(tokens[c].type == ')') {
          // kuohao_right[j] = c;
-           j++;
+           i--;
        }
+       if(c != p && c !=q && i ==0) {return false;}
+       if(i < 0) {return false; }
        } 
-       printf("i = %d, j = %d \n", i , j);
-       if(i != j){return false;}
+       printf("i = %d, \n", i );
+       if(i != 0){return false;}
        else { return true; }
     }
     else { return false; }
@@ -213,5 +215,6 @@ word_t expr(char *e, bool *success) {
   if(FLAG == true){
     printf("the expr is true\n");
   }
+  else printf("the expr is false\n");
   return 0;
 }
