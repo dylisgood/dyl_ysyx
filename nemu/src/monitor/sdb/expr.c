@@ -209,6 +209,6 @@ word_t expr(char *e, bool *success) {
 
   /* TODO: Insert codes to evaluate the expression. */
   // TODO();
-  *success = check_parentheses(0,numofstr);
+  //*success = check_parentheses(0,numofstr);
   return 0;
 }
