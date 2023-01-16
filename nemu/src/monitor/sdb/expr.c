@@ -148,12 +148,21 @@ static bool make_token(char *e) {
      }
   return true;
 }
-
+bool check_expr(int p, int q) {
+  int c,i=0;
+  for(c=p; c<=q; c++){
+    if(tokens[c].type == '(') {i++; }
+    if(tokens[c].type == ')') {i--; }
+    if(i<0) {return false;}
+  }
+  if(i==0) {return true;}
+  else {return false;}
+}
 bool check_parentheses(int p, int q){
   int c;
   int i=0;
     if(tokens[p].type == '(' && tokens[q].type == ')')  {
-       for(c = p; c <= q; c ++) {
+       for(c = p; c <= q; c++) {
         if(tokens[c].type == '(') {
            i++;
         }
@@ -262,9 +271,7 @@ word_t expr(char *e, bool *success) {
 
   /* TODO: Insert codes to evaluate the expression. */
   // TODO();
-  bool FLAG;
-  FLAG = check_parentheses(0,numofstr);
-  if(FLAG == true){
+  if(check_expr(0,numofstr)){
     printf("the expr is true\n");
   }
   else printf("the expr is false\n");
