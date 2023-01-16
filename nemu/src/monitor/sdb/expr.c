@@ -184,7 +184,7 @@ bool check_bracket(int count , int q){
   for(i = 0; i < count; i++){
     if(tokens[i].type == '('){ LEFT = true; }
   }
-  for(i = count + 1; i < q; i++) {
+  for(i = count + 1; i <= q; i++) {
     if(tokens[i].type == ')') { RIGHT = true; }
   }
   if(LEFT && RIGHT){ LEFT=false; RIGHT=false; return true; }
