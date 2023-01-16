@@ -271,13 +271,13 @@ word_t expr(char *e, bool *success) {
 
   /* TODO: Insert codes to evaluate the expression. */
   // TODO();
+
+  int result;
   if(check_expr(0,numofstr)){
-    printf("the expr is true\n");
+     result = eval(0,numofstr);
+     printf("result = %d\n ",result);
   }
   else printf("the expr is false\n");
-  int result;
-  printf("numofstr = %d\n",numofstr);
-  result = eval(0,numofstr);
-  printf("result = %d\n ",result);
+  
   return 0;
 }
