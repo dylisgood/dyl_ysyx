@@ -188,10 +188,9 @@ bool check_bracket(int count , int q){
   for(i = count + 1; i < q; i++) {
     if(tokens[i].type == ')') { RIGHT = true; }
   }
-  if(LEFT && RIGHT){return true; }
-  else {return false;}
-  LEFT = false;
-  RIGHT =false;
+  if(LEFT && RIGHT){ LEFT=false; RIGHT=false; return true; }
+  else {LEFT = false; RIGHT = false; return false;}
+
 }
 
 int first=1;
