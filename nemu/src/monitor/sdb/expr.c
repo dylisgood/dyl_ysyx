@@ -178,7 +178,7 @@ bool check_op(int count){
 }
 
 //check the count tokens whether in bracket or not
-//
+bool LEFT,RIGHT;
 bool check_bracket(int count , int q){
   int i;
   bool LEFT,RIGHT;
@@ -188,6 +188,8 @@ bool check_bracket(int count , int q){
   for(i = count + 1; i < q; i++) {
     if(tokens[i].type == ')') { RIGHT = true; }
   }
+  LEFT = false;
+  RIGHT =false;
   if(LEFT && RIGHT){return true; }
   else {return false;}
 }
@@ -240,6 +242,7 @@ uint32_t eval(int p,int q){
     }
     else {
       op = Main_position(p,q);
+      printf("op = %d\n",op);
       val1 = eval(p, op - 1);
       val2 = eval(op+1, q);
       printf("val1 = %d,  val2 = %d\n", val1,val2);
