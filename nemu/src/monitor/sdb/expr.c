@@ -244,7 +244,7 @@ uint32_t eval(int p,int q){
     uint32_t val1,val2;
     char op_type;
     int op;
-    printf("p=%d,   q=%d\n",p,q);
+//    printf("p=%d,   q=%d\n",p,q);
     if(p > q){
       printf("bad expression! \n");
       assert(0);
@@ -286,7 +286,7 @@ word_t expr(char *e, bool *success) {
   uint32_t result=0;
   if(check_expr(0,numofstr)){
      result = eval(0,numofstr);
-     printf("result = %d\n ",result);
+//     printf("result = %d\n ",result);
   }
   else printf("the expr is false\n");
   
