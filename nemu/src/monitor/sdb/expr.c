@@ -269,6 +269,7 @@ word_t expr(char *e, bool *success) {
   }
   else printf("the expr is false\n");
   int result;
+  printf("numofstr = %d\n",numofstr);
   result = eval(0,numofstr);
   printf("result = %d/n ",result);
   return 0;
