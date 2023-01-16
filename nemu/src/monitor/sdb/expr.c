@@ -189,7 +189,7 @@ bool check_bracket(int count , int q){
     if(tokens[cnt].type == '(') { j++; };
     if(tokens[cnt].type == ')') { j--; }; 
   }
-  
+  printf("i=%d,   j=%d\n",i,j); 
   if(i==j && i!=0 && j!=0)  { i=0; j=0; return true; }
   else if(i==0 && j==0) { i=0;j=0;return false;}
   else  {assert(0);}
