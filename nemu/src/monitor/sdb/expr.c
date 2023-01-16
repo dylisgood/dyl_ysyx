@@ -181,7 +181,6 @@ bool check_op(int count){
 bool LEFT,RIGHT;
 bool check_bracket(int count , int q){
   int i;
-  bool LEFT,RIGHT;
   for(i = 0; i < count; i++){
     if(tokens[i].type == '('){ LEFT = true; }
   }
