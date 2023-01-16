@@ -179,19 +179,19 @@ bool check_op(int count){
 
 //check the count tokens whether in bracket or not
 bool check_bracket(int count , int q){
-  int i=0,j=0;
+  int ii=0,jj=0;
   int cnt;
   for(cnt = 0; cnt < count; cnt++){
-    if(tokens[cnt].type == '('){ i++; }
-    if(tokens[cnt].type == ')'){ i--; }
+    if(tokens[cnt].type == '('){ ii++; }
+    if(tokens[cnt].type == ')'){ ii--; }
   }
   for(cnt = count; cnt <= q; cnt++) {
-    if(tokens[cnt].type == '(') { j++; };
-    if(tokens[cnt].type == ')') { j--; }; 
+    if(tokens[cnt].type == '(') { jj++; };
+    if(tokens[cnt].type == ')') { jj--; }; 
   }
-  printf("i=%d,   j=%d\n",i,j); 
-  if(i==j && i!=0 && j!=0)  { i=0; j=0; return true; }
-  else if(i==0 && j==0) { i=0;j=0;return false;}
+  printf("i=%d,   j=%d\n",ii,jj); 
+  if(ii==jj && ii!=0 && jj!=0)  { ii=0; jj=0; return true; }
+  else if(ii==0 && jj==0) { ii=0;jj=0;return false;}
   else  {assert(0);}
 
 }
