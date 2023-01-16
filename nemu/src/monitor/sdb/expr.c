@@ -188,16 +188,17 @@ bool check_bracket(int count , int q){
   for(i = count + 1; i < q; i++) {
     if(tokens[i].type == ')') { RIGHT = true; }
   }
-  LEFT = false;
-  RIGHT =false;
   if(LEFT && RIGHT){return true; }
   else {return false;}
+  LEFT = false;
+  RIGHT =false;
 }
 
+int first=1;
+int first_FLAG=1;
 int Main_position(int p, int q){
   int count;
   int op=0;
-  int first_FLAG=1,first = 1;
   for(count = p; count < q; count ++){
     if(check_op(count)){
       if(!check_bracket(count,q)) 
@@ -221,6 +222,7 @@ int Main_position(int p, int q){
 
     }
   }
+  first = 1;first_FLAG=1;
   return op;
 
 }
