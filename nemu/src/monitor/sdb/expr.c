@@ -227,6 +227,7 @@ uint32_t eval(int p,int q){
     uint32_t val1,val2;
     char op_type;
     int op;
+    printf("p=%d,   q=%d\n",p,q);
     if(p > q){
       printf("bad expression! \n");
       assert(0);
