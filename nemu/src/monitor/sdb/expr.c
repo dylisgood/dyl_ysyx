@@ -142,23 +142,22 @@ static bool make_token(char *e) {
     }
   }
   numofstr = j - 1;
+  
   for(int h = 0;h < j; h++){
        printf("j = %d, type = %d,  str= %s \n", h,tokens[h].type, tokens[h].str); 
      }
   return true;
 }
+
 bool check_parentheses(int p, int q){
   int c;
   int i=0;
- // int kuohao_left[10],kuohao_right[10];
     if(tokens[p].type == '(' && tokens[q].type == ')')  {
        for(c = p; c <= q; c ++) {
         if(tokens[c].type == '(') {
-         ///  kuohao_left[i] = c;
            i++;
         }
         else if(tokens[c].type == ')') {
-         // kuohao_right[j] = c;
            i--;
        }
        if(c != p && c !=q && i ==0) {return false;}
@@ -170,14 +169,67 @@ bool check_parentheses(int p, int q){
     }
     else { return false; }
 }
-/*
-int Main_position(int p, int q){
-  return 0;
+
+bool check_op(int count){
+  if(tokens[count].type == '+' || tokens[count].type == '-' || tokens[count].type == '*' || tokens[count].type == '/'){
+     return true;
+  }
+  else {return false; }
 }
+
+//check the count tokens whether in bracket or not
+//
+bool check_bracket(int count , int q){
+  int i;
+  bool LEFT,RIGHT;
+  for(i = 0; i < count; i++){
+    if(tokens[i].type == '('){ LEFT = true; }
+  }
+  for(i = count + 1; i < q; i++) {
+    if(tokens[i].type == ')') { RIGHT = true; }
+  }
+  if(LEFT && RIGHT){return true; }
+  else {return false;}
+}
+
+int Main_position(int p, int q){
+  int count;
+  int op=0;
+  int first_FLAG=1,first = 1;
+  for(count = p; count < q; count ++){
+    if(check_op(count)){
+      if(!check_bracket(count,q)) 
+       {
+         if(first_FLAG) { op=count; first_FLAG =0; }
+         if(!first_FLAG){
+          if(tokens[count].type == '+' || tokens[count].type == '-') {
+            op = count;
+          }
+         }
+       }
+      if(check_parentheses(count+1,q) && check_parentheses(p,count))
+      {
+        if(first) {op = count; first = 0;}
+        if(!first)
+        {
+          if(tokens[count].type == '+' || tokens[count].type == '-')
+            {op = count; }
+        }
+      }
+
+    }
+  }
+  return op;
+
+}
+
 uint32_t eval(int p,int q){
-     uint32_t val1,val2;
+    uint32_t val1,val2;
+    char op_type;
+    int op;
     if(p > q){
       printf("bad expression! \n");
+      return 0;
     }
     else if(p == q){
       return atoi(tokens[p].str);
@@ -186,10 +238,10 @@ uint32_t eval(int p,int q){
       return eval(p + 1, q - 1);
     }
     else {
-     // op = Main_position();
+      op = Main_position(p,q);
       val1 = eval(p, op - 1);
       val2 = eval(op+1, q);
-
+      op_type = tokens[op].type;
       switch(op_type){
         case '+':return val1 + val2;
         case '-':return val1 - val2;
@@ -201,7 +253,7 @@ uint32_t eval(int p,int q){
     }
 
 }
-*/
+
 word_t expr(char *e, bool *success) {
   if (!make_token(e)) {
     *success = false;
@@ -216,5 +268,8 @@ word_t expr(char *e, bool *success) {
     printf("the expr is true\n");
   }
   else printf("the expr is false\n");
+  int result;
+  result = eval(0,numofstr);
+  printf("result = %d/n ",result);
   return 0;
 }
