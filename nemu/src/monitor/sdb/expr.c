@@ -177,10 +177,10 @@ bool check_op(int count){
 }
 
 //check the count tokens whether in bracket or not
-bool check_bracket(int count , int q){
+bool check_bracket(int p,int count , int q){
   int ii=0,jj=0;
   int cnt;
-  for(cnt = 0; cnt < count; cnt++){
+  for(cnt = p; cnt < count; cnt++){
     if(tokens[cnt].type == '('){ ii++; }
     if(tokens[cnt].type == ')'){ ii--; }
   }
@@ -202,7 +202,7 @@ int Main_position(int p, int q){
   int op=0;
   for(count = p; count <= q; count ++){
     if(check_op(count)){
-      if(!check_bracket(count,q)) 
+      if(!check_bracket(p,count,q)) 
        {
          printf("count = %d\n",count);
          if(first_FLAG) { op=count; first_FLAG =0; }
