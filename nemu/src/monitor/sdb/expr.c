@@ -75,6 +75,7 @@ typedef struct token {
 
 static Token tokens[32] __attribute__((used)) = {};
 static int nr_token __attribute__((used))  = 0;
+static int numofstr;
 
 static bool make_token(char *e) {
   int position = 0;
@@ -140,13 +141,66 @@ static bool make_token(char *e) {
       return false;
     }
   }
+  numofstr = j - 1;
   for(int h = 0;h < j; h++){
        printf("j = %d, type = %d,  str= %s \n", h,tokens[h].type, tokens[h].str); 
      }
   return true;
 }
+bool check_parentheses(int p, int q){
+  int c;
+  int i=0,j=0;
+ // int kuohao_left[10],kuohao_right[10];
+    if(tokens[p].type == '(' && tokens[q].type == ')')  {
+       for(c = p; c <= q; c ++) {
+        if(tokens[c].type == '(') {
+         ///  kuohao_left[i] = c;
+           i++;
+        }
+        else if(tokens[c].type == ')') {
+         // kuohao_right[j] = c;
+           j++;
+        
+        printf("i = %d, j = %d", i , j);
+       }
+       } 
+       if(i != j){return false;}
+       else { return true; }
+    }
+    else { return false; }
+}
+/*
+int Main_position(int p, int q){
+  return 0;
+}
+uint32_t eval(int p,int q){
+     uint32_t val1,val2;
+    if(p > q){
+      printf("bad expression! \n");
+    }
+    else if(p == q){
+      return atoi(tokens[p].str);
+    }
+    else if(check_parentheses(p,q) == true){
+      return eval(p + 1, q - 1);
+    }
+    else {
+     // op = Main_position();
+      val1 = eval(p, op - 1);
+      val2 = eval(op+1, q);
 
+      switch(op_type){
+        case '+':return val1 + val2;
+        case '-':return val1 - val2;
+        case '*':return val1 * val2;
+        case '/':return val1 / val2;
+        default: assert(0);
+      }
 
+    }
+
+}
+*/
 word_t expr(char *e, bool *success) {
   if (!make_token(e)) {
     *success = false;
@@ -154,7 +208,7 @@ word_t expr(char *e, bool *success) {
   }
 
   /* TODO: Insert codes to evaluate the expression. */
-   TODO();
-
+  // TODO();
+  *success = check_parentheses(0,numofstr);
   return 0;
 }
