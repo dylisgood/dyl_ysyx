@@ -160,10 +160,9 @@ bool check_parentheses(int p, int q){
         else if(tokens[c].type == ')') {
          // kuohao_right[j] = c;
            j++;
-        
-        printf("i = %d, j = %d", i , j);
        }
        } 
+       printf("i = %d, j = %d \n", i , j);
        if(i != j){return false;}
        else { return true; }
     }
