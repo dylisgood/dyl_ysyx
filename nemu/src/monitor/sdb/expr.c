@@ -241,6 +241,7 @@ uint32_t eval(int p,int q){
       op = Main_position(p,q);
       val1 = eval(p, op - 1);
       val2 = eval(op+1, q);
+      printf("val1 = %d,  val2 = %d\n", val1,val2);
       op_type = tokens[op].type;
       switch(op_type){
         case '+':return val1 + val2;
