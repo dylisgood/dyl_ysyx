@@ -229,7 +229,7 @@ uint32_t eval(int p,int q){
     int op;
     if(p > q){
       printf("bad expression! \n");
-      return 0;
+      assert(0);
     }
     else if(p == q){
       return atoi(tokens[p].str);
