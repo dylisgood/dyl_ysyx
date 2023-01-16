@@ -202,6 +202,7 @@ int Main_position(int p, int q){
     if(check_op(count)){
       if(!check_bracket(count,q)) 
        {
+         printf("count = %d\n",count);
          if(first_FLAG) { op=count; first_FLAG =0; }
          if(!first_FLAG){
           if(tokens[count].type == '+' || tokens[count].type == '-') {
