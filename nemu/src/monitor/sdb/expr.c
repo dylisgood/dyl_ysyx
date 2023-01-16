@@ -185,7 +185,7 @@ bool check_bracket(int count , int q){
     if(tokens[cnt].type == '('){ i++; }
     if(tokens[cnt].type == ')'){ i--; }
   }
-  for(cnt = count + 1; cnt <= q; cnt++) {
+  for(cnt = count; cnt <= q; cnt++) {
     if(tokens[cnt].type == '(') { j++; };
     if(tokens[cnt].type == ')') { j--; }; 
   }
