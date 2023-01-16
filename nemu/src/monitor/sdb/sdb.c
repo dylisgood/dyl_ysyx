@@ -75,7 +75,8 @@ static int cmd_x(char *args) {
     printf("N = %d\n" , N);
     arg = strtok(NULL , "\0");
     bool *success = false;
-    expr(arg,success);
+    uint32_t addr = expr(arg,success);
+    printf("addr = %d\n",addr);
  //   for(int i=0; i < N; i++) {
 //    vaddr_read(addr + i,8); }
   }
