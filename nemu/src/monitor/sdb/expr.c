@@ -148,6 +148,9 @@ static bool make_token(char *e) {
      }
   return true;
 }
+
+//to check the expr whether valid or not
+//valid ---true    invalid---false
 bool check_expr(int p, int q) {
   int c,i=0;
   for(c=p; c<=q; c++){
@@ -158,6 +161,9 @@ bool check_expr(int p, int q) {
   if(i==0) {return true;}
   else {return false;}
 }
+
+//To check whether BNF or not
+//BNF---true  no-BNF---false
 bool check_parentheses(int p, int q){
   int c;
   int i=0;
@@ -178,6 +184,7 @@ bool check_parentheses(int p, int q){
     else { return false; }
 }
 
+//check tokens[].type operator or not
 bool check_op(int count){
   if(tokens[count].type == '+' || tokens[count].type == '-' || tokens[count].type == '*' || tokens[count].type == '/'){
      return true;
@@ -186,6 +193,7 @@ bool check_op(int count){
 }
 
 //check the count tokens whether in bracket or not
+//in bracket----true   not---false
 bool check_bracket(int p,int count , int q){
   int ii=0,jj=0;
   int cnt;
@@ -197,13 +205,15 @@ bool check_bracket(int p,int count , int q){
     if(tokens[cnt].type == '(') { jj--; };
     if(tokens[cnt].type == ')') { jj++; }; 
   }
-  printf("ii=%d,   jj=%d\n",ii,jj); 
-  if(ii==jj && ii!=0 && jj!=0)  { ii=0; jj=0; return true; }
-  else if(ii==0 && jj==0) { ii=0;jj=0;return false;}
+  //printf("ii=%d,   jj=%d\n",ii,jj); 
+  if(ii==jj && ii!=0 && jj!=0)  {  return true; }
+  else if(ii==0 && jj==0) { return false;}
   else  {assert(0);}
 
 }
 
+
+//get main_operator_position
 int first=1;
 int first_FLAG=1;
 int Main_position(int p, int q){
@@ -213,7 +223,7 @@ int Main_position(int p, int q){
     if(check_op(count)){
       if(!check_bracket(p,count,q)) 
        {
-         printf("count = %d\n",count);
+        // printf("count = %d\n",count);
          if(first_FLAG) { op=count; first_FLAG =0; }
          if(!first_FLAG){
           if(tokens[count].type == '+' || tokens[count].type == '-') {
@@ -229,6 +239,7 @@ int Main_position(int p, int q){
 
 }
 
+//get expr's result
 uint32_t eval(int p,int q){
     uint32_t val1,val2;
     char op_type;
@@ -246,10 +257,10 @@ uint32_t eval(int p,int q){
     }
     else {
       op = Main_position(p,q);
-      printf("op = %d\n",op);
+     // printf("op = %d\n",op);
       val1 = eval(p, op - 1);
       val2 = eval(op+1, q);
-      printf("val1 = %d,  val2 = %d\n", val1,val2);
+     // printf("val1 = %d,  val2 = %d\n", val1,val2);
       op_type = tokens[op].type;
       switch(op_type){
         case '+':return val1 + val2;
