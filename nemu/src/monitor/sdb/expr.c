@@ -163,7 +163,6 @@ bool check_parentheses(int p, int q){
        if(c != p && c !=q && i ==0) {return false;}
        if(i < 0) {return false; }
        } 
-       printf("i = %d, \n", i );
        if(i != 0){return false;}
        else { return true; }
     }
@@ -185,11 +184,11 @@ bool check_bracket(int count , int q){
     if(tokens[cnt].type == '('){ ii++; }
     if(tokens[cnt].type == ')'){ ii--; }
   }
-  for(cnt = count; cnt <= q; cnt++) {
+  for(cnt = count+1; cnt <= q; cnt++) {
     if(tokens[cnt].type == '(') { jj++; };
     if(tokens[cnt].type == ')') { jj--; }; 
   }
-  printf("i=%d,   j=%d\n",ii,jj); 
+  printf("ii=%d,   jj=%d\n",ii,jj); 
   if(ii==jj && ii!=0 && jj!=0)  { ii=0; jj=0; return true; }
   else if(ii==0 && jj==0) { ii=0;jj=0;return false;}
   else  {assert(0);}
@@ -213,18 +212,9 @@ int Main_position(int p, int q){
           }
          }
        }
-      if(check_parentheses(count+1,q) && check_parentheses(p,count))
-      {
-        if(first) {op = count; first = 0;}
-        if(!first)
-        {
-          if(tokens[count].type == '+' || tokens[count].type == '-')
-            {op = count; }
-        }
       }
 
     }
-  }
   first = 1;first_FLAG=1;
   return op;
 
