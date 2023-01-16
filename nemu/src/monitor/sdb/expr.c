@@ -209,6 +209,10 @@ word_t expr(char *e, bool *success) {
 
   /* TODO: Insert codes to evaluate the expression. */
   // TODO();
-  //*success = check_parentheses(0,numofstr);
+  bool FLAG;
+  FLAG = check_parentheses(0,numofstr);
+  if(FLAG == true){
+    printf("the expr is true\n");
+  }
   return 0;
 }
