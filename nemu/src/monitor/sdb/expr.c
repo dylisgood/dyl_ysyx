@@ -185,8 +185,8 @@ bool check_bracket(int count , int q){
     if(tokens[cnt].type == ')'){ ii--; }
   }
   for(cnt = count+1; cnt <= q; cnt++) {
-    if(tokens[cnt].type == '(') { jj++; };
-    if(tokens[cnt].type == ')') { jj--; }; 
+    if(tokens[cnt].type == '(') { jj--; };
+    if(tokens[cnt].type == ')') { jj++; }; 
   }
   printf("ii=%d,   jj=%d\n",ii,jj); 
   if(ii==jj && ii!=0 && jj!=0)  { ii=0; jj=0; return true; }
