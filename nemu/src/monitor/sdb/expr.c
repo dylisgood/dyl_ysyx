@@ -197,7 +197,7 @@ int first_FLAG=1;
 int Main_position(int p, int q){
   int count;
   int op=0;
-  for(count = p; count < q; count ++){
+  for(count = p; count <= q; count ++){
     if(check_op(count)){
       if(!check_bracket(count,q)) 
        {
