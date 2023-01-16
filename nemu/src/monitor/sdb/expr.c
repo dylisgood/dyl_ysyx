@@ -277,6 +277,6 @@ word_t expr(char *e, bool *success) {
   int result;
   printf("numofstr = %d\n",numofstr);
   result = eval(0,numofstr);
-  printf("result = %d/n ",result);
+  printf("result = %d\n ",result);
   return 0;
 }
