@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
    bool* success = false;
    FILE *fp = fopen("/home/ysyx/ysyx-workbench/nemu/tools/gen-expr/input","r");
    
-   for(int i=0; i < 10; i++){
+   for(int i=0; i < 100; i++){
    count = fscanf(fp,"%s",buff);
   // printf("the count = %d, the buff = %s\n",count,buff);
    count = fscanf(fp,"%s",buf);
@@ -45,7 +45,10 @@ int main(int argc, char *argv[]) {
     if(result == atoi(buff) && count >=0){
       printf("%dst test pass!\n",i+1);
     }
-    else printf("test fail!\n");
+    else {
+      printf("%dst test fail!\n",i+1);
+      assert(0);
+    }
   //printf("the result = %ld, count = %d\n",result,count);
    //printf("the count = %s,the buff is%s",buf,buff);
    }
