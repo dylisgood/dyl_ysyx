@@ -54,8 +54,10 @@ int main(int argc, char *argv[]) {
    //printf("the count = %s,the buff is%s",buf,buff);
    }
    */
+   for(int i=0;i<100;i++){
    result = expr("1*(10*(1)-8-(((((((10))))))))",success);
-   printf("result = %d",result);
+   printf("result = %d\n",result);
+   }
   /* Start engine. */
   engine_start();
 
