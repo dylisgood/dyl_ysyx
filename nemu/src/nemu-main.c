@@ -46,7 +46,8 @@ int main(int argc, char *argv[]) {
       printf("%dst test pass!\n",i+1);
     }
     else {
-      printf("%dst test fail!\nthe result= %d, the buff = %s\n",i+1,result,buff);
+      printf("%dst test fail!\nthe result= %d, the answer = %d\n",i+1,result,atoi(buff));
+      printf("the expr is %s\n",buf);
       //assert(0);
     }
   //printf("the result = %ld, count = %d\n",result,count);
