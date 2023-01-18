@@ -28,12 +28,16 @@ int main(int argc, char *argv[]) {
   init_monitor(argc, argv);
 #endif
    char buf[1000];
-   char* count;
+   int count;
+   char* buff;
+  // char* success = false;
    FILE *fp = fopen("/home/ysyx/ysyx-workbench/nemu/tools/gen-expr/input","r");
-   for(int i=0; i < 100; i++){
-   count = fgets(buf,1000,(FILE *)fp);
-   printf("the buf = %s",buf);
-   printf("the count = %s",count);
+   
+   for(int i=0; i < 2; i++){
+   count = fscanf(fp,"%s",buf);
+   printf("the count = %d, the buff = %s",count,buf);
+   buff = fgets(buff,1000,(FILE *)fp);
+   printf("the count = %s",buf);
    }
   /* Start engine. */
   engine_start();
