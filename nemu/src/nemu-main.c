@@ -18,7 +18,7 @@
 void init_monitor(int, char *[]);
 void am_init_monitor();
 void engine_start();
-word_t expr(char *e, bool *success);
+uint32_t expr(char *e, bool *success);
 int is_exit_status_bad();
 
 int main(int argc, char *argv[]) {
@@ -28,12 +28,12 @@ int main(int argc, char *argv[]) {
 #else
   init_monitor(argc, argv);
 #endif
-  // char buf_answer[1000];
-  // int count;
-  // char buf_expr[1000];
+   char buf_answer[1000];
+  int count;
+  char buf_expr[1000];
    uint32_t result=0;
    bool* success = false;
-   /*
+   
    FILE *fp = fopen("/home/ysyx/ysyx-workbench/nemu/tools/gen-expr/input","r");
    
    for(int i=0; i < 100; i++){
@@ -55,13 +55,13 @@ int main(int argc, char *argv[]) {
   //printf("the result = %ld, count = %d\n",result,count);
    //printf("the count = %s,the buff is%s",buf,buff);
    }
-  */ 
-     
+   
+  /*   
    for(int i=0;i<100;i++){
    result = expr("(8+(((2)+7+(4-2)+(2)*1)))+(6)",success);
    printf("result = %d\n",result);
    }
-   
+   */
   /* Start engine. */
   engine_start();
 
