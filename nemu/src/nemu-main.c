@@ -42,6 +42,10 @@ int main(int argc, char *argv[]) {
    //printf("the count = %d, the buf = %s\n",count,buf); 
    //buff = fgets(buf,1000,(FILE *)fp);
     result = expr(buf,success);
+    if(result == atoi(buff)){
+      printf("test pass!\n");
+    }
+    else printf("test fail!\n");
    printf("the result = %ld, count = %d\n",result,count);
    //printf("the count = %s,the buff is%s",buf,buff);
    }
