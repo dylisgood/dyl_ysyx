@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
    bool* success = false;
    FILE *fp = fopen("/home/ysyx/ysyx-workbench/nemu/tools/gen-expr/input","r");
    
-   for(int i=0; i < 2; i++){
+   for(int i=0; i < 10; i++){
    count = fscanf(fp,"%s",buff);
   // printf("the count = %d, the buff = %s\n",count,buff);
    count = fscanf(fp,"%s",buf);
