@@ -28,12 +28,12 @@ int main(int argc, char *argv[]) {
 #else
   init_monitor(argc, argv);
 #endif
-   char buf[1000];
-   int count;
+   //char buf[1000];
+   //int count;
+   //char buff[1000];
    uint32_t result=0;
-   char buff[1000];
    bool* success = false;
-   FILE *fp = fopen("/home/ysyx/ysyx-workbench/nemu/tools/gen-expr/input","r");
+   /*FILE *fp = fopen("/home/ysyx/ysyx-workbench/nemu/tools/gen-expr/input","r");
    
    for(int i=0; i < 100; i++){
    count = fscanf(fp,"%s",buff);
@@ -53,6 +53,9 @@ int main(int argc, char *argv[]) {
   //printf("the result = %ld, count = %d\n",result,count);
    //printf("the count = %s,the buff is%s",buf,buff);
    }
+   */
+   result = expr("1*(10*(1)-8-(((((((10))))))))",success);
+   printf("result = %d",result);
   /* Start engine. */
   engine_start();
 
