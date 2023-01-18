@@ -37,16 +37,16 @@ int main(int argc, char *argv[]) {
    
    for(int i=0; i < 2; i++){
    count = fscanf(fp,"%s",buff);
-   printf("the count = %d, the buff = %s\n",count,buff);
+  // printf("the count = %d, the buff = %s\n",count,buff);
    count = fscanf(fp,"%s",buf);
    //printf("the count = %d, the buf = %s\n",count,buf); 
    //buff = fgets(buf,1000,(FILE *)fp);
     result = expr(buf,success);
-    if(result == atoi(buff)){
+    if(result == atoi(buff) && count >=0){
       printf("test pass!\n");
     }
     else printf("test fail!\n");
-   printf("the result = %ld, count = %d\n",result,count);
+  //printf("the result = %ld, count = %d\n",result,count);
    //printf("the count = %s,the buff is%s",buf,buff);
    }
   /* Start engine. */
