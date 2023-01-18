@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
    
    for(int i=0; i < 2; i++){
    count = fscanf(fp,"%s",buf);
-   //printf("the count = %d, the buf = %s\n",count,buf);
+   printf("the count = %d, the buf = %s\n",count,buf);
    count = fscanf(fp,"%s",buf);
    //printf("the count = %d, the buf = %s\n",count,buf); 
    //buff = fgets(buf,1000,(FILE *)fp);
