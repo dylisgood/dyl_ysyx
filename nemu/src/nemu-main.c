@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
 #endif
    char buf[1000];
    int count;
-   word_t result=0;
+   uint32_t result=0;
    char buff[1000];
    bool* success = false;
    FILE *fp = fopen("/home/ysyx/ysyx-workbench/nemu/tools/gen-expr/input","r");
@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
       printf("%dst test pass!\n",i+1);
     }
     else {
-      printf("%dst test fail!\nthe result= %ld, the buf = %s\n",i+1,result,buf);
+      printf("%dst test fail!\nthe result= %d, the buff = %s\n",i+1,result,buff);
       //assert(0);
     }
   //printf("the result = %ld, count = %d\n",result,count);
