@@ -36,8 +36,8 @@ int main(int argc, char *argv[]) {
    for(int i=0; i < 2; i++){
    count = fscanf(fp,"%s",buf);
    printf("the count = %d, the buff = %s",count,buf);
-   buff = fgets(buff,1000,(FILE *)fp);
-   printf("the count = %s",buf);
+   buff = fgets(buf,1000,(FILE *)fp);
+   printf("the count = %s, the buff is %s",buf,buff);
    }
   /* Start engine. */
   engine_start();
