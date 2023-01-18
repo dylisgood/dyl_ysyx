@@ -18,6 +18,7 @@
 void init_monitor(int, char *[]);
 void am_init_monitor();
 void engine_start();
+word_t expr(char *e, bool *success);
 int is_exit_status_bad();
 
 int main(int argc, char *argv[]) {
@@ -29,14 +30,17 @@ int main(int argc, char *argv[]) {
 #endif
    char buf[1000];
    int count;
+   word_t result=0;
    char* buff;
-  // char* success = false;
+   bool* success = false;
    FILE *fp = fopen("/home/ysyx/ysyx-workbench/nemu/tools/gen-expr/input","r");
    
    for(int i=0; i < 1; i++){
    count = fscanf(fp,"%s",buf);
-   printf("the count = %d, the buff = %s",count,buf);
+   printf("the count = %d, the buf = %s",count,buf);
    buff = fgets(buf,1000,(FILE *)fp);
+   result = expr(buff,success);
+   printf("the result = %ld\n",result);
    printf("the count = %s, the buff is %s",buf,buff);
    }
   /* Start engine. */
