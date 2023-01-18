@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
    //buff = fgets(buf,1000,(FILE *)fp);
     result = expr(buf,success);
     if(result == atoi(buff) && count >=0){
-      printf("%dst test pass!\n",i);
+      printf("%dst test pass!\n",i+1);
     }
     else printf("test fail!\n");
   //printf("the result = %ld, count = %d\n",result,count);
