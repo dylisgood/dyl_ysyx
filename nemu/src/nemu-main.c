@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
   // char* success = false;
    FILE *fp = fopen("/home/ysyx/ysyx-workbench/nemu/tools/gen-expr/input","r");
    
-   for(int i=0; i < 2; i++){
+   for(int i=0; i < 1; i++){
    count = fscanf(fp,"%s",buf);
    printf("the count = %d, the buff = %s",count,buf);
    buff = fgets(buf,1000,(FILE *)fp);
