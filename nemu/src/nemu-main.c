@@ -28,38 +28,39 @@ int main(int argc, char *argv[]) {
 #else
   init_monitor(argc, argv);
 #endif
-  // char buf[1000];
-  // int count;
-  // char buff[1000];
+   char buf_answer[1000];
+   int count;
+  char buf_expr[1000];
    uint32_t result=0;
    bool* success = false;
-   /*FILE *fp = fopen("/home/ysyx/ysyx-workbench/nemu/tools/gen-expr/input","r");
+   FILE *fp = fopen("/home/ysyx/ysyx-workbench/nemu/tools/gen-expr/input","r");
    
    for(int i=0; i < 100; i++){
-   count = fscanf(fp,"%s",buff);
+   count = fscanf(fp,"%s",buf_expr);
   // printf("the count = %d, the buff = %s\n",count,buff);
-   count = fscanf(fp,"%s",buf);
+   count = fscanf(fp,"%s",buf_answer);
   // printf("the buf = %s\n",buf); 
    //buff = fgets(buf,1000,(FILE *)fp);
-    result = expr(buf,success);
-    if(result == atoi(buff) && count !=10000){
+    result = expr(buf_expr,success);
+    if(result == atoi(buf_answer) && count !=10000){
       printf("%dst test pass!\n",i+1);
     }
     else {
-      printf("the expr is %s\n",buf);
-      printf("%dst test fail!\nthe result= %d, the answer = %d\n",i+1,result,atoi(buff));
+      printf("%dst test fail!\n",i+1);
+      printf("the expr is %s\n",buf_expr);
+      printf("your result is %d, the answer is %d\n",result,atoi(buf_answer));
       //assert(0);
     }
   //printf("the result = %ld, count = %d\n",result,count);
    //printf("the count = %s,the buff is%s",buf,buff);
    }
-  */ 
-  
+   
+    /* 
    for(int i=0;i<100;i++){
    result = expr("((9+(((1)*(2)))*(3))-7)",success);
    printf("result = %d\n",result);
    }
-  
+   */
   /* Start engine. */
   engine_start();
 
