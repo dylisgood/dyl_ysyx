@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
    buff = fgets(buf,1000,(FILE *)fp);
    result = expr("4+4\0",success);
    printf("the result = %ld\n",result);
-   printf("the count = %s, the buff is %s",buf,buff);
+   printf("the count = %s,the buff is%s",buf,buff);
    }
   /* Start engine. */
   engine_start();
