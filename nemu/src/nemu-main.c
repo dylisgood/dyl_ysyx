@@ -27,7 +27,11 @@ int main(int argc, char *argv[]) {
 #else
   init_monitor(argc, argv);
 #endif
-   printf("init_monitor");
+   char buf[1000];
+   char* count;
+   FILE *fp = fopen("/home/ysyx/ysyx-workbench/nemu/tools/gen-expr/input","r");
+   count = fgets(buf,1000,(FILE *)fp);
+   printf("the buf = %s, the count = %s\n",buf,count);
   /* Start engine. */
   engine_start();
 
