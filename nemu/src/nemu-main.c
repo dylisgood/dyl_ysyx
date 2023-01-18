@@ -39,14 +39,14 @@ int main(int argc, char *argv[]) {
    count = fscanf(fp,"%s",buff);
   // printf("the count = %d, the buff = %s\n",count,buff);
    count = fscanf(fp,"%s",buf);
-   printf("the buf = %s\n",buf); 
+  // printf("the buf = %s\n",buf); 
    //buff = fgets(buf,1000,(FILE *)fp);
     result = expr(buf,success);
-    if(result == atoi(buff) && count >=0){
+    if(result == atoi(buff) && count !=10000){
       printf("%dst test pass!\n",i+1);
     }
     else {
-      printf("%dst test fail!\n",i+1);
+      printf("%dst test fail! the buf = %s\n",i+1,buf);
       //assert(0);
     }
   //printf("the result = %ld, count = %d\n",result,count);
