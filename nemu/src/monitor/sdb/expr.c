@@ -277,7 +277,7 @@ uint32_t eval(int p,int q){
 
 void init_tokens() {
   for(int i=0; i < numofstr; i++){
-    strcpy(tokens[i].str,"0");
+    strcpy(tokens[i].str," ");
   }
 }
 uint32_t expr(char *e, bool *success) {
