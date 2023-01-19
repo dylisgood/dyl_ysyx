@@ -73,7 +73,7 @@ typedef struct token {
   char str[32];
 } Token;
 
-static Token tokens[128] __attribute__((used)) = {};
+static Token tokens[1000] __attribute__((used)) = {};
 static int nr_token __attribute__((used))  = 0;
 static int numofstr;
 
@@ -275,6 +275,11 @@ uint32_t eval(int p,int q){
 }
 
 
+void init_tokens() {
+  for(int i=0; i < numofstr; i++){
+    strcpy(tokens[i].str,"0");
+  }
+}
 uint32_t expr(char *e, bool *success) {
   if (!make_token(e)) {
     *success = false;
@@ -287,6 +292,7 @@ uint32_t expr(char *e, bool *success) {
   uint32_t result=0;
   if(check_expr(0,numofstr)){
      result = eval(0,numofstr);
+     init_tokens();
 //     printf("result = %d\n ",result);
   }
   else printf("the expr is false\n");
