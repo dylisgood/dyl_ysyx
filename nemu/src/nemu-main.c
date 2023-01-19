@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
 #endif
    uint32_t result=0;
    bool* success = false;
-   /*
+   
   char buf_answer[1000];
   int count;
   char buf_expr[1000];
@@ -56,13 +56,13 @@ int main(int argc, char *argv[]) {
   //printf("the result = %ld, count = %d\n",result,count);
    //printf("the count = %s,the buff is%s",buf,buff);
    }
-  */ 
-     
+   
+  /*/ 
    for(int i=0;i<100;i++){
    result = expr("1+1",success);
    printf("result = %d\n",result);
    }
-   
+   */
   /* Start engine. */
   engine_start();
 
