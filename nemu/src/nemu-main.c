@@ -28,6 +28,7 @@ int main(int argc, char *argv[]) {
 #else
   init_monitor(argc, argv);
 #endif
+/*   //used for test expr
    uint32_t result=0;
    bool* success = false;
    
@@ -57,12 +58,13 @@ int main(int argc, char *argv[]) {
    //printf("the count = %s,the buff is%s",buf,buff);
    }
    
-  /*/ 
+   
    for(int i=0;i<100;i++){
    result = expr("1+1",success);
    printf("result = %d\n",result);
    }
-   */
+   
+  */ 
   /* Start engine. */
   engine_start();
 

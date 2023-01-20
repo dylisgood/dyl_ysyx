@@ -75,10 +75,21 @@ static int cmd_x(char *args) {
     printf("N = %d\n" , N);
     arg = strtok(NULL , "\0");
     bool *success = false;
-    uint32_t addr = expr(arg,success);
-    printf("addr = %d\n",addr);
+    uint64_t addr = expr(arg,success);
+    printf("addr = %ld\n",addr);
  //   for(int i=0; i < N; i++) {
 //    vaddr_read(addr + i,8); }
+  }
+  return 0;
+}
+
+static int cmd_p(char *args){
+  char *arg = strtok(NULL, " ");
+  if(arg == NULL) {printf("please add expr to evalation\n");} 
+  else {
+    bool *success = false;
+    uint64_t value = expr(arg,success);
+    printf("value = %ld\n",value);
   }
   return 0;
 }
@@ -109,6 +120,7 @@ static struct {
   { "si","execute n steps",cmd_si },
   { "info" , "print reg ", cmd_info },
   { "x" , "Scan memory" ,cmd_x}, 
+  { "p", "expr evaluation", cmd_p},
 };
 
 #define NR_CMD ARRLEN(cmd_table)

@@ -240,8 +240,8 @@ int Main_position(int p, int q){
 }
 
 //get expr's result
-uint32_t eval(int p,int q){
-    uint32_t val1,val2;
+uint64_t eval(int p,int q){
+    uint64_t val1,val2;
     char op_type;
     int op;
 //    printf("p=%d,   q=%d\n",p,q);
@@ -280,7 +280,8 @@ void init_tokens() {
     strcpy(tokens[i].str," ");
   }
 }
-uint32_t expr(char *e, bool *success) {
+
+word_t expr(char *e, bool *success) {
   if (!make_token(e)) {
     *success = false;
     return 0;
@@ -289,7 +290,7 @@ uint32_t expr(char *e, bool *success) {
   /* TODO: Insert codes to evaluate the expression. */
   // TODO();
 
-  uint32_t result=0;
+  uint64_t result=0;
   if(check_expr(0,numofstr)){
      result = eval(0,numofstr);
      init_tokens();
