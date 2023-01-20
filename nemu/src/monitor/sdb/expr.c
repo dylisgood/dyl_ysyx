@@ -150,6 +150,10 @@ static bool make_token(char *e) {
                       tokens[j].type = rules[i].token_type;
                       strncat(tokens[j].str,substr_start,1);
                       break;
+          case TK_EQ:
+                      if(NUM_FLAG){j++; NUM_FLAG = 0;}
+                      tokens[j].type = rules[i].token_type;
+                      break;
           default: printf("unknown operator!\n"); break;
       }
 
