@@ -84,7 +84,7 @@ static int cmd_x(char *args) {
 }
 
 static int cmd_p(char *args){
-  char *arg = strtok(NULL, " ");
+  char *arg = strtok(NULL, "\0");
   if(arg == NULL) {printf("please add expr to evalation\n");} 
   else {
     bool *success = false;
