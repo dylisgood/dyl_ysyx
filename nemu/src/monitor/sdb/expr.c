@@ -150,7 +150,7 @@ static bool make_token(char *e) {
                       if(NUM_FLAG){j++; NUM_FLAG = 0;HEX_NUM_FLAG =0;} 
                       printf("i enter case\n");
                       tokens[j].type = rules[i].token_type; 
-                      j++; 
+                      if(e[position] != '\0') {j++;} 
                       break;
           case NUM:
                       printf("I enter NUM\n");
