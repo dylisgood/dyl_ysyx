@@ -133,7 +133,7 @@ static bool make_token(char *e) {
              NUM_FLAG = 1;
         }
 */     
-
+         printf("rules[%d].token_type = %d\n",i,tokens[i].type);
         switch (rules[i].token_type) {
          // case '+':
          // case '-':
