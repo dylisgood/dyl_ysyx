@@ -44,11 +44,12 @@ static struct rule {
   {"==", TK_EQ},        // equal
   {"\\(", '('},
   {"\\)", ')'},
+  {"0x", HEX_NUM},
   {"[0-9]",NUM},
   {"!=", TK_UNIEQ},
   {"&&", '&'},
   {"\\$",TK_REG},
-  {"0x", HEX_NUM},
+  
 };
 
 #define NR_REGEX ARRLEN(rules)
