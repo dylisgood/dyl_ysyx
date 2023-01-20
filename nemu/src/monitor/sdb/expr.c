@@ -141,7 +141,6 @@ static bool make_token(char *e) {
           default: printf("unknown operator!\n"); break;
       }
 
-        break;
       }
     }
 
