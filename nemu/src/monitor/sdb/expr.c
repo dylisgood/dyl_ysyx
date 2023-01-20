@@ -133,12 +133,17 @@ static bool make_token(char *e) {
              NUM_FLAG = 1;
         }
 */     
-         printf("rules[%d].token_type = %d\n",i,rules[i].token_type);
+        
         switch (rules[i].token_type) {
          // case '+':
-         // case '-':
-         // case '*':
-          case '+': if(NUM_FLAG){j++; NUM_FLAG = 0;} printf("i enter case\n");tokens[j].type = rules[i].token_type; j++; break;
+          case '-':
+          case '*':
+          case '+': 
+                      if(NUM_FLAG){j++; NUM_FLAG = 0;} 
+                      printf("i enter case\n");
+                      tokens[j].type = rules[i].token_type; 
+                      j++; 
+                      break;
           case NUM:
                       printf("I enter NUM\n");
                       NUM_FLAG = 1;
