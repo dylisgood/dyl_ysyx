@@ -94,6 +94,7 @@ static bool make_token(char *e) {
     for (i = 0; i < NR_REGEX; i ++) {
       if (regexec(&re[i], e + position, 1, &pmatch, 0) == 0 && pmatch.rm_so == 0) {
         char *substr_start = e + position;
+        printf("I enter if\n");
         int substr_len = pmatch.rm_eo;
         //char *substr_num;
 
