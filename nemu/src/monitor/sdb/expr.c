@@ -153,7 +153,9 @@ static bool make_token(char *e) {
                       break;
           case TK_EQ:
                       if(NUM_FLAG){j++; NUM_FLAG = 0;}
+                      printf("I enter case TK_EQ\n");
                       tokens[j].type = rules[i].token_type;
+                      j++;
                       break;
           default: printf("unknown operator!\n"); break;
       }
