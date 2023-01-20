@@ -83,8 +83,8 @@ static bool make_token(char *e) {
   regmatch_t pmatch;
   int j=0;
   nr_token = 0;
-  int  NUM_number = 0;
-  int  NUM_FLAG = 0;
+ // int  NUM_number = 0;
+ // int  NUM_FLAG = 0;
   while (e[position] != '\0') {
     /* Try all rules one by one. */
     for (i = 0; i < NR_REGEX; i ++) {;
@@ -93,16 +93,16 @@ static bool make_token(char *e) {
         int substr_len = pmatch.rm_eo;
         char *substr_num;
 
-       // Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
-       //     i, rules[i].regex, position, substr_len, substr_len, substr_start);
+        Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
+           i, rules[i].regex, position, substr_len, substr_len, substr_start);
         position += substr_len;
-        printf("substr_len = %d\n",substr_len);
+       // printf("substr_len = %d\n",substr_len);
 
         /* TODO: Now a new token is recognized with rules[i]. Add codes
          * to record the token in the array `tokens'. For certain types
          * of tokens, some extra actions should be performed.
          */
- 
+/* 
         if(rules[i].token_type != NUM ){  
             if(NUM_FLAG == 1){ 
                strncpy(tokens[j-1].str,substr_num,NUM_number);
@@ -128,10 +128,19 @@ static bool make_token(char *e) {
              NUM_number ++;
              NUM_FLAG = 1;
         }
-     
-//        switch (rules[i].token_type) {
-//          default: TODO();
-//      }
+*/     
+        switch (rules[i].token_type) {
+          case '+':
+          case '-':
+          case '*':
+          case '/': tokens[j].type = rules[i].token_type; j++; break;
+          case NUM:
+                      tokens[j].type = rules[i].token_type;
+                      strncat(tokens[j].str,substr_num,1);
+                      if(rules[i+1].token_type != NUM) {j++;}
+                      break;
+          default: printf("unknown operator!\n"); break;
+      }
 
         break;
       }
