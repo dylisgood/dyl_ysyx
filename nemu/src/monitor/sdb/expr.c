@@ -96,6 +96,7 @@ static bool make_token(char *e) {
        // Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
        //     i, rules[i].regex, position, substr_len, substr_len, substr_start);
         position += substr_len;
+        printf("substr_len = %d\n",substr_len);
 
         /* TODO: Now a new token is recognized with rules[i]. Add codes
          * to record the token in the array `tokens'. For certain types
@@ -289,7 +290,7 @@ word_t expr(char *e, bool *success) {
 
   /* TODO: Insert codes to evaluate the expression. */
   // TODO();
-
+/*
   uint64_t result=0;
   if(check_expr(0,numofstr)){
      result = eval(0,numofstr);
@@ -297,6 +298,6 @@ word_t expr(char *e, bool *success) {
 //     printf("result = %d\n ",result);
   }
   else printf("the expr is false\n");
-  
-  return result;
+*/  
+  return 0;
 }
