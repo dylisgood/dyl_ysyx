@@ -84,7 +84,7 @@ static bool make_token(char *e) {
   int j=0;
   nr_token = 0;
  // int  NUM_number = 0;
- // int  NUM_FLAG = 0;
+  int  NUM_FLAG = 0;
   while (e[position] != '\0') {
     /* Try all rules one by one. */
     for (i = 0; i < NR_REGEX; i ++) {
@@ -133,8 +133,9 @@ static bool make_token(char *e) {
           case '+':
           case '-':
           case '*':
-          case '/': tokens[j].type = rules[i].token_type; j++; break;
+          case '/': if(NUM_FLAG){j++; NUM_FLAG = 0;} tokens[j].type = rules[i].token_type; j++; break;
           case NUM:
+                      NUM_FLAG = 1;
                       tokens[j].type = rules[i].token_type;
                       strncat(tokens[j].str,substr_num,1);
                       break;
