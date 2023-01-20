@@ -46,6 +46,7 @@ static struct rule {
   {"\\)", ')'},
   {"[0-9]",NUM},
   {"!=", TK_UNIEQ},
+  {"&&", '&'}
 };
 
 #define NR_REGEX ARRLEN(rules)
@@ -164,6 +165,11 @@ static bool make_token(char *e) {
                       tokens[j].type = rules[i].token_type;
                       j++;
                       break;
+          case '&':
+                    if(NUM_FLAG) {j++; NUM_FLAG = 0;};
+                    tokens[j].type = rules[i].token_type;
+                    j++;
+                    break;
           default: printf("unknown operator!\n"); break;
       }
 
