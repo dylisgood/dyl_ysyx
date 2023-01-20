@@ -181,6 +181,7 @@ static bool make_token(char *e) {
                     HEX_NUM_FLAG = 1;
                     strncat(tokens[j].str,substr_start,2);
                     break;
+          case TK_NOTYPE:break;
           default: printf("unknown operator!\n"); break;
       }
 
