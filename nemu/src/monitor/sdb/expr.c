@@ -22,7 +22,7 @@
 
 enum {
   TK_NOTYPE = 256, TK_EQ, NUM,TK_UNIEQ,
-
+  TK_REG,HEX_NUM,
   /* TODO: Add more token types */
 
 };
@@ -46,7 +46,9 @@ static struct rule {
   {"\\)", ')'},
   {"[0-9]",NUM},
   {"!=", TK_UNIEQ},
-  {"&&", '&'}
+  {"&&", '&'},
+  {"\\$",TK_REG},
+  {"0x", HEX_NUM},
 };
 
 #define NR_REGEX ARRLEN(rules)
@@ -87,6 +89,7 @@ static bool make_token(char *e) {
   nr_token = 0;
   //int  NUM_number = 0;
   int  NUM_FLAG = 0;
+  int HEX_NUM_FLAG=0;
   for(int i=0; i < 1000; i++){
     strcpy(tokens[i].str,"\0");
   }
@@ -151,24 +154,30 @@ static bool make_token(char *e) {
           case NUM:
                       printf("I enter NUM\n");
                       NUM_FLAG = 1;
+                      if(!HEX_NUM_FLAG){
                       tokens[j].type = rules[i].token_type;
+                      }
                       strncat(tokens[j].str,substr_start,1);
                       break;
           case TK_EQ:
-                      if(NUM_FLAG){j++; NUM_FLAG = 0;}
+                      if(NUM_FLAG){j++; NUM_FLAG = 0;HEX_NUM_FLAG=0;}
                       printf("I enter case TK_EQ\n");
                       tokens[j].type = rules[i].token_type;
                       j++;
                       break;
           case TK_UNIEQ:
-                      if(NUM_FLAG) {j++; NUM_FLAG = 0;}
+                      if(NUM_FLAG) {j++; NUM_FLAG = 0;HEX_NUM_FLAG=0;}
                       tokens[j].type = rules[i].token_type;
                       j++;
                       break;
           case '&':
-                    if(NUM_FLAG) {j++; NUM_FLAG = 0;};
+                    if(NUM_FLAG) {j++; NUM_FLAG = 0;HEX_NUM_FLAG=0;};
                     tokens[j].type = rules[i].token_type;
                     j++;
+                    break;
+          case HEX_NUM:
+                    HEX_NUM_FLAG = 1;
+                    strncat(tokens[j].str,substr_start,2);
                     break;
           default: printf("unknown operator!\n"); break;
       }
