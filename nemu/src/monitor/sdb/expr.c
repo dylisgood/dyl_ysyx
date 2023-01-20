@@ -176,6 +176,7 @@ static bool make_token(char *e) {
                     j++;
                     break;
           case HEX_NUM:
+                    printf("I enter HEX_NUM\n");
                     HEX_NUM_FLAG = 1;
                     strncat(tokens[j].str,substr_start,2);
                     break;
