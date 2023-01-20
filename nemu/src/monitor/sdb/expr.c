@@ -142,8 +142,6 @@ static bool make_token(char *e) {
                       break;
           default: printf("unknown operator!\n"); break;
       }
-
-      }
     }
 
     if (i == NR_REGEX) {
@@ -156,8 +154,11 @@ static bool make_token(char *e) {
   for(int h = 0;h < j; h++){
        printf("j = %d, type = %d,  str= %s \n", h,tokens[h].type, tokens[h].str); 
      }
+
+  }
   return true;
 }
+
 
 //to check the expr whether valid or not
 //valid ---true    invalid---false
