@@ -87,7 +87,7 @@ static bool make_token(char *e) {
   int  NUM_FLAG = 0;
   while (e[position] != '\0') {
     /* Try all rules one by one. */
-    for (i = 0; i < NR_REGEX; i ++) {
+    for (i = 0; i < NR_REGEX; i ++) {;
       if (regexec(&re[i], e + position, 1, &pmatch, 0) == 0 && pmatch.rm_so == 0) {
         char *substr_start = e + position;
         int substr_len = pmatch.rm_eo;
@@ -144,9 +144,9 @@ static bool make_token(char *e) {
   }
   numofstr = j - 1;
   
-  //for(int h = 0;h < j; h++){
-  //     printf("j = %d, type = %d,  str= %s \n", h,tokens[h].type, tokens[h].str); 
-  //   }
+  for(int h = 0;h < j; h++){
+       printf("j = %d, type = %d,  str= %s \n", h,tokens[h].type, tokens[h].str); 
+     }
   return true;
 }
 
