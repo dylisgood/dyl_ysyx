@@ -87,7 +87,7 @@ static bool make_token(char *e) {
  // int  NUM_FLAG = 0;
   while (e[position] != '\0') {
     /* Try all rules one by one. */
-    for (i = 0; i < NR_REGEX; i ++) {;
+    for (i = 0; i < NR_REGEX; i ++) {
       if (regexec(&re[i], e + position, 1, &pmatch, 0) == 0 && pmatch.rm_so == 0) {
         char *substr_start = e + position;
         int substr_len = pmatch.rm_eo;
@@ -137,7 +137,6 @@ static bool make_token(char *e) {
           case NUM:
                       tokens[j].type = rules[i].token_type;
                       strncat(tokens[j].str,substr_num,1);
-                      if(rules[i+1].token_type != NUM) {j++;}
                       break;
           default: printf("unknown operator!\n"); break;
       }
