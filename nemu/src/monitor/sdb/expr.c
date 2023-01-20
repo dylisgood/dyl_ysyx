@@ -100,7 +100,7 @@ static bool make_token(char *e) {
         Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
            i, rules[i].regex, position, substr_len, substr_len, substr_start);
         position += substr_len;
-        printf("substr_len = %d\n",substr_len);
+        //printf("substr_len = %d\n",substr_len);
 
         /* TODO: Now a new token is recognized with rules[i]. Add codes
          * to record the token in the array `tokens'. For certain types
@@ -153,16 +153,19 @@ static bool make_token(char *e) {
           default: printf("unknown operator!\n"); break;
       }
 */
-    }
+    
 
-    }
+    
     if (i == NR_REGEX) {
       printf("no match at position %d\n%s\n%*.s^\n", position, e, position, "");
       return false;
     }
+
+    }
   } 
+  }
   numofstr = j - 1;
-  
+   
   for(int h = 0;h < j; h++){
        printf("j = %d, type = %d,  str= %s \n", h,tokens[h].type, tokens[h].str); 
      }
