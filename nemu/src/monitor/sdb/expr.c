@@ -83,7 +83,7 @@ static bool make_token(char *e) {
   regmatch_t pmatch;
   int j=0;
   nr_token = 0;
- // int  NUM_number = 0;
+  int  NUM_number = 0;
   int  NUM_FLAG = 0;
   for(int i=0; i < 1000; i++){
     strcpy(tokens[i].str,"\0");
@@ -95,7 +95,7 @@ static bool make_token(char *e) {
       if (regexec(&re[i], e + position, 1, &pmatch, 0) == 0 && pmatch.rm_so == 0) {
         char *substr_start = e + position;
         int substr_len = pmatch.rm_eo;
-       // char *substr_num;
+        char *substr_num;
 
         Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
            i, rules[i].regex, position, substr_len, substr_len, substr_start);
@@ -106,7 +106,7 @@ static bool make_token(char *e) {
          * to record the token in the array `tokens'. For certain types
          * of tokens, some extra actions should be performed.
          */
-/* 
+ 
         if(rules[i].token_type != NUM ){  
             if(NUM_FLAG == 1){ 
                strncpy(tokens[j-1].str,substr_num,NUM_number);
@@ -132,8 +132,8 @@ static bool make_token(char *e) {
              NUM_number ++;
              NUM_FLAG = 1;
         }
-*/     
-        
+     
+/*      
         switch (rules[i].token_type) {
          // case '+':
           case '-':
@@ -152,6 +152,7 @@ static bool make_token(char *e) {
                       break;
           default: printf("unknown operator!\n"); break;
       }
+*/
     }
 
     }
