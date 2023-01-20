@@ -129,6 +129,7 @@ static bool make_token(char *e) {
              NUM_FLAG = 1;
         }
 */     
+
         switch (rules[i].token_type) {
           case '+':
           case '-':
