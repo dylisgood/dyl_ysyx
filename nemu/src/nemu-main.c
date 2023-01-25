@@ -20,6 +20,7 @@ void am_init_monitor();
 void engine_start();
 uint32_t expr(char *e, bool *success);
 word_t isa_reg_str2val(const char *s, bool *success);
+void isa_reg_display(void);
 int is_exit_status_bad();
 
 int main(int argc, char *argv[]) {
@@ -29,10 +30,11 @@ int main(int argc, char *argv[]) {
 #else
   init_monitor(argc, argv);
 #endif
-    bool *succ = false;
-    word_t reg_value;
-    reg_value = isa_reg_str2val("$0",succ);
-    printf("reg_value = %lx \n",reg_value);
+  //  bool *succ = false;
+  //  word_t reg_value;
+    isa_reg_display();
+   // reg_value = isa_reg_str2val("$0",succ);
+   // printf("reg_value = %lx \n",reg_value);
 /*   //used for test expr
    uint32_t result=0;
    bool* success = false;
