@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
     bool *succ = false;
     word_t reg_value;
     //isa_reg_display();
-    reg_value = isa_reg_str2val("t1",succ);
+    reg_value = isa_reg_str2val("dd1",succ);
     printf("reg_value = %lx \n",reg_value);
 /*   //used for test expr
    uint32_t result=0;
