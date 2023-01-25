@@ -30,11 +30,11 @@ int main(int argc, char *argv[]) {
 #else
   init_monitor(argc, argv);
 #endif
-  //  bool *succ = false;
-  //  word_t reg_value;
-    isa_reg_display();
-   // reg_value = isa_reg_str2val("$0",succ);
-   // printf("reg_value = %lx \n",reg_value);
+    bool *succ = false;
+    word_t reg_value;
+    //isa_reg_display();
+    reg_value = isa_reg_str2val("$0",succ);
+    printf("reg_value = %lx \n",reg_value);
 /*   //used for test expr
    uint32_t result=0;
    bool* success = false;
