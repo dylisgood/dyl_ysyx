@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
 #endif
     bool *succ = false;
     word_t reg_value;
-    //isa_reg_display();
+    isa_reg_display();
     reg_value = isa_reg_str2val("dd1",succ);
     printf("reg_value = %ld \n",reg_value);
 /*   //used for test expr
