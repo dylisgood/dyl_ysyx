@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
 #else
   init_monitor(argc, argv);
 #endif
-/*
+/*  used for test reg
     bool *succ = false;
     word_t reg_value;
     isa_reg_display();
