@@ -158,7 +158,7 @@ static bool make_token(char *e) {
                       if(!HEX_NUM_FLAG){
                       tokens[j].type = rules[i].token_type;
                       }
-                      strcpy(tokens[j].str,substr_start);
+                      strncat(tokens[j].str,substr_start,substr_len);
                       break;
           case TK_EQ:
                       if(NUM_FLAG){j++; NUM_FLAG = 0;HEX_NUM_FLAG=0;}
