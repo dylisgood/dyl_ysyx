@@ -149,12 +149,13 @@ static bool make_token(char *e) {
           case ')':
                       printf("i enter casei +\n");
                       tokens[j].type = rules[i].token_type; 
-                      if(e[position] != '\0') {j++;} 
+                      j++;
                       break;
           case NUM:
                       printf("I enter NUM\n");
                       tokens[j].type = rules[i].token_type;
                       strncat(tokens[j].str,substr_start,substr_len);
+                      j++;
                       break;
           case TK_EQ:
                       printf("I enter case TK_EQ\n");
@@ -172,6 +173,7 @@ static bool make_token(char *e) {
           case HEX_NUM:
                     printf("I enter HEX_NUM\n");
                     strncat(tokens[j].str,substr_start,substr_len);
+                    j++;
                     break;
           case '$':break;
           case TK_NOTYPE:break;
