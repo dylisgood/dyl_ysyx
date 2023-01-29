@@ -44,7 +44,7 @@ static struct rule {
   {"==", TK_EQ},        // equal
   {"\\(", '('},
   {"\\)", ')'},
-  {"0x", HEX_NUM},
+  {"0x[0-9]*", HEX_NUM},
   {"[0-9]*",NUM},
   {"!=", TK_UNIEQ},
   {"&&", '&'},
@@ -89,8 +89,8 @@ static bool make_token(char *e) {
   int j=0;
   nr_token = 0;
   //int  NUM_number = 0;
-  int  NUM_FLAG = 0;
-  int HEX_NUM_FLAG=0;
+ // int  NUM_FLAG = 0;
+ // int HEX_NUM_FLAG=0;
   for(int i=0; i < 1000; i++){
     strcpy(tokens[i].str,"\0");
   }
@@ -147,39 +147,31 @@ static bool make_token(char *e) {
           case '/': 
           case '(':
           case ')':
-                      if(NUM_FLAG){j++; NUM_FLAG = 0;HEX_NUM_FLAG =0;} 
-                      printf("i enter case\n");
+                      printf("i enter casei +\n");
                       tokens[j].type = rules[i].token_type; 
                       if(e[position] != '\0') {j++;} 
                       break;
           case NUM:
                       printf("I enter NUM\n");
-                      NUM_FLAG = 1;
-                      if(!HEX_NUM_FLAG){
                       tokens[j].type = rules[i].token_type;
-                      }
                       strncat(tokens[j].str,substr_start,substr_len);
                       break;
           case TK_EQ:
-                      if(NUM_FLAG){j++; NUM_FLAG = 0;HEX_NUM_FLAG=0;}
                       printf("I enter case TK_EQ\n");
                       tokens[j].type = rules[i].token_type;
                       j++;
                       break;
           case TK_UNIEQ:
-                      if(NUM_FLAG) {j++; NUM_FLAG = 0;HEX_NUM_FLAG=0;}
                       tokens[j].type = rules[i].token_type;
                       j++;
                       break;
           case '&':
-                    if(NUM_FLAG) {j++; NUM_FLAG = 0;HEX_NUM_FLAG=0;};
                     tokens[j].type = rules[i].token_type;
                     j++;
                     break;
           case HEX_NUM:
                     printf("I enter HEX_NUM\n");
-                    HEX_NUM_FLAG = 1;
-                    strncat(tokens[j].str,substr_start,2);
+                    strncat(tokens[j].str,substr_start,substr_len);
                     break;
           case '$':break;
           case TK_NOTYPE:break;
