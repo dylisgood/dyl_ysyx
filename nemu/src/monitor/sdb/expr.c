@@ -147,7 +147,7 @@ static bool make_token(char *e) {
           case '/': 
           case '(':
           case ')':
-                      printf("i enter casei +\n");
+                      printf("i enter case +-*/\n");
                       tokens[j].type = rules[i].token_type; 
                       j++;
                       break;
