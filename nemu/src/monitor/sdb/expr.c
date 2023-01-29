@@ -173,10 +173,14 @@ static bool make_token(char *e) {
                     break;
           case HEX_NUM:
                     printf("I enter HEX_NUM\n");
+                    tokens[j].type = rules[i].token_type;
                     strncat(tokens[j].str,substr_start,substr_len);
                     j++;
                     break;
-          case '$':break;
+          case TK_REG:
+                    tokens[j].type = rules[i].token_type;
+                    strncpy(tokens[j].str,substr_start,substr_len);
+                    break;
           case TK_NOTYPE:break;
           default: printf("unknown operator!\n"); break;
       }
