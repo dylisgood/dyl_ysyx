@@ -48,7 +48,7 @@ static struct rule {
   {"[0-9][0-9]*",NUM},
   {"!=", TK_UNIEQ},
   {"&&", '&'},
-  {"\\$.\\{2,3\\}",TK_REG},
+  {"\\$t\\{2,3\\}",TK_REG},
   
 };
 
@@ -179,6 +179,7 @@ static bool make_token(char *e) {
           case TK_REG:
                     tokens[j].type = rules[i].token_type;
                     strncpy(tokens[j].str,substr_start,substr_len);
+                    j++;
                     break;
           case TK_NOTYPE:break;
           default: printf("unknown operator!\n"); break;
