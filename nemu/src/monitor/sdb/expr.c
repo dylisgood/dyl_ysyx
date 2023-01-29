@@ -189,9 +189,9 @@ static bool make_token(char *e) {
     }
     } 
   }
-   numofstr = j;
+   numofstr = j -1;
    
-  for(int h = 0;h <= j; h++){
+  for(int h = 0;h < j; h++){
        printf("j = %d, type = %d,  str= %s \n", h,tokens[h].type, tokens[h].str); 
      }
 
