@@ -368,7 +368,7 @@ word_t expr(char *e, bool *success) {
  
   uint64_t result=0;
   if(check_expr(0,nr_token)){
-     result = eval(0,nr_token);
+   //  result = eval(0,nr_token);
      init_tokens();
      //printf("result = %d\n ",result);
   }
