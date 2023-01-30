@@ -76,6 +76,7 @@ void init_regex() {
 typedef struct token {
   int type;
   char str[32];
+  char* st;
 } Token;
 
 static Token tokens[1000] __attribute__((used)) = {};
@@ -175,7 +176,7 @@ static bool make_token(char *e) {
                     break;
           case TK_REG:
                     tokens[j].type = rules[i].token_type;
-                    strncpy(tokens[j].str,substr_start+1,substr_len-1);
+                    strncpy(tokens[j].st,substr_start+1,substr_len-1);
                     j++;
                     break;
           case TK_NOTYPE:break;
@@ -309,7 +310,7 @@ uint64_t eval(int p,int q){
       else if(tokens[p].type == TK_REG)
       {
         printf("tokens[p].str =%s\n",tokens[p].str);
-        return isa_reg_str2val(tokens[p].str,succ);
+        return isa_reg_str2val(tokens[p].st,succ);
       }        
       else 
       {return atoi(tokens[p].str);}
