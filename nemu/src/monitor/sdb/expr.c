@@ -332,10 +332,12 @@ void tokens_handle() {     //become reg and pointer to num
       tokens[i].type = DEREF;
     }
    }
+
    for(int i=0; i <= nr_token; i++){
     if(tokens[i].type == '-' && ((i == 0) || check_op(i-1))){
-      tokens[i+1].type = NEG_NUM;
-      for(int x=i;i < nr_token; x++){
+      tokens[i].type = NEG_NUM;
+      strcpy(tokens[i].str,tokens[i+1].str);
+      for(int x=i+1;i < nr_token; x++){
         tokens[x].type = tokens[x+1].type;
         strcpy(tokens[x].str,tokens[x+1].str);
       }
