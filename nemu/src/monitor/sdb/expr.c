@@ -307,7 +307,10 @@ uint64_t eval(int p,int q){
       if(tokens[p].type == NEG_NUM)
       {return -(atoi(tokens[p].str));}
       else if(tokens[p].type == TK_REG)
-      {return isa_reg_str2val(tokens[p].str,s);}
+      {
+        printf("tokens[p].str = %s\n",tokens[p].str);
+        return isa_reg_str2val(tokens[p].str,s);
+      }        
       else 
       {return atoi(tokens[p].str);}
     }
