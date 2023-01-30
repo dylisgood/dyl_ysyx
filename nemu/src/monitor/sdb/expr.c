@@ -345,6 +345,11 @@ void tokens_handle() {     //become reg and pointer to num
       nr_token --;
     }
    }
+    
+    for(int i=0;i <= nr_token;i++){
+    printf("after handle:  j = %d, type = %d,  str= %s \n", i,tokens[i].type, tokens[i].str); 
+  }
+
 }
 
 void init_tokens() {
@@ -360,9 +365,7 @@ word_t expr(char *e, bool *success) {
   }
 
   tokens_handle();
-  for(int i=0;i <= nr_token;i++){
-    printf("after handle:  j = %d, type = %d,  str= %s \n", i,tokens[i].type, tokens[i].str); 
-  }
+ 
   uint64_t result=0;
   if(check_expr(0,nr_token)){
      result = eval(0,nr_token);
