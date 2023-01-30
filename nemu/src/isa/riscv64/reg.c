@@ -34,7 +34,7 @@ word_t isa_reg_str2val(const char *s, bool *success) {
   for(int i=0; i < 32; i++){
      
     printf("reg_name = %s, s=%s\n",reg_name(i,64),s);
-    if(reg_name(i,64) == s) {return gpr(i);}
+    if(s == reg_name(i,64)) {return gpr(i);}
   }
   return 404;
 }
