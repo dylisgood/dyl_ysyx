@@ -22,7 +22,7 @@
 
 enum {
   TK_NOTYPE = 256, TK_EQ, NUM,TK_UNIEQ,
-  TK_REG,HEX_NUM,
+  TK_REG,HEX_NUM,NEG_NUM,DEREF,
   /* TODO: Add more token types */
 
 };
@@ -80,7 +80,7 @@ typedef struct token {
 
 static Token tokens[1000] __attribute__((used)) = {};
 static int nr_token __attribute__((used))  = 0;
-static int numofstr;
+//static int numofstr;
 
 static bool make_token(char *e) {
   int position = 0;
@@ -88,9 +88,6 @@ static bool make_token(char *e) {
   regmatch_t pmatch;
   int j=0;
   nr_token = 0;
-  //int  NUM_number = 0;
- // int  NUM_FLAG = 0;
- // int HEX_NUM_FLAG=0;
   for(int i=0; i < 1000; i++){
     strcpy(tokens[i].str,"\0");
   }
@@ -194,7 +191,7 @@ static bool make_token(char *e) {
     }
     } 
   }
-   numofstr = j -1;
+   nr_token = j -1;
    
   for(int h = 0;h < j; h++){
        printf("j = %d, type = %d,  str= %s \n", h,tokens[h].type, tokens[h].str); 
@@ -329,10 +326,26 @@ uint64_t eval(int p,int q){
     }
 
 }
-
+void tokens_handle() {     //become reg and pointer to num
+   for(int i=0;i<=nr_token;i++){
+    if(tokens[i].type == '*' && ((i == 0) || check_op(i-1))){
+      tokens[i].type = DEREF;
+    }
+   }
+   for(int i=0; i <= nr_token; i++){
+    if(tokens[i].type == '-' && ((i == 0) || check_op(i-1))){
+      tokens[i+1].type = NEG_NUM;
+      for(int x=i;i < nr_token; x++){
+        tokens[x].type = tokens[x+1].type;
+        strcpy(tokens[x].str,tokens[x+1].str);
+      }
+      nr_token --;
+    }
+   }
+}
 
 void init_tokens() {
-  for(int i=0; i <= numofstr; i++){
+  for(int i=0; i <= nr_token; i++){
     strcpy(tokens[i].str," ");
   }
 }
@@ -343,12 +356,13 @@ word_t expr(char *e, bool *success) {
     return 0;
   }
 
-  /* TODO: Insert codes to evaluate the expression. */
-  // TODO();
-
+  tokens_handle();
+  for(int i=0;i<nr_token;i++){
+    printf("j = %d, type = %d,  str= %s \n", i,tokens[i].type, tokens[i].str); 
+  }
   uint64_t result=0;
-  if(check_expr(0,numofstr)){
-     result = eval(0,numofstr);
+  if(check_expr(0,nr_token)){
+     result = eval(0,nr_token);
      init_tokens();
      //printf("result = %d\n ",result);
   }
