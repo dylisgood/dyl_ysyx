@@ -338,10 +338,10 @@ void tokens_handle() {     //become reg and pointer to num
       printf("I find negative num at %d\n",i);
      // tokens[i].type = NEG_NUM;
      // strcpy(tokens[i].str,tokens[i+1].str);
-      for(int x=i+1;i < nr_token; x++){
-        tokens[x].type = tokens[x+1].type;
+     // for(int x=i+1;i < nr_token; x++){
+     //   tokens[x].type = tokens[x+1].type;
       //  strcpy(tokens[x].str,tokens[x+1].str);
-      }
+      //}
       nr_token --;
     }
    }
@@ -368,7 +368,7 @@ word_t expr(char *e, bool *success) {
  
   uint64_t result=0;
   if(check_expr(0,nr_token)){
-   //  result = eval(0,nr_token);
+     result = eval(0,nr_token);
      init_tokens();
      //printf("result = %d\n ",result);
   }
