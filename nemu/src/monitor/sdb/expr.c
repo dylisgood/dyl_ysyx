@@ -297,7 +297,7 @@ uint64_t eval(int p,int q){
     uint64_t val1,val2;
     char op_type;
     int op;
-    bool *s = false;
+    bool *succ = false;
 //    printf("p=%d,   q=%d\n",p,q);
     if(p > q){
       printf("bad expression! \n");
@@ -309,7 +309,7 @@ uint64_t eval(int p,int q){
       else if(tokens[p].type == TK_REG)
       {
         printf("tokens[p].str =%s\n",tokens[p].str);
-        return isa_reg_str2val(tokens[p].str,s);
+        return isa_reg_str2val(tokens[p].str,succ);
       }        
       else 
       {return atoi(tokens[p].str);}
