@@ -309,8 +309,7 @@ uint64_t eval(int p,int q){
       else if(tokens[p].type == TK_REG)
       {
         printf("tokens[p].str = %s\n",tokens[p].str);
-        char *str1 = tokens[p].str;
-        return isa_reg_str2val(str1,s);
+        return isa_reg_str2val("t0",s);
       }        
       else 
       {return atoi(tokens[p].str);}
