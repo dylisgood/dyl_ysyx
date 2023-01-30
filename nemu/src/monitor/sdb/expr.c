@@ -357,7 +357,7 @@ word_t expr(char *e, bool *success) {
   }
 
   tokens_handle();
-  for(int i=0;i<nr_token;i++){
+  for(int i=0;i <= nr_token;i++){
     printf("j = %d, type = %d,  str= %s \n", i,tokens[i].type, tokens[i].str); 
   }
   uint64_t result=0;
