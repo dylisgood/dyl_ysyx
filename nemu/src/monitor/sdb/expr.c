@@ -14,7 +14,7 @@
 ***************************************************************************************/
 
 #include <isa.h>
-
+///#include "local-include/reg.h"
 /* We use the POSIX regex functions to process regular expressions.
  * Type 'man regex' for more information about POSIX regex functions.
  */
@@ -297,6 +297,7 @@ uint64_t eval(int p,int q){
     uint64_t val1,val2;
     char op_type;
     int op;
+    bool *s = false;
 //    printf("p=%d,   q=%d\n",p,q);
     if(p > q){
       printf("bad expression! \n");
@@ -304,9 +305,11 @@ uint64_t eval(int p,int q){
     }
     else if(p == q){
       if(tokens[p].type == NEG_NUM)
-      return -(atoi(tokens[p].str));
+      {return -(atoi(tokens[p].str));}
+      else if(tokens[p].type == TK_REG)
+      {return isa_reg_str2val(tokens[p].str,s);}
       else 
-      return atoi(tokens[p].str);
+      {return atoi(tokens[p].str);}
     }
     else if(check_parentheses(p,q) == true){
       return eval(p + 1, q - 1);
@@ -330,13 +333,14 @@ uint64_t eval(int p,int q){
 
 }
 void tokens_handle() {     //become reg and pointer to num
-   for(int i=0;i<=nr_token;i++){
+   for(int i=0;i <= nr_token;i++){
     if(tokens[i].type == '*' && ((i == 0) || check_op(i-1))){
       tokens[i].type = DEREF;
     }
    }
-
-   for(int i=0; i <= nr_token; i++){
+    
+   //negative num
+   for(int i=0; i <= nr_token; i++)  {
     if(tokens[i].type == '-' && ((i == 0) || check_op(i-1))){
       printf("I find negative num at %d, nr_token = %d\n",i,nr_token);
       tokens[i].type = NEG_NUM;
