@@ -136,7 +136,6 @@ static bool make_token(char *e) {
              NUM_FLAG = 1;
         }
 */     
-     
         switch (rules[i].token_type) {
           case '+':
           case '-':
@@ -335,6 +334,7 @@ uint64_t eval(int p,int q){
 
 }
 void tokens_handle() {     //become reg and pointer to num
+    //pointer 
    for(int i=0;i <= nr_token;i++){
     if(tokens[i].type == '*' && ((i == 0) || check_op(i-1))){
       tokens[i].type = DEREF;
