@@ -60,12 +60,15 @@ void free_wp(WP *wp){
 
 void set_wp(char *arg){
   WP* p_new;
+  WP* PB;
   p_new = new_wp();
   free_ ++;
+  PB = head;
   strcpy(p_new->expr , arg);
-  for(int i = 0; i < NR_WP; i++)
+  while(PB != free_)
   {
-    printf("wp_pool[%d].NO = %d expr = %s\n",i,wp_pool[i].NO,wp_pool[i].expr);
+    printf("PB.NO = %d   PB.expr = %s\n",PB->NO,PB->expr);
+    PB = PB->next;
   }
 }
 
