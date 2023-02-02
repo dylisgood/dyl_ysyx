@@ -86,7 +86,6 @@ void dele_wp(int NO){
    free_wp(wp_pool + NO);
    free_ --;
    if(free_ == wp_pool){
-    printf("sssss\n");
     head = NULL;
    }
    WP* pb;
@@ -100,7 +99,7 @@ void dele_wp(int NO){
    }
    }
    else {
-    printf("There is no watchpoint! \n");
+    printf("You delete all the watchpoint! \n");
    }
   }
 }
