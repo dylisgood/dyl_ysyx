@@ -58,7 +58,7 @@ void set_wp(char *arg){
   strcpy(p_new->expr , arg);
   for(int i = 0; i < NR_WP; i++)
   {
-    printf("wp_pool[i].NO = %d expr = %s",wp_pool[i].NO,wp_pool[i].expr);
+    printf("wp_pool[%d].NO = %d expr = %s\n",i,wp_pool[i].NO,wp_pool[i].expr);
   }
 }
 
