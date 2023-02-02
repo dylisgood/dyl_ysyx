@@ -85,6 +85,7 @@ void dele_wp(int NO){
    while(pb != NULL)
    {
     printf("wp_pool.NO = %d, expr = %s \n",pb->NO,pb->expr);
+    pb = pb->next;
    }
   }
 }
