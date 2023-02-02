@@ -74,8 +74,12 @@ void set_wp(char *arg){
 
 void dele_wp(int NO){
   if(head == NULL){
-    printf("The watchpoint pool is empty!");
-    assert("0");
+    printf("The watchpoint pool is empty!\n");
+    //assert("0");
+  }
+  if(wp_pool + NO > free_)
+  {
+    printf("The watchpoint pool is already empty!\n");
   }
   else
   {
