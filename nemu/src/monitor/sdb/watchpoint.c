@@ -80,9 +80,10 @@ void dele_wp(int NO){
   else
   {
    free_wp(wp_pool + NO);
+   free_ --;
    WP* pb;
    pb = head;
-   while(pb != NULL)
+   while(pb != free_)
    {
     printf("wp_pool.NO = %d, expr = %s \n",pb->NO,pb->expr);
     pb = pb->next;
