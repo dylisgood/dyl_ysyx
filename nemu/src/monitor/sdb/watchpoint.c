@@ -42,19 +42,26 @@ void init_wp_pool() {
 
 //get a idle wacthpoint from free_
 WP* new_wp(){
-  head = free_;
-  free_ ++;
-  return head;
+  if(head == NULL)
+      {head = wp_pool;}
+  return free_;
 }
 
 //return wp to free_
 void free_wp(WP *wp){
-
+   WP* pb;
+   pb = wp;
+   while(pb != free_)
+   {
+    strcpy(pb->expr,(pb+1)->expr);
+    pb = pb->next;
+   }
 }
 
 void set_wp(char *arg){
   WP* p_new;
   p_new = new_wp();
+  free_ ++;
   strcpy(p_new->expr , arg);
   for(int i = 0; i < NR_WP; i++)
   {
@@ -62,7 +69,20 @@ void set_wp(char *arg){
   }
 }
 
-void dele_wp(int n){
-
+void dele_wp(int NO){
+  if(head == NULL){
+    printf("The watchpoint pool is empty!");
+    assert("0");
+  }
+  else
+  {
+   free_wp(wp_pool + NO);
+   WP* pb;
+   pb = head;
+   while(pb != NULL)
+   {
+    printf("wp_pool.NO = %d, expr = %s \n",pb->NO,pb->expr);
+   }
+  }
 }
 
