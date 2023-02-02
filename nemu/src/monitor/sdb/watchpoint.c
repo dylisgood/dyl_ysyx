@@ -42,6 +42,8 @@ void init_wp_pool() {
 
 //get a idle wacthpoint from free_
 WP* new_wp(){
+  head = free_;
+  free_ ++;
   return head;
 }
 
