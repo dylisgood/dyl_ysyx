@@ -112,7 +112,8 @@ static int cmd_d(char *args){
   else
   {
     int wp_num = atoi(arg);
-    dele_wp(wp_num);
+    if(wp_num < 32) {dele_wp(wp_num);}
+    else printf("there is no NO.%d watchpoint!\n",wp_num);
   }
   return 0;
 }

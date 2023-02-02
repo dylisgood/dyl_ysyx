@@ -79,7 +79,7 @@ void dele_wp(int NO){
   }
   else if(wp_pool + NO >= free_)
   {
-    printf("This watchpoint pool is already empty!\n");
+    printf("This watchpoint is not exist!\n");
   }
   else
   {
