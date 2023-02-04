@@ -23,6 +23,7 @@ word_t isa_reg_str2val(const char *s, bool *success);
 void isa_reg_display(void);
 int is_exit_status_bad();
 
+
 int main(int argc, char *argv[]) {
   /* Initialize the monitor. */
 #ifdef CONFIG_TARGET_AM

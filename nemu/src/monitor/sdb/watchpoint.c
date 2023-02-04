@@ -20,15 +20,15 @@
 typedef struct watchpoint {
   int NO;
   char expr[64];
+  int last_value;
+  int cur_value;
   struct watchpoint *next;
-
-  /* TODO: Add more members if necessary */
 
 } WP;
 
+
 static WP wp_pool[NR_WP] = {};
 static WP *head = NULL, *free_ = NULL;
-
 void init_wp_pool() {
   int i;
   for (i = 0; i < NR_WP; i ++) {
@@ -54,6 +54,8 @@ void free_wp(WP *wp){
    while(pb != free_)
    {
     strcpy(pb->expr,(pb+1)->expr);
+    pb->last_value = (pb+1)->last_value;
+    pb->cur_value = (pb+1)->cur_value;
     pb = pb->next;
    }
 }
@@ -67,7 +69,7 @@ void set_wp(char *arg){
   strcpy(p_new->expr , arg);
   while(PB != free_)
   {
-    printf("PB.NO = %d   PB.expr = %s\n",PB->NO,PB->expr);
+    printf("wp_pool.NO = %d   wp_pool.expr = %s\n",PB->NO,PB->expr);
     PB = PB->next;
   }
 }
@@ -94,7 +96,7 @@ void dele_wp(int NO){
    pb = head;
    while(pb != free_)
    {
-    printf("wp_pool.NO = %d, expr = %s \n",pb->NO,pb->expr);
+    printf("wp_pool.NO = %d, wp_pool.expr = %s \n",pb->NO,pb->expr);
     pb = pb->next;
    }
    }
