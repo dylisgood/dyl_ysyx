@@ -67,12 +67,13 @@ void free_wp(WP *wp){
 
 void set_wp(char *arg){
   WP* p_new;
-  WP* PB;
   p_new = new_wp();
+  strcpy(p_new->expr , arg);
+
   if(free_ == wp_pool + 31) {free_ = NULL;}
   else {free_ ++; };
-  PB = head;
-  strcpy(p_new->expr , arg);
+
+  WP *PB = head;
   while(PB != free_)
   {
     printf("wp_pool.NO = %d   wp_pool.expr = %s\n",PB->NO,PB->expr);
