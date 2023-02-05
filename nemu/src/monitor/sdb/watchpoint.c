@@ -69,9 +69,8 @@ void set_wp(char *arg){
   WP* p_new;
   WP* PB;
   p_new = new_wp();
-  if(free_ <= wp_pool + 30) {free_ ++;}
-  else if(free_ == wp_pool + 31) {free_ = NULL;}
-
+  if(free_ == wp_pool + 31) {free_ = NULL;}
+  else {free_ ++; };
   PB = head;
   strcpy(p_new->expr , arg);
   while(PB != free_)
