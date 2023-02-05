@@ -43,7 +43,7 @@ void init_wp_pool() {
 
 //get a idle wacthpoint from free_
 WP* new_wp(){
-   if(head == wp_pool + 31)
+   if(free_ == NULL)
   {
     assert(0);
   }
@@ -75,6 +75,7 @@ void set_wp(char *arg){
   WP* PB;
   p_new = new_wp();
   if(free_ <= wp_pool + 30) {free_ ++;}
+  else if(free_ == wp_pool + 31) {free_ = NULL;}
 
   PB = head;
   strcpy(p_new->expr , arg);
