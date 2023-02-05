@@ -67,7 +67,7 @@ void set_wp(char *arg){
   WP* p_new;
   WP* PB;
   p_new = new_wp();
-  free_ ++;
+  free_ = free_ + 31;
 
   PB = head;
   strcpy(p_new->expr , arg);
