@@ -45,15 +45,10 @@ void init_wp_pool() {
 WP* new_wp(){
    if(free_ == NULL)
   {
+    printf("The wp_pool is full!\n");
     assert(0);
   }
-  if(head == NULL)
-      {head = wp_pool;}
-  if(free_ == wp_pool + 31)
-  {
-    printf("The wp_pool is full! \n");
-  }
-
+  if(head == NULL) {head = wp_pool;}
   return free_;
 }
 
