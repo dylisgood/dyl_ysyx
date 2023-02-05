@@ -45,7 +45,7 @@ void init_wp_pool() {
 WP* new_wp(){
   if(head == NULL)
       {head = wp_pool;}
-  if(free_ > wp_pool + 4)
+  if(free_ > wp_pool + 31)
       {assert(0);}
   return free_;
 }
