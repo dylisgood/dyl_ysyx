@@ -45,6 +45,8 @@ void init_wp_pool() {
 WP* new_wp(){
   if(head == NULL)
       {head = wp_pool;}
+  if(free_ > wp_pool + 4)
+      {assert(0);}
   return free_;
 }
 
@@ -66,6 +68,7 @@ void set_wp(char *arg){
   WP* PB;
   p_new = new_wp();
   free_ ++;
+
   PB = head;
   strcpy(p_new->expr , arg);
   while(PB != free_)
