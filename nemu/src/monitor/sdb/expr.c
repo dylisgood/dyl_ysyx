@@ -80,7 +80,6 @@ typedef struct token {
 
 static Token tokens[1000] __attribute__((used)) = {};
 static int nr_token __attribute__((used))  = 0;
-//static int numofstr;
 
 static bool make_token(char *e) {
   int position = 0;
@@ -98,44 +97,11 @@ static bool make_token(char *e) {
       if (regexec(&re[i], e + position, 1, &pmatch, 0) == 0 && pmatch.rm_so == 0) {
         char *substr_start = e + position;
         int substr_len = pmatch.rm_eo;
-        //char *substr_num;
 
         Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
            i, rules[i].regex, position, substr_len, substr_len, substr_start);
         position += substr_len;
-        //printf("substr_len = %d\n",substr_len);
 
-        /* TODO: Now a new token is recognized with rules[i]. Add codes
-         * to record the token in the array `tokens'. For certain types
-         * of tokens, some extra actions should be performed.
-         */
- /*
-        if(rules[i].token_type != NUM ){  
-            if(NUM_FLAG == 1){ 
-               strncpy(tokens[j-1].str,substr_num,NUM_number);
-               tokens[j-1].type = NUM;
-               NUM_FLAG = 0;
-               NUM_number =0;
-              }
-           
-           tokens[j].type = rules[i].token_type;
-           if(rules[i].token_type != TK_NOTYPE) { j++; }
-        }
-        else if(rules[i].token_type == NUM || e[position] == '\0')
-        { 
-            if(!NUM_FLAG && rules[i].token_type == NUM) { substr_num = substr_start; j++; }  
-            if(e[position] == '\0' && rules[i].token_type == NUM ) {
-                 strcpy(tokens[j-1].str,substr_num);
-                 tokens[j-1].type = NUM;
-               //  printf("i reach the last bit of expr\n");
-              }
-            else if((e[position] == '\0') &&(rules[i].token_type != NUM)) {
-                tokens[j].type = rules[i].token_type;
-               } 
-             NUM_number ++;
-             NUM_FLAG = 1;
-        }
-*/     
         switch (rules[i].token_type) {
           case '+':
           case '-':
@@ -143,18 +109,15 @@ static bool make_token(char *e) {
           case '/': 
           case '(':
           case ')':
-                      printf("i enter case +-*/\n");
                       tokens[j].type = rules[i].token_type; 
                       j++;
                       break;
           case NUM:
-                      printf("I enter NUM\n");
                       tokens[j].type = rules[i].token_type;
                       strncat(tokens[j].str,substr_start,substr_len);
                       j++;
                       break;
           case TK_EQ:
-                      printf("I enter case TK_EQ\n");
                       tokens[j].type = rules[i].token_type;
                       j++;
                       break;
@@ -167,7 +130,6 @@ static bool make_token(char *e) {
                     j++;
                     break;
           case HEX_NUM:
-                    printf("I enter HEX_NUM\n");
                     tokens[j].type = rules[i].token_type;
                     strncat(tokens[j].str,substr_start,substr_len);
                     j++;
@@ -194,11 +156,8 @@ static bool make_token(char *e) {
    
   //for(int h = 0;h < j; h++)
   //{ printf("j = %d, type = %d,  str= %s \n", h,tokens[h].type, tokens[h].str); }
-
-  
   return true;
 }
-
 
 //to check the expr whether valid or not
 //valid ---true    invalid---false
