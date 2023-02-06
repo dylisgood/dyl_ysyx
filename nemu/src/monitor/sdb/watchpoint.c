@@ -105,3 +105,18 @@ void dele_wp(int NO){
   }
 }
 
+void wp_detect(){
+  WP  *pb;
+  bool *suc = false;
+  pb = head;
+  while(pb != free_)
+  {
+    pb->cur_value = expr(pb->expr,suc); 
+    if(pb->cur_value != pb->last_value)
+    {
+      nemu_state.state = NEMU_STOP;
+      printf("watchpoint change! \n");
+    }
+    pb->last_value = pb->cur_value;
+  } 
+}
