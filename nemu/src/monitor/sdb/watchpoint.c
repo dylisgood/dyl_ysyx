@@ -67,9 +67,10 @@ void free_wp(WP *wp){
 
 void print_wp(){
   WP *PB = head;
+  bool *su=false;
   while(PB != free_)
   {
-    printf("wp_pool.NO = %d   wp_pool.expr = %s\n",PB->NO,PB->expr);
+    printf("wp_pool.NO = %d   wp_pool.expr = %s wp_pool.value = %ld\n",PB->NO,PB->expr,expr(PB->expr,su));
     PB = PB->next;
   }
 }
@@ -87,7 +88,6 @@ void set_wp(char *arg){
 void dele_wp(int NO){
   if(head == NULL){
     printf("The watchpoint pool is empty!\n");
-    //assert("0");
   }
   else if(wp_pool + NO >= free_)
   {
