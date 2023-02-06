@@ -88,7 +88,7 @@ static int cmd_p(char *args){
   else {
     bool *success = false;
     uint64_t value = expr(arg,success);
-    printf("value = %lx\n",value);
+    printf("value = %ld\n",value);
   }
   return 0;
 }
