@@ -18,7 +18,8 @@
 /* We use the POSIX regex functions to process regular expressions.
  * Type 'man regex' for more information about POSIX regex functions.
  */
-#include<string.h>
+#include <string.h>
+#include <stdlib.h>
 #include <regex.h>
 
 enum {
@@ -132,7 +133,7 @@ static bool make_token(char *e) {
                     break;
           case HEX_NUM:
                     tokens[j].type = rules[i].token_type;
-                    strncpy(tokens[j].str,substr_start+2,substr_len-2);
+                    strncpy(tokens[j].str,substr_start,substr_len);
                     j++;
                     break;
           case TK_REG:
@@ -261,7 +262,6 @@ uint64_t eval(int p,int q){
     char op_type;
     int op;
     bool *succ = false;
-//    printf("p=%d,   q=%d\n",p,q);
     if(p > q){
       printf("bad expression! \n");
       assert(0);
@@ -275,7 +275,9 @@ uint64_t eval(int p,int q){
       }        
       else if(tokens[p].type == HEX_NUM)
       {
-        return 100;
+        uint64_t dec; 
+        sscanf(tokens[p].str,"%lx",&dec);
+        return dec;
       }
       else 
       {return atoi(tokens[p].str);}
