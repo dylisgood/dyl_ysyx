@@ -60,8 +60,10 @@ static int cmd_info(char *args){
   else {
   if( *arg == 'r' ){
    isa_reg_display(); }
-  else if( *arg == 'w'){
-   isa_reg_display(); }
+  else if( *arg == 'w')
+  {
+   print_wp(); 
+  }
   else 
     { printf("Unknown command"); }
   printf("\n");

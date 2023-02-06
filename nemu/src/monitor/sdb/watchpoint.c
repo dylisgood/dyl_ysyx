@@ -70,7 +70,7 @@ void print_wp(){
   bool *su=false;
   while(PB != free_)
   {
-    printf("wp_pool.NO = %d   wp_pool.expr = %s wp_pool.value = %ld\n",PB->NO,PB->expr,expr(PB->expr,su));
+    printf("wp_pool.NO = %d  expr = %s  value = %ld\n",PB->NO,PB->expr,expr(PB->expr,su));
     PB = PB->next;
   }
 }

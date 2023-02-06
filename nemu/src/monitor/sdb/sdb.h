@@ -35,5 +35,6 @@ static WP wp_pool[NR_WP] __attribute__((used))= {};
 static WP *head __attribute__((used))= NULL, *free_ __attribute__((used))= NULL;
 */
 word_t expr(char *e, bool *success);
+void print_wp();
 
 #endif
