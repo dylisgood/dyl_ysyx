@@ -82,7 +82,7 @@ void set_wp(char *arg){
 
   if(free_ == wp_pool + 31) {free_ = NULL;}
   else {free_ ++; };
-  print_wp();
+  //print_wp();
 }
 
 void dele_wp(int NO){
@@ -99,10 +99,9 @@ void dele_wp(int NO){
    free_ --;
    if(free_ == wp_pool){
     head = NULL;
+    printf("You delete all the watchpoint! \n");
    }
-
-   if(head != NULL)  { print_wp(); }
-   else { printf("You delete all the watchpoint! \n");}
+   print_wp();
   }
 }
 
