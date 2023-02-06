@@ -313,19 +313,9 @@ void tokens_handle() {     //become reg and pointer to num
       nr_token --;
     }
    }
-   /* 
-   bool *success = false;
-   for(int i = 0; i <= nr_token; i++){
-    if(tokens[i].type == TK_REG)
-    {
-      tokens[i].type = NUM;
-      strcpy(tokens[i].str ,toa(isa_reg_str2val(tokens[i].str,success)));
-    }
-   }
-   */
    
-  //for(int i=0;i <= nr_token;i++)
-  //{ printf("after handle:  j = %d, type = %d,  str= %s \n", i,tokens[i].type, tokens[i].str); }
+  for(int i=0;i <= nr_token;i++)
+  { printf("after handle:  j = %d, type = %d,  str= %s \n", i,tokens[i].type, tokens[i].str); }
 
 }
 
