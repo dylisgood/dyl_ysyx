@@ -250,6 +250,11 @@ int Main_position(int p, int q){
 
 }
 
+long HexToDec(char *source){
+
+  return 0;
+}
+
 //get expr's result
 uint64_t eval(int p,int q){
     uint64_t val1,val2;
