@@ -57,18 +57,13 @@ static int cmd_si(char *args){
 static int cmd_info(char *args){
   char *arg = strtok(NULL , " ");
   if( arg == NULL) { printf("please choose to print r-regs or w-watchpoints\n"); }
-  else {
-  if( *arg == 'r' ){
-   isa_reg_display(); }
-  else if( *arg == 'w')
-  {
-   print_wp(); 
-  }
   else 
-    { printf("Unknown command"); }
-  printf("\n");
+  {
+    if( *arg == 'r' ){ isa_reg_display(); }
+    else if( *arg == 'w') { print_wp(); }
+    else { printf("Unknown command"); }
   }
-   return 0;
+  return 0;
 }
 
 static int cmd_x(char *args) {
