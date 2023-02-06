@@ -31,6 +31,7 @@ int main(int argc, char *argv[]) {
 #else
   init_monitor(argc, argv);
 #endif
+/*
 // used for test reg
     bool *succ = false;
     char *str2 = "t0";
@@ -38,7 +39,7 @@ int main(int argc, char *argv[]) {
     //isa_reg_display();
     reg_value = isa_reg_str2val(str2,succ);
     printf("reg_value = %ld \n",reg_value);
-
+*/
 /*   //used for test expr
    uint32_t result=0;
    bool* success = false;
