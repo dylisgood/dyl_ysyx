@@ -35,15 +35,8 @@ void device_update();
 
 extern WP* head;
 extern WP* free_;
-static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
-#ifdef CONFIG_ITRACE_COND
-  if (ITRACE_COND) { log_write("%s\n", _this->logbuf); }
-#endif
-  if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
-  IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
 
-  if(CONFIG_WATCHPOINT) {printf("defined watchpoint! \n");}
-
+void wp_detect(){
   WP  *pb;
   bool *suc = false;
   pb = head;
@@ -56,8 +49,19 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
       printf("watchpoint change! \n");
     }
     pb->last_value = pb->cur_value;
-  }   
+  } 
+}
 
+static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
+#ifdef CONFIG_ITRACE_COND
+  if (ITRACE_COND) { log_write("%s\n", _this->logbuf); }
+#endif
+  if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
+  IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
+
+#ifdef CONFIG_WATCHPOINT
+  if(CONFIG_WATCHPOINT) {wp_detect();}
+#endif
 }
 
 static void exec_once(Decode *s, vaddr_t pc) {
