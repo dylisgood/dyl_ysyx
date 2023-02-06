@@ -277,7 +277,6 @@ uint64_t eval(int p,int q){
       {
         uint64_t dec = 0;
         sscanf(tokens[p].str,"%lx",&dec);
-        printf("dec = %ld\n",dec);
         return dec;
       }
       else 
@@ -300,10 +299,9 @@ uint64_t eval(int p,int q){
         case '/':return val1 / val2;
         default: assert(0);
       }
-
     }
-
 }
+
 void tokens_handle() {     //become reg and pointer to num
     //pointer 
    for(int i=0;i <= nr_token;i++){
