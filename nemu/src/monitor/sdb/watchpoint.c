@@ -111,19 +111,22 @@ void dele_wp(int NO){
 void wp_detect(){
   WP  *pb;
   bool *suc = false;
+  static int count =0;
   if(head != NULL) 
   {
     pb = head;
     while(pb != free_)
     {
       pb->cur_value = expr(pb->expr,suc); 
-      if(pb->cur_value != pb->last_value)
+      if(pb->cur_value != pb->last_value && count !=0)
       {
         nemu_state.state = NEMU_STOP;
         printf("watchpoint change! \n");
       }
       pb->last_value = pb->cur_value;
+      pb = pb->next;
     }
+    count ++;
   }
   else printf("There is no watchpoint! \n"); 
 }
