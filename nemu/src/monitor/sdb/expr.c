@@ -132,7 +132,7 @@ static bool make_token(char *e) {
                     break;
           case HEX_NUM:
                     tokens[j].type = rules[i].token_type;
-                    strncat(tokens[j].str,substr_start,substr_len);
+                    strncpy(tokens[j].str,substr_start+2,substr_len-2);
                     j++;
                     break;
           case TK_REG:
