@@ -66,6 +66,7 @@ void free_wp(WP *wp){
 }
 
 void print_wp(){
+  if(head != NULL){
   WP *PB = head;
   bool *su=false;
   while(PB != free_)
@@ -73,6 +74,8 @@ void print_wp(){
     printf("wp_pool.NO = %d  expr = %s  value = %ld\n",PB->NO,PB->expr,expr(PB->expr,su));
     PB = PB->next;
   }
+  }
+  else printf("There is no watchpoint! \n");
 }
 
 void set_wp(char *arg){
