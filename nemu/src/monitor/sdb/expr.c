@@ -192,9 +192,8 @@ static bool make_token(char *e) {
   }
    nr_token = j -1;
    
-  for(int h = 0;h < j; h++){
-       printf("j = %d, type = %d,  str= %s \n", h,tokens[h].type, tokens[h].str); 
-     }
+  //for(int h = 0;h < j; h++)
+  //{ printf("j = %d, type = %d,  str= %s \n", h,tokens[h].type, tokens[h].str); }
 
   
   return true;
@@ -354,10 +353,9 @@ void tokens_handle() {     //become reg and pointer to num
       nr_token --;
     }
    }
-    
-    for(int i=0;i <= nr_token;i++){
-    printf("after handle:  j = %d, type = %d,  str= %s \n", i,tokens[i].type, tokens[i].str); 
-  }
+   
+  //for(int i=0;i <= nr_token;i++)
+  //{ printf("after handle:  j = %d, type = %d,  str= %s \n", i,tokens[i].type, tokens[i].str); }
 
 }
 
