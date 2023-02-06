@@ -215,5 +215,5 @@ choice
   prompt "Watchpoint"
 config CONFIG_WATCHPOINT
   bool "enable watchpoint"
-  default n
+  default y
 endchoice
