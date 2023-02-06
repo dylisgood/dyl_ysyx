@@ -275,8 +275,9 @@ uint64_t eval(int p,int q){
       }        
       else if(tokens[p].type == HEX_NUM)
       {
-        uint64_t dec = 0; 
+        uint64_t dec = 0;
         sscanf(tokens[p].str,"%lx",&dec);
+        printf("dec = %ld\n",dec);
         return dec;
       }
       else 
