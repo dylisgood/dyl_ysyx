@@ -18,22 +18,6 @@
 
 #include <common.h>
 
-
-typedef struct watchpoint {
-  int NO;
-  char expr[64];
-  int last_value;
-  int cur_value;
-  struct watchpoint *next;
-
-
-} WP;
-//WP* head = NULL;
-//WP* free_ = NULL;
-/*
-static WP wp_pool[NR_WP] __attribute__((used))= {};
-static WP *head __attribute__((used))= NULL, *free_ __attribute__((used))= NULL;
-*/
 word_t expr(char *e, bool *success);
 void print_wp();
 void wp_detect();
