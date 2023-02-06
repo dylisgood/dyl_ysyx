@@ -101,7 +101,7 @@ void dele_wp(int NO){
     head = NULL;
     printf("You delete all the watchpoint! \n");
    }
-   print_wp();
+   if(head != NULL )print_wp();
   }
 }
 
