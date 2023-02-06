@@ -14,7 +14,7 @@
 ***************************************************************************************/
 
 #include <isa.h>
-///#include "local-include/reg.h"
+//#include "local-include/reg.h"
 /* We use the POSIX regex functions to process regular expressions.
  * Type 'man regex' for more information about POSIX regex functions.
  */
@@ -255,7 +255,7 @@ uint64_t eval(int p,int q){
     uint64_t val1,val2;
     char op_type;
     int op;
-    //bool *succ = false;
+    bool *succ = false;
 //    printf("p=%d,   q=%d\n",p,q);
     if(p > q){
       printf("bad expression! \n");
@@ -266,8 +266,8 @@ uint64_t eval(int p,int q){
       {return -(atoi(tokens[p].str));}
       else if(tokens[p].type == TK_REG)
       {
-        //return isa_reg_str2val("t0",succ);
-        return 10;
+        return isa_reg_str2val("t0",succ);
+       // return 10;
       }        
       else 
       {return atoi(tokens[p].str);}
