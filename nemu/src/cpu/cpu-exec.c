@@ -33,25 +33,6 @@ static bool g_print_step = false;
 
 void device_update();
 
-extern WP* head;
-extern WP* free_;
-
-void wp_detect(){
-  WP  *pb;
-  bool *suc = false;
-  pb = head;
-  while(pb != free_)
-  {
-    pb->cur_value = expr(pb->expr,suc); 
-    if(pb->cur_value != pb->last_value)
-    {
-      nemu_state.state = NEMU_STOP;
-      printf("watchpoint change! \n");
-    }
-    pb->last_value = pb->cur_value;
-  } 
-}
-
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #ifdef CONFIG_ITRACE_COND
   if (ITRACE_COND) { log_write("%s\n", _this->logbuf); }
