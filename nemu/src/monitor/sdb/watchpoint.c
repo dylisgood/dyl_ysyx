@@ -65,6 +65,15 @@ void free_wp(WP *wp){
    }
 }
 
+void print_wp(){
+  WP *PB = head;
+  while(PB != free_)
+  {
+    printf("wp_pool.NO = %d   wp_pool.expr = %s\n",PB->NO,PB->expr);
+    PB = PB->next;
+  }
+}
+
 void set_wp(char *arg){
   WP* p_new;
   p_new = new_wp();
@@ -72,13 +81,7 @@ void set_wp(char *arg){
 
   if(free_ == wp_pool + 31) {free_ = NULL;}
   else {free_ ++; };
-
-  WP *PB = head;
-  while(PB != free_)
-  {
-    printf("wp_pool.NO = %d   wp_pool.expr = %s\n",PB->NO,PB->expr);
-    PB = PB->next;
-  }
+  print_wp();
 }
 
 void dele_wp(int NO){
@@ -97,19 +100,9 @@ void dele_wp(int NO){
    if(free_ == wp_pool){
     head = NULL;
    }
-   WP* pb;
-   if(head != NULL) 
-   { 
-   pb = head;
-   while(pb != free_)
-   {
-    printf("wp_pool.NO = %d, wp_pool.expr = %s \n",pb->NO,pb->expr);
-    pb = pb->next;
-   }
-   }
-   else {
-    printf("You delete all the watchpoint! \n");
-   }
+
+   if(head != NULL)  { print_wp(); }
+   else { printf("You delete all the watchpoint! \n");}
   }
 }
 
