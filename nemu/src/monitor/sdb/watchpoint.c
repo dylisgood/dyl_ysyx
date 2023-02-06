@@ -118,10 +118,11 @@ void wp_detect(){
     while(pb != free_)
     {
       pb->cur_value = expr(pb->expr,suc); 
-      if(pb->cur_value != pb->last_value && count !=0)
+      if(pb->cur_value != pb->last_value && count ==0)
       {
         nemu_state.state = NEMU_STOP;
-        printf("watchpoint change! \n");
+        printf("The NO.%d Watchpoint %s change! \n",pb->NO,pb->expr);
+        printf("Last value = %d , Current value = %d \n",pb->last_value, pb->cur_value);
       }
       pb->last_value = pb->cur_value;
       pb = pb->next;
