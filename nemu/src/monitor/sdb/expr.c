@@ -271,7 +271,7 @@ uint64_t eval(int p,int q){
       {return -(atoi(tokens[p].str));}
       else if(tokens[p].type == TK_REG)
       {
-        return isa_reg_str2val("t0",succ);
+        return isa_reg_str2val(tokens[p].str,succ);
       }        
       else if(tokens[p].type == HEX_NUM)
       {
