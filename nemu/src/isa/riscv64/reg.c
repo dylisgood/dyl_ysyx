@@ -25,10 +25,17 @@ const char *regs[] = {
 
 void isa_reg_display(void) {
   for (int i=0; i < 32; i++){
-  printf("regs[%d] = %x,   ",i,*regs[i]);
+//  printf("regs[%d] = %s \n",i,reg_name(i,64));
+    printf("reg: %s = %lx\n",reg_name(i,64),gpr(i));
 }
 }
 
 word_t isa_reg_str2val(const char *s, bool *success) {
-  return 0;
+  int i;
+  for(i=0; i < 32; i++){
+    if( !strcmp(s ,reg_name(i,64))) { return gpr(i);}
+  }
+  if(i == 32) {printf("unknown reg !\n");}
+  return 404;
 }
+

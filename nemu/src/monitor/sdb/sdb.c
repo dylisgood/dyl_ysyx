@@ -24,6 +24,8 @@ static int is_batch_mode = false;
 
 void init_regex();
 void init_wp_pool();
+void set_wp();
+void dele_wp();
 
 /* We use the `readline' library to provide more flexibility to read from stdin. */
 static char* rl_gets() {
@@ -55,16 +57,13 @@ static int cmd_si(char *args){
 static int cmd_info(char *args){
   char *arg = strtok(NULL , " ");
   if( arg == NULL) { printf("please choose to print r-regs or w-watchpoints\n"); }
-  else {
-  if( *arg == 'r' ){
-   isa_reg_display(); }
-  else if( *arg == 'w'){
-   isa_reg_display(); }
   else 
-    { printf("Unknown command"); }
-  printf("\n");
+  {
+    if( *arg == 'r' ){ isa_reg_display(); }
+    else if( *arg == 'w') { print_wp(); }
+    else { printf("Unknown command\n"); }
   }
-   return 0;
+  return 0;
 }
 
 static int cmd_x(char *args) {
@@ -75,10 +74,43 @@ static int cmd_x(char *args) {
     printf("N = %d\n" , N);
     arg = strtok(NULL , "\0");
     bool *success = false;
-    uint32_t addr = expr(arg,success);
-    printf("addr = %d\n",addr);
- //   for(int i=0; i < N; i++) {
-//    vaddr_read(addr + i,8); }
+    uint64_t addr = expr(arg,success);
+    printf("addr = %ld\n",addr);
+    for(int i=0; i < N; i++) {
+    vaddr_read(addr + i,8); }
+  }
+  return 0;
+}
+
+static int cmd_p(char *args){
+  char *arg = strtok(NULL, "\0");
+  if(arg == NULL) {printf("please add expr to evalation\n");} 
+  else {
+    bool *success = false;
+    uint64_t value = expr(arg,success);
+    printf("value = %ld\n",value);
+  }
+  return 0;
+}
+
+static int cmd_w(char *args){
+  char *arg = strtok(NULL,"\0");
+  if(arg == NULL) {printf("please add watchpoint expression!\n");}
+  else
+  {
+    set_wp(arg);
+  }
+  return 0;
+}
+
+static int cmd_d(char *args){
+  char *arg = strtok(NULL,"\0");
+  if(arg == NULL) {printf("please add the number of watchpoint to delete!\n");}
+  else
+  {
+    int wp_num = atoi(arg);
+    if(wp_num < 32) {dele_wp(wp_num);}
+    else printf("there is no NO.%d watchpoint!\n",wp_num);
   }
   return 0;
 }
@@ -87,7 +119,6 @@ static int cmd_c(char *args) {
   cpu_exec(-1);
   return 0;
 }
-
 
 static int cmd_q(char *args) {
   nemu_state.state = NEMU_QUIT;
@@ -109,6 +140,9 @@ static struct {
   { "si","execute n steps",cmd_si },
   { "info" , "print reg ", cmd_info },
   { "x" , "Scan memory" ,cmd_x}, 
+  { "p", "expr evaluation", cmd_p},
+  { "w", "set watchpoint", cmd_w},
+  { "d", "delete watchpoint", cmd_d},
 };
 
 #define NR_CMD ARRLEN(cmd_table)

@@ -1,4 +1,4 @@
-/***************************************************************************************
+/****************************************************************************************
 * Copyright (c) 2014-2022 Zihao Yu, Nanjing University
 *
 * NEMU is licensed under Mulan PSL v2.
@@ -14,15 +14,17 @@
 ***************************************************************************************/
 
 #include <isa.h>
-
+//#include "local-include/reg.h"
 /* We use the POSIX regex functions to process regular expressions.
  * Type 'man regex' for more information about POSIX regex functions.
  */
+#include <string.h>
+#include <stdlib.h>
 #include <regex.h>
 
 enum {
-  TK_NOTYPE = 256, TK_EQ, NUM,
-
+  TK_NOTYPE = 256, TK_EQ, NUM,TK_UNIEQ,
+  TK_REG,HEX_NUM,NEG_NUM,DEREF,
   /* TODO: Add more token types */
 
 };
@@ -44,7 +46,12 @@ static struct rule {
   {"==", TK_EQ},        // equal
   {"\\(", '('},
   {"\\)", ')'},
-  {"[0-9]",NUM},
+  {"0x[0-9][0-9]*", HEX_NUM},
+  {"[0-9][0-9]*",NUM},
+  {"!=", TK_UNIEQ},
+  {"&&", '&'},
+  {"\\$.{1,3}",TK_REG},
+  
 };
 
 #define NR_REGEX ARRLEN(rules)
@@ -73,9 +80,8 @@ typedef struct token {
   char str[32];
 } Token;
 
-static Token tokens[32] __attribute__((used)) = {};
+static Token tokens[1000] __attribute__((used)) = {};
 static int nr_token __attribute__((used))  = 0;
-static int numofstr;
 
 static bool make_token(char *e) {
   int position = 0;
@@ -83,69 +89,75 @@ static bool make_token(char *e) {
   regmatch_t pmatch;
   int j=0;
   nr_token = 0;
-  int  NUM_number = 0;
-  int  NUM_FLAG = 0;
+  for(int i=0; i < 1000; i++){
+    strcpy(tokens[i].str,"\0");
+  }
+
   while (e[position] != '\0') {
     /* Try all rules one by one. */
     for (i = 0; i < NR_REGEX; i ++) {
       if (regexec(&re[i], e + position, 1, &pmatch, 0) == 0 && pmatch.rm_so == 0) {
         char *substr_start = e + position;
         int substr_len = pmatch.rm_eo;
-        char *substr_num;
 
-        Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
-            i, rules[i].regex, position, substr_len, substr_len, substr_start);
+       // Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
+       //    i, rules[i].regex, position, substr_len, substr_len, substr_start);
         position += substr_len;
 
-        /* TODO: Now a new token is recognized with rules[i]. Add codes
-         * to record the token in the array `tokens'. For certain types
-         * of tokens, some extra actions should be performed.
-         */
- 
-        if(rules[i].token_type != NUM ){  
-            if(NUM_FLAG == 1){ 
-               strncpy(tokens[j-1].str,substr_num,NUM_number);
-               tokens[j-1].type = NUM;
-               NUM_FLAG = 0;
-               NUM_number =0;
-              }
-           
-           tokens[j].type = rules[i].token_type;
-           if(rules[i].token_type != TK_NOTYPE) { j++; }
-        }
-        else if(rules[i].token_type == NUM || e[position] == '\0')
-        { 
-            if(!NUM_FLAG && rules[i].token_type == NUM) { substr_num = substr_start; j++; }  
-            if(e[position] == '\0' && rules[i].token_type == NUM ) {
-                 strcpy(tokens[j-1].str,substr_num);
-                 tokens[j-1].type = NUM;
-                 printf("i enter ther\n");
-              }
-            else if((e[position] == '\0') &&(rules[i].token_type != NUM)) {
-                tokens[j].type = rules[i].token_type;
-               } 
-             NUM_number ++;
-             NUM_FLAG = 1;
-        }
-     
-//        switch (rules[i].token_type) {
-//          default: TODO();
-//      }
-
-        break;
+        switch (rules[i].token_type) {
+          case '+':
+          case '-':
+          case '*':
+          case '/': 
+          case '(':
+          case ')':
+                      tokens[j].type = rules[i].token_type; 
+                      j++;
+                      break;
+          case NUM:
+                      tokens[j].type = rules[i].token_type;
+                      strncat(tokens[j].str,substr_start,substr_len);
+                      j++;
+                      break;
+          case TK_EQ:
+                      tokens[j].type = rules[i].token_type;
+                      j++;
+                      break;
+          case TK_UNIEQ:
+                      tokens[j].type = rules[i].token_type;
+                      j++;
+                      break;
+          case '&':
+                    tokens[j].type = rules[i].token_type;
+                    j++;
+                    break;
+          case HEX_NUM:
+                    tokens[j].type = rules[i].token_type;
+                    strncpy(tokens[j].str,substr_start,substr_len);
+                    j++;
+                    break;
+          case TK_REG:
+                    tokens[j].type = rules[i].token_type;
+                    strncpy(tokens[j].str,substr_start+1,substr_len-1);
+                    j++;
+                    break;
+          case TK_NOTYPE:break;
+          default: printf("unknown operator!\n"); break;
       }
-    }
+
+      } 
+     
 
     if (i == NR_REGEX) {
       printf("no match at position %d\n%s\n%*.s^\n", position, e, position, "");
       return false;
     }
+    } 
   }
-  numofstr = j - 1;
-  
-  for(int h = 0;h < j; h++){
-       printf("j = %d, type = %d,  str= %s \n", h,tokens[h].type, tokens[h].str); 
-     }
+   nr_token = j -1;
+   
+  //for(int h = 0;h < j; h++)
+  //{ printf("j = %d, type = %d,  str= %s \n", h,tokens[h].type, tokens[h].str); }
   return true;
 }
 
@@ -240,17 +252,32 @@ int Main_position(int p, int q){
 }
 
 //get expr's result
-uint32_t eval(int p,int q){
-    uint32_t val1,val2;
+uint64_t eval(int p,int q){
+    uint64_t val1,val2;
     char op_type;
     int op;
-//    printf("p=%d,   q=%d\n",p,q);
+    bool *succ = false;
     if(p > q){
       printf("bad expression! \n");
       assert(0);
     }
     else if(p == q){
-      return atoi(tokens[p].str);
+      if(tokens[p].type == NEG_NUM)
+      {return -(atoi(tokens[p].str));}
+      else if(tokens[p].type == TK_REG)
+      {
+        uint64_t reg_value = isa_reg_str2val(tokens[p].str,succ);
+        return reg_value; 
+        
+      }        
+      else if(tokens[p].type == HEX_NUM)
+      {
+        uint64_t dec = 0;
+        sscanf(tokens[p].str,"%lx",&dec);
+        return dec;
+      }
+      else 
+      {return atoi(tokens[p].str);}
     }
     else if(check_parentheses(p,q) == true){
       return eval(p + 1, q - 1);
@@ -269,9 +296,40 @@ uint32_t eval(int p,int q){
         case '/':return val1 / val2;
         default: assert(0);
       }
-
     }
+}
 
+void tokens_handle() {     //become reg and pointer to num
+    //pointer 
+   for(int i=0;i <= nr_token;i++){
+    if(tokens[i].type == '*' && ((i == 0) || check_op(i-1))){
+      tokens[i].type = DEREF;
+    }
+   }
+    
+   //negative num
+   for(int i=0; i <= nr_token; i++)  {
+    if(tokens[i].type == '-' && ((i == 0) || check_op(i-1))){
+      printf("I find negative num at %d, nr_token = %d\n",i,nr_token);
+      tokens[i].type = NEG_NUM;
+      strcpy(tokens[i].str,tokens[i+1].str);
+      for(int x=i+1;x < nr_token; x++){
+        tokens[x].type = tokens[x+1].type;
+        strcpy(tokens[x].str,tokens[x+1].str);
+      }
+      nr_token --;
+    }
+   }
+   
+  for(int i=0;i <= nr_token;i++)
+  { printf("after handle:  j = %d, type = %d,  str= %s \n", i,tokens[i].type, tokens[i].str); }
+
+}
+
+void init_tokens() {
+  for(int i=0; i <= nr_token; i++){
+    strcpy(tokens[i].str," ");
+  }
 }
 
 word_t expr(char *e, bool *success) {
@@ -280,13 +338,13 @@ word_t expr(char *e, bool *success) {
     return 0;
   }
 
-  /* TODO: Insert codes to evaluate the expression. */
-  // TODO();
-
-  uint32_t result=0;
-  if(check_expr(0,numofstr)){
-     result = eval(0,numofstr);
-//     printf("result = %d\n ",result);
+  tokens_handle();
+ 
+  uint64_t result=0;
+  if(check_expr(0,nr_token)){
+     result = eval(0,nr_token);
+     init_tokens();
+     //printf("result = %d\n ",result);
   }
   else printf("the expr is false\n");
   
