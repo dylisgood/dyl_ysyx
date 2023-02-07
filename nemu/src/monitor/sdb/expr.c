@@ -256,8 +256,7 @@ uint64_t eval(int p,int q){
     uint64_t val1,val2;
     char op_type;
     int op;
-    bool success = false;
-    bool *succ = &success;
+    bool *succ = false;
     if(p > q){
       printf("bad expression! \n");
       assert(0);
@@ -268,8 +267,7 @@ uint64_t eval(int p,int q){
       else if(tokens[p].type == TK_REG)
       {
         uint64_t reg_value = isa_reg_str2val(tokens[p].str,succ);
-        if(*succ == true) {printf("reg false! \n"); return 0;}
-        else { return reg_value; }
+        return reg_value; 
         
       }        
       else if(tokens[p].type == HEX_NUM)
