@@ -266,7 +266,10 @@ uint64_t eval(int p,int q){
       {return -(atoi(tokens[p].str));}
       else if(tokens[p].type == TK_REG)
       {
-        return isa_reg_str2val(tokens[p].str,succ);
+        uint64_t reg_value = isa_reg_str2val(tokens[p].str,succ);
+        if(succ == false) {printf("reg false! \n");}
+        return reg_value; 
+        
       }        
       else if(tokens[p].type == HEX_NUM)
       {
