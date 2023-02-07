@@ -251,11 +251,6 @@ int Main_position(int p, int q){
 
 }
 
-long HexToDec(char *source){
-
-  return 0;
-}
-
 //get expr's result
 uint64_t eval(int p,int q){
     uint64_t val1,val2;
@@ -324,8 +319,8 @@ void tokens_handle() {     //become reg and pointer to num
     }
    }
    
-  //for(int i=0;i <= nr_token;i++)
-  //{ printf("after handle:  j = %d, type = %d,  str= %s \n", i,tokens[i].type, tokens[i].str); }
+  for(int i=0;i <= nr_token;i++)
+  { printf("after handle:  j = %d, type = %d,  str= %s \n", i,tokens[i].type, tokens[i].str); }
 
 }
 
