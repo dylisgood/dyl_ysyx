@@ -103,7 +103,7 @@ static bool make_token(char *e) {
        // Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
        //    i, rules[i].regex, position, substr_len, substr_len, substr_start);
         position += substr_len;
-        strcpy(tokens[j].str," ");
+        
         switch (rules[i].token_type) {
           case '+':
           case '-':
@@ -328,7 +328,7 @@ void tokens_handle() {     //become reg and pointer to num
 
 void init_tokens() {
   for(int i=0; i <= nr_token; i++){
-    strcpy(tokens[i].str," ");
+    strcpy(tokens[i].str,"\0");
   }
 }
 
