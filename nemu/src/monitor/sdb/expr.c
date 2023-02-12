@@ -138,6 +138,7 @@ static bool make_token(char *e) {
                     break;
           case TK_REG:
                     tokens[j].type = rules[i].token_type;
+                    printf("tokens[j].str = %s\n",tokens[j].str);
                     strncpy(tokens[j].str,substr_start+1,substr_len-1);
                     j++;
                     break;
@@ -330,7 +331,7 @@ void init_tokens() {
   //char *str = " ";
   for(int i=0; i <= nr_token; i++){
     strcpy(tokens[i].str,"\0");
-    printf("tokens[%d].str = %s \n", i,tokens[i].str);
+    //printf("tokens[%d].str = %s \n", i,tokens[i].str);
   }
 }
 
@@ -346,7 +347,6 @@ word_t expr(char *e, bool *success) {
   if(check_expr(0,nr_token)){
      result = eval(0,nr_token);
      init_tokens();
-     printf("init_tokens finish! \n");
   }
   else printf("the expr is false\n");
   
