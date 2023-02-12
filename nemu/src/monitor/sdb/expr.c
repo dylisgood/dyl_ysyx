@@ -345,7 +345,7 @@ word_t expr(char *e, bool *success) {
   if(check_expr(0,nr_token)){
      result = eval(0,nr_token);
      init_tokens();
-     //printf("result = %d\n ",result);
+     printf("init_tokens finish! \n");
   }
   else printf("the expr is false\n");
   
