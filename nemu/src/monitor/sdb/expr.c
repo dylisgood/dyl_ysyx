@@ -327,9 +327,10 @@ void tokens_handle() {     //become reg and pointer to num
 }
 
 void init_tokens() {
-  char *str = "\0";
+  //char *str = " ";
   for(int i=0; i <= nr_token; i++){
-    strcpy(tokens[i].str,str);
+    strcpy(tokens[i].str,"\0");
+    printf("tokens[%d].str = %s ", i,tokens[i].str);
   }
 }
 
