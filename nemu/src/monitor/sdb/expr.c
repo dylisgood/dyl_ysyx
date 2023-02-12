@@ -330,7 +330,7 @@ void init_tokens() {
   //char *str = " ";
   for(int i=0; i <= nr_token; i++){
     strcpy(tokens[i].str,"\0");
-    printf("tokens[%d].str = %s ", i,tokens[i].str);
+    printf("tokens[%d].str = %s \n", i,tokens[i].str);
   }
 }
 
