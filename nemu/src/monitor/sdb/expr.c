@@ -24,7 +24,8 @@
 
 //new add
 #include <stdint.h>  //for uint64_t etc
-#include <stdbool.h>
+#include <stdbool.h>  //for bool
+#include <common.h>
 
 #define false 0
 #define true 1
