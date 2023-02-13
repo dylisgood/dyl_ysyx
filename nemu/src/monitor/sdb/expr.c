@@ -21,6 +21,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <regex.h>
+#include <stdint.h>  //for uint64_t etc
 
 #define false 0
 #define true 1
