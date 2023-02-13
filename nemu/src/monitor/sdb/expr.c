@@ -300,7 +300,7 @@ uint64_t eval(int p,int q){
       {
         if(tokens[p].type == DEREF)
         {
-          return eval(p+1,q);
+          return eval(p+1,q)-1;
         }
         else {printf("bad expression!\n"); return 0;}
       }
