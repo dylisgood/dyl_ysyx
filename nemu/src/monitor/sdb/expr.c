@@ -332,7 +332,7 @@ void tokens_handle() {     //become reg and pointer to num
     
    //negative num
    for(int i=0; i <= nr_token; i++)  {
-    if(tokens[i].type == '-' && ((i == 0) || check_op(i-1))){
+    if(tokens[i].type == '-' && ((i == 0) || check_op(i-1) || tokens[i-1].type == '(')){
       printf("I find negative num at %d, nr_token = %d\n",i,nr_token);
       tokens[i].type = NEG_NUM;
       strcpy(tokens[i].str,tokens[i+1].str);
