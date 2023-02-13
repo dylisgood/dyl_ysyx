@@ -26,6 +26,7 @@
 #include <stdint.h>  //for uint64_t etc
 #include <stdbool.h>  //for bool
 #include <common.h>
+#include <memory/vaddr.h> //for DEREF
 
 #define false 0
 #define true 1
@@ -300,7 +301,7 @@ uint64_t eval(int p,int q){
       {
         if(tokens[p].type == DEREF)
         {
-          return eval(p+1,q)-1;
+          return vaddr_read(eval(p+1,q),8);
         }
         else {printf("bad expression!\n"); return 0;}
       }
