@@ -21,7 +21,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include <regex.h>
+
+//new add
 #include <stdint.h>  //for uint64_t etc
+#include <stdbool.h>
 
 #define false 0
 #define true 1
