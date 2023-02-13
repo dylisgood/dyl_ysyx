@@ -307,32 +307,26 @@ uint64_t eval(int p,int q){
       }
       else
       {
-     // printf("op = %d\n",op);
       val1 = eval(p, op - 1);
       val2 = eval(op+1, q);
-     // printf("val1 = %d,  val2 = %d\n", val1,val2);
       op_type = tokens[op].type;
-      switch(op_type){
-        case '+':return val1 + val2;
-        case '-':return val1 - val2;
-        case '*':return val1 * val2;
-        case '/':return val1 / val2;
-        default: assert(0);
-      }
+      switch(op_type)
+        {
+          case '+':return val1 + val2;
+          case '-':return val1 - val2;
+          case '*':return val1 * val2;
+          case '/':return val1 / val2;
+          default: assert(0);
+        }
       }
     }
 }
 
 void tokens_handle() {     //become reg and pointer to num
-    //pointer 
-    //这里先假设解引用后没有括号 及只需要解一个引用
+    //recognize * and become DEREF
    for(int i=0;i <= nr_token;i++){
     if(tokens[i].type == '*' && ((i == 0) || check_op(i-1) || tokens[i-1].type == '(')){
       tokens[i].type = DEREF;
-      //uint64_t p_value;
-
-      //p_value = vaddr()
-      //strcpy(tokens[i].str,vaddr());
     }
    }
     
