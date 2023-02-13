@@ -240,13 +240,13 @@ int Main_position(int p, int q){
   int count;
   int op=0;
   for(count = p; count <= q; count ++){
-    if(check_op(count)){
-      if(!check_bracket(p,count,q)) 
+    if(check_op(count)){   //首先是运算符+ - * /
+      if(!check_bracket(p,count,q))  //且运算符不在括号内
        {
         // printf("count = %d\n",count);
-         if(first_FLAG) { op=count; first_FLAG =0; }
-         if(!first_FLAG){
-          if(tokens[count].type == '+' || tokens[count].type == '-') {
+         if(first_FLAG) { op=count; first_FLAG =0; }  //如果是第一次找到符合条件的运算符 先将其视为主运算符的位置
+         if(!first_FLAG){          //之后再发现可能符合条件的运算符 进一步判断是不是主运算符  
+          if(tokens[count].type == '+' || tokens[count].type == '-') { // + -的运算优先级小于 * /
             op = count;
           }
          }
@@ -295,12 +295,17 @@ uint64_t eval(int p,int q){
       return eval(p + 1, q - 1);
     }
     else {
-      if(tokens[p].type == DEREF)
-      {
-        return eval(p+1,q);
-      }
-      else{
       op = Main_position(p,q);
+      if(op == 0) //若没找到主运算符 且p != q 则可能有解引用
+      {
+        if(tokens[p].type == DEREF)
+        {
+          return eval(p+1,q);
+        }
+        else {printf("bad expression!\n"); return 0;}
+      }
+      else
+      {
      // printf("op = %d\n",op);
       val1 = eval(p, op - 1);
       val2 = eval(op+1, q);
