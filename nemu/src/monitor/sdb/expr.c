@@ -321,7 +321,7 @@ void tokens_handle() {     //become reg and pointer to num
     //pointer 
     //这里先假设解引用后没有括号 及只需要解一个引用
    for(int i=0;i <= nr_token;i++){
-    if(tokens[i].type == '*' && ((i == 0) || check_op(i-1))){
+    if(tokens[i].type == '*' && ((i == 0) || check_op(i-1) || tokens[i-1].type == '(')){
       tokens[i].type = DEREF;
       //uint64_t p_value;
 
