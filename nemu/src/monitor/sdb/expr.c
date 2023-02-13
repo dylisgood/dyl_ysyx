@@ -22,6 +22,9 @@
 #include <stdlib.h>
 #include <regex.h>
 
+#define false 0
+#define true 1
+
 enum {
   TK_NOTYPE = 256, TK_EQ, NUM,TK_UNIEQ,
   TK_REG,HEX_NUM,NEG_NUM,DEREF,
