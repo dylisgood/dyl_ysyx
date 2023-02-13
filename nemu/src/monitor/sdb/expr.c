@@ -271,7 +271,9 @@ uint64_t eval(int p,int q){
     }
     else if(p == q){
       if(tokens[p].type == NEG_NUM)
-      {return -(atoi(tokens[p].str));}
+      {
+        return -(atoi(tokens[p].str));
+      }
       else if(tokens[p].type == TK_REG)
       {
         uint64_t reg_value = isa_reg_str2val(tokens[p].str,succ);
@@ -285,7 +287,9 @@ uint64_t eval(int p,int q){
         return dec;
       }
       else 
-      {return atoi(tokens[p].str);}
+      {
+        return atoi(tokens[p].str);
+      }
     }
     else if(check_parentheses(p,q) == true){
       return eval(p + 1, q - 1);
@@ -309,9 +313,14 @@ uint64_t eval(int p,int q){
 
 void tokens_handle() {     //become reg and pointer to num
     //pointer 
+    //这里先假设解引用后没有括号 及只需要解一个引用
    for(int i=0;i <= nr_token;i++){
     if(tokens[i].type == '*' && ((i == 0) || check_op(i-1))){
       tokens[i].type = DEREF;
+      //uint64_t p_value;
+
+      //p_value = vaddr()
+      //strcpy(tokens[i].str,vaddr());
     }
    }
     
