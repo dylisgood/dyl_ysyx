@@ -295,6 +295,11 @@ uint64_t eval(int p,int q){
       return eval(p + 1, q - 1);
     }
     else {
+      if(tokens[p].type == DEREF)
+      {
+        return eval(p+1,q);
+      }
+      else{
       op = Main_position(p,q);
      // printf("op = %d\n",op);
       val1 = eval(p, op - 1);
@@ -307,6 +312,7 @@ uint64_t eval(int p,int q){
         case '*':return val1 * val2;
         case '/':return val1 / val2;
         default: assert(0);
+      }
       }
     }
 }
