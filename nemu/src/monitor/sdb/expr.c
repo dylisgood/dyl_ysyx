@@ -32,7 +32,7 @@
 #define true 1
 
 enum {
-  TK_NOTYPE = 256, TK_EQ, NUM,TK_UNIEQ,
+  TK_NOTYPE = 10, TK_EQ, NUM,TK_UNIEQ,
   TK_REG,HEX_NUM,NEG_NUM,DEREF,
   /* TODO: Add more token types */
 
@@ -207,7 +207,9 @@ bool check_parentheses(int p, int q){
 
 //check tokens[].type operator or not
 bool check_op(int count){
-  if(tokens[count].type == '+' || tokens[count].type == '-' || tokens[count].type == '*' || tokens[count].type == '/'){
+  if(tokens[count].type == '+' || tokens[count].type == '-'\
+   || tokens[count].type == '*' || tokens[count].type == '/'\
+   || tokens[count].type == TK_EQ){
      return true;
   }
   else {return false; }
@@ -320,6 +322,7 @@ uint64_t eval(int p,int q){
           case '-':return val1 - val2;
           case '*':return val1 * val2;
           case '/':return val1 / val2;
+          case TK_EQ:return 1;
           default: assert(0);
         }
       }
@@ -337,14 +340,7 @@ void tokens_handle() {     //become reg and pointer to num
    //negative num
    for(int i=0; i <= nr_token; i++)  {
     if(tokens[i].type == '-' && ((i == 0) || check_op(i-1) || tokens[i-1].type == '(')){
-      printf("I find negative num at %d, nr_token = %d\n",i,nr_token);
       tokens[i].type = NEG_NUM;
-/*       strcpy(tokens[i].str,tokens[i+1].str);
-      for(int x=i+1;x < nr_token; x++){
-        tokens[x].type = tokens[x+1].type;
-        strcpy(tokens[x].str,tokens[x+1].str);
-      }
-      nr_token --; */
     }
    }
    
