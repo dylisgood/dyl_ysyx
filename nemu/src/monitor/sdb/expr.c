@@ -297,11 +297,15 @@ uint64_t eval(int p,int q){
     }
     else {
       op = Main_position(p,q);
-      if(op == 0) //若没找到主运算符 且p != q 则可能有解引用
+      if(op == 0) //若没找到主运算符 且p != q 则可能有解引用 或负数
       {
         if(tokens[p].type == DEREF)
         {
           return vaddr_read(eval(p+1,q),8);
+        }
+        else if(tokens[p].type == NEG_NUM)
+        {
+          return -eval(p+1,q);
         }
         else {printf("bad expression!\n"); return 0;}
       }
@@ -335,12 +339,12 @@ void tokens_handle() {     //become reg and pointer to num
     if(tokens[i].type == '-' && ((i == 0) || check_op(i-1) || tokens[i-1].type == '(')){
       printf("I find negative num at %d, nr_token = %d\n",i,nr_token);
       tokens[i].type = NEG_NUM;
-      strcpy(tokens[i].str,tokens[i+1].str);
+/*       strcpy(tokens[i].str,tokens[i+1].str);
       for(int x=i+1;x < nr_token; x++){
         tokens[x].type = tokens[x+1].type;
         strcpy(tokens[x].str,tokens[x+1].str);
       }
-      nr_token --;
+      nr_token --; */
     }
    }
    
