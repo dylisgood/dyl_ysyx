@@ -32,10 +32,8 @@
 #define true 1
 
 enum {
-  TK_NOTYPE = 10, TK_EQ, NUM,TK_UNIEQ,
-  TK_REG,HEX_NUM,NEG_NUM,DEREF,
-  /* TODO: Add more token types */
-
+  TK_NOTYPE = 2, TK_EQ = 1, NUM = 10,TK_UNIEQ = 0,
+  TK_REG = 3,HEX_NUM=16,NEG_NUM = 4,DEREF = 5,
 };
 
 static struct rule {
@@ -48,11 +46,11 @@ static struct rule {
    */
 
   {" +", TK_NOTYPE},    // spaces
-  {"\\+", '+'},         // plus
-  {"\\-", '-'},         // minus
-  {"\\*", '*'},         // multip
-  {"\\/", '/'},         //
-  {"==", TK_EQ},        // equal
+  {"\\+", '+'},         // plus 43
+  {"\\-", '-'},         // minus 45
+  {"\\*", '*'},         // multip 42
+  {"\\/", '/'},         // 47
+  {"==", TK_EQ},        // equal 
   {"\\(", '('},
   {"\\)", ')'},
   {"0x[0-9][0-9]*", HEX_NUM},
@@ -205,7 +203,7 @@ bool check_parentheses(int p, int q){
     else { return false; }
 }
 
-//check tokens[].type operator or not
+//check tokens[].type is operator or not
 bool check_op(int count){
   if(tokens[count].type == '+' || tokens[count].type == '-'\
    || tokens[count].type == '*' || tokens[count].type == '/'\
@@ -273,11 +271,7 @@ uint64_t eval(int p,int q){
       assert(0);
     }
     else if(p == q){
-      if(tokens[p].type == NEG_NUM)
-      {
-        return -(atoi(tokens[p].str));
-      }
-      else if(tokens[p].type == TK_REG)
+      if(tokens[p].type == TK_REG)
       {
         uint64_t reg_value = isa_reg_str2val(tokens[p].str,succ);
         return reg_value; 
@@ -322,7 +316,7 @@ uint64_t eval(int p,int q){
           case '-':return val1 - val2;
           case '*':return val1 * val2;
           case '/':return val1 / val2;
-          case TK_EQ:return 1;
+          case TK_EQ:return val1 == val2;
           default: assert(0);
         }
       }
