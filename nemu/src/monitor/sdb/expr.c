@@ -22,11 +22,18 @@
 #include <stdlib.h>
 #include <regex.h>
 
-enum {
-  TK_NOTYPE = 256, TK_EQ, NUM,TK_UNIEQ,
-  TK_REG,HEX_NUM,NEG_NUM,DEREF,
-  /* TODO: Add more token types */
+//new add
+#include <stdint.h>  //for uint64_t etc
+#include <stdbool.h>  //for bool
+#include <common.h>
+#include <memory/vaddr.h> //for DEREF
 
+#define false 0
+#define true 1
+
+enum {
+  TK_NOTYPE = 2, TK_EQ = 1, NUM = 10,TK_UNIEQ = 0,
+  TK_REG = 3,HEX_NUM=16,NEG_NUM = 4,DEREF = 5,
 };
 
 static struct rule {
@@ -39,18 +46,18 @@ static struct rule {
    */
 
   {" +", TK_NOTYPE},    // spaces
-  {"\\+", '+'},         // plus
-  {"\\-", '-'},         // minus
-  {"\\*", '*'},         // multip
-  {"\\/", '/'},         //
-  {"==", TK_EQ},        // equal
+  {"\\+", '+'},         // plus 43
+  {"\\-", '-'},         // minus 45
+  {"\\*", '*'},         // multip 42
+  {"\\/", '/'},         // 47
+  {"==", TK_EQ},        // equal 
   {"\\(", '('},
   {"\\)", ')'},
   {"0x[0-9][0-9]*", HEX_NUM},
   {"[0-9][0-9]*",NUM},
   {"!=", TK_UNIEQ},
   {"&&", '&'},
-  {"\\$.{1,3}",TK_REG},
+  {"\\$.{1,2}[0-9]*",TK_REG},
   
 };
 
@@ -103,7 +110,7 @@ static bool make_token(char *e) {
        // Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
        //    i, rules[i].regex, position, substr_len, substr_len, substr_start);
         position += substr_len;
-
+        
         switch (rules[i].token_type) {
           case '+':
           case '-':
@@ -138,7 +145,7 @@ static bool make_token(char *e) {
                     break;
           case TK_REG:
                     tokens[j].type = rules[i].token_type;
-                    strncpy(tokens[j].str,substr_start+1,substr_len-1);
+                    strncat(tokens[j].str,substr_start+1,substr_len-1);
                     j++;
                     break;
           case TK_NOTYPE:break;
@@ -196,9 +203,11 @@ bool check_parentheses(int p, int q){
     else { return false; }
 }
 
-//check tokens[].type operator or not
+//check tokens[].type is operator or not
 bool check_op(int count){
-  if(tokens[count].type == '+' || tokens[count].type == '-' || tokens[count].type == '*' || tokens[count].type == '/'){
+  if(tokens[count].type == '+' || tokens[count].type == '-'\
+   || tokens[count].type == '*' || tokens[count].type == '/'\
+   || tokens[count].type == TK_EQ){
      return true;
   }
   else {return false; }
@@ -232,13 +241,13 @@ int Main_position(int p, int q){
   int count;
   int op=0;
   for(count = p; count <= q; count ++){
-    if(check_op(count)){
-      if(!check_bracket(p,count,q)) 
+    if(check_op(count)){   //首先是运算符+ - * /
+      if(!check_bracket(p,count,q))  //且运算符不在括号内
        {
         // printf("count = %d\n",count);
-         if(first_FLAG) { op=count; first_FLAG =0; }
-         if(!first_FLAG){
-          if(tokens[count].type == '+' || tokens[count].type == '-') {
+         if(first_FLAG) { op=count; first_FLAG =0; }  //如果是第一次找到符合条件的运算符 先将其视为主运算符的位置
+         if(!first_FLAG){          //之后再发现可能符合条件的运算符 进一步判断是不是主运算符  
+          if(tokens[count].type == '+' || tokens[count].type == '-') { // + -的运算优先级小于 * /
             op = count;
           }
          }
@@ -262,9 +271,7 @@ uint64_t eval(int p,int q){
       assert(0);
     }
     else if(p == q){
-      if(tokens[p].type == NEG_NUM)
-      {return -(atoi(tokens[p].str));}
-      else if(tokens[p].type == TK_REG)
+      if(tokens[p].type == TK_REG)
       {
         uint64_t reg_value = isa_reg_str2val(tokens[p].str,succ);
         return reg_value; 
@@ -277,58 +284,68 @@ uint64_t eval(int p,int q){
         return dec;
       }
       else 
-      {return atoi(tokens[p].str);}
+      {
+        return atoi(tokens[p].str);
+      }
     }
     else if(check_parentheses(p,q) == true){
       return eval(p + 1, q - 1);
     }
     else {
       op = Main_position(p,q);
-     // printf("op = %d\n",op);
+      if(op == 0) //若没找到主运算符 且p != q 则可能有解引用 或负数
+      {
+        if(tokens[p].type == DEREF)
+        {
+          return vaddr_read(eval(p+1,q),8);
+        }
+        else if(tokens[p].type == NEG_NUM)
+        {
+          return -eval(p+1,q);
+        }
+        else {printf("bad expression!\n"); return 0;}
+      }
+      else
+      {
       val1 = eval(p, op - 1);
       val2 = eval(op+1, q);
-     // printf("val1 = %d,  val2 = %d\n", val1,val2);
       op_type = tokens[op].type;
-      switch(op_type){
-        case '+':return val1 + val2;
-        case '-':return val1 - val2;
-        case '*':return val1 * val2;
-        case '/':return val1 / val2;
-        default: assert(0);
+      switch(op_type)
+        {
+          case '+':return val1 + val2;
+          case '-':return val1 - val2;
+          case '*':return val1 * val2;
+          case '/':return val1 / val2;
+          case TK_EQ:return val1 == val2;
+          default: assert(0);
+        }
       }
     }
 }
 
 void tokens_handle() {     //become reg and pointer to num
-    //pointer 
+    //recognize * and become DEREF
    for(int i=0;i <= nr_token;i++){
-    if(tokens[i].type == '*' && ((i == 0) || check_op(i-1))){
+    if(tokens[i].type == '*' && ((i == 0) || check_op(i-1) || tokens[i-1].type == '(')){
       tokens[i].type = DEREF;
     }
    }
     
    //negative num
    for(int i=0; i <= nr_token; i++)  {
-    if(tokens[i].type == '-' && ((i == 0) || check_op(i-1))){
-      printf("I find negative num at %d, nr_token = %d\n",i,nr_token);
+    if(tokens[i].type == '-' && ((i == 0) || check_op(i-1) || tokens[i-1].type == '(')){
       tokens[i].type = NEG_NUM;
-      strcpy(tokens[i].str,tokens[i+1].str);
-      for(int x=i+1;x < nr_token; x++){
-        tokens[x].type = tokens[x+1].type;
-        strcpy(tokens[x].str,tokens[x+1].str);
-      }
-      nr_token --;
     }
    }
    
-  for(int i=0;i <= nr_token;i++)
-  { printf("after handle:  j = %d, type = %d,  str= %s \n", i,tokens[i].type, tokens[i].str); }
+  //for(int i=0;i <= nr_token;i++)
+  //{ printf("after handle:  j = %d, type = %d,  str= %s \n", i,tokens[i].type, tokens[i].str); }
 
 }
 
 void init_tokens() {
   for(int i=0; i <= nr_token; i++){
-    strcpy(tokens[i].str," ");
+    strcpy(tokens[i].str,"\0");
   }
 }
 
@@ -344,7 +361,6 @@ word_t expr(char *e, bool *success) {
   if(check_expr(0,nr_token)){
      result = eval(0,nr_token);
      init_tokens();
-     //printf("result = %d\n ",result);
   }
   else printf("the expr is false\n");
   

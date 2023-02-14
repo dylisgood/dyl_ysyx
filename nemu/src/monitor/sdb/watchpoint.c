@@ -20,8 +20,8 @@
 typedef struct watchpoint {
   int NO;
   char expr[64];
-  int last_value;
-  int cur_value;
+  uint64_t last_value;
+  uint64_t cur_value;
   struct watchpoint *next;
 
 } WP;
@@ -71,7 +71,7 @@ void print_wp(){
   bool *su=false;
   while(PB != free_)
   {
-    printf("wp_pool.NO = %d  expr = %s  value = %ld\n",PB->NO,PB->expr,expr(PB->expr,su));
+    printf("wp_pool.NO = %d  expr = (%s)  value = %ld\n",PB->NO,PB->expr,expr(PB->expr,su));
     PB = PB->next;
   }
   }
@@ -118,11 +118,11 @@ void wp_detect(){
     while(pb != free_)
     {
       pb->cur_value = expr(pb->expr,suc); 
-      if(pb->cur_value != pb->last_value && count ==0)
+      if(pb->cur_value != pb->last_value && count !=0)
       {
         nemu_state.state = NEMU_STOP;
         printf("The NO.%d Watchpoint %s change! \n",pb->NO,pb->expr);
-        printf("Last value = %d , Current value = %d \n",pb->last_value, pb->cur_value);
+        printf("Old value = %ld \n New value = %ld \n",pb->last_value, pb->cur_value);
       }
       pb->last_value = pb->cur_value;
       pb = pb->next;

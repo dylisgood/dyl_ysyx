@@ -75,7 +75,7 @@ static int cmd_x(char *args) {
     arg = strtok(NULL , "\0");
     bool *success = false;
     uint64_t addr = expr(arg,success);
-    printf("addr = %ld\n",addr);
+    printf("addr = %lx\n",addr);
     for(int i=0; i < N; i++) {
     vaddr_read(addr + i,8); }
   }
@@ -88,7 +88,7 @@ static int cmd_p(char *args){
   else {
     bool *success = false;
     uint64_t value = expr(arg,success);
-    printf("value = %ld\n",value);
+    printf("value = %lx\n",value);
   }
   return 0;
 }
@@ -111,6 +111,16 @@ static int cmd_d(char *args){
     int wp_num = atoi(arg);
     if(wp_num < 32) {dele_wp(wp_num);}
     else printf("there is no NO.%d watchpoint!\n",wp_num);
+  }
+  return 0;
+}
+
+static int cmd_b(char *args){
+  char *arg = strtok(NULL,"\0");
+  if(arg == NULL) {printf("please add the address of breakpoint! \n");}
+  else
+  {
+    //set_bp();
   }
   return 0;
 }
@@ -143,6 +153,7 @@ static struct {
   { "p", "expr evaluation", cmd_p},
   { "w", "set watchpoint", cmd_w},
   { "d", "delete watchpoint", cmd_d},
+  { "b", "set breakpoint", cmd_b},
 };
 
 #define NR_CMD ARRLEN(cmd_table)
