@@ -115,6 +115,16 @@ static int cmd_d(char *args){
   return 0;
 }
 
+static int cmd_b(char *args){
+  char *arg = strtok(NULL,"\0");
+  if(arg == NULL) {printf("please add the address of breakpoint! \n");}
+  else
+  {
+    //set_bp();
+  }
+  return 0;
+}
+
 static int cmd_c(char *args) {
   cpu_exec(-1);
   return 0;
@@ -143,6 +153,7 @@ static struct {
   { "p", "expr evaluation", cmd_p},
   { "w", "set watchpoint", cmd_w},
   { "d", "delete watchpoint", cmd_d},
+  { "b", "set breakpoint", cmd_b},
 };
 
 #define NR_CMD ARRLEN(cmd_table)
