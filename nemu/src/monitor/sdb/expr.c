@@ -338,16 +338,14 @@ void tokens_handle() {     //become reg and pointer to num
     }
    }
    
-  for(int i=0;i <= nr_token;i++)
-  { printf("after handle:  j = %d, type = %d,  str= %s \n", i,tokens[i].type, tokens[i].str); }
+  //for(int i=0;i <= nr_token;i++)
+  //{ printf("after handle:  j = %d, type = %d,  str= %s \n", i,tokens[i].type, tokens[i].str); }
 
 }
 
 void init_tokens() {
-  //char *str = " ";
   for(int i=0; i <= nr_token; i++){
     strcpy(tokens[i].str,"\0");
-    //printf("tokens[%d].str = %s \n", i,tokens[i].str);
   }
 }
 
