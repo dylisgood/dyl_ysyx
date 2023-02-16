@@ -46,11 +46,11 @@ static char* rl_gets() {
 }
 
 static int cmd_si(char *args){
-  char *arg = strtok(NULL , " ");
-  int i;
-  if(arg == NULL) { i=1; }
-  else { i = atoi(arg);} 
-  cpu_exec(i);
+  char *arg = strtok(NULL , "\0");
+  int N;
+  if(arg == NULL) { N = 1; }
+  else { N = atoi(arg);} 
+  cpu_exec(N);
   return 0;
 }
 
