@@ -46,7 +46,7 @@ static char* rl_gets() {
 }
 
 static int cmd_si(char *args){
-  char *arg = strtok(NULL , "\0");
+  char *arg = strtok(NULL , " ");
   int N;
   if(arg == NULL) { N = 1; }
   else { N = atoi(arg);} 
