@@ -49,7 +49,7 @@ static int cmd_si(char *args){
   char *arg = strtok(NULL , " ");
   int i;
   if(arg == NULL) { i=1; }
-  else { i = *arg - '0';} 
+  else { i = atoi(arg);} 
   cpu_exec(i);
   return 0;
 }
