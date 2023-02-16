@@ -71,12 +71,11 @@ static int cmd_x(char *args) {
   if( arg == NULL ) {printf("please add N and exp");  }
   else {
     int N = atoi(arg);
-    printf("N = %d\n" , N);
     arg = strtok(NULL , "\0");
     bool *success = false;
     uint64_t addr = expr(arg,success);
     for(int i=0; i < N; i++) {
-    printf("mem[0x%lx] = 0x%lx\n",addr,vaddr_read(addr + i,8)); }
+    printf("mem[0x%lx] = 0x%lx\n",addr + i,vaddr_read(addr + i,8)); }
   }
   return 0;
 }
