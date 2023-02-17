@@ -53,7 +53,7 @@ static struct rule {
   {"==", TK_EQ},        // equal 
   {"\\(", '('},
   {"\\)", ')'},
-  {"0x[:xdight:]*", HEX_NUM},
+  {"0x[:xdight:][:xdight:]*", HEX_NUM},
   {"[0-9][0-9]*",NUM},
   {"!=", TK_UNIEQ},
   {"&&", '&'},
