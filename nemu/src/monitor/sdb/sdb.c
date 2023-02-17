@@ -75,7 +75,7 @@ static int cmd_x(char *args) {
     bool *success = false;
     uint64_t addr = expr(arg,success);
     for(int i=0; i < N; i++) {
-    printf("mem[0x%lx] = 0x%lx\n",addr + i*4,vaddr_read(addr + i*4,8)); }
+    printf("mem[0x%lx] = 0x%lx\n",addr + i*8,vaddr_read(addr + i*8,8)); }
   }
   return 0;
 }
