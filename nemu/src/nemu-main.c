@@ -64,9 +64,8 @@ int main(int argc, char *argv[]) {
    for(int i=0;i<100;i++){
    result = expr("1+1",success);
    printf("result = %d\n",result);
-   }
-   
-  */ 
+   } */
+
   /* Start engine. */
   engine_start();
 
