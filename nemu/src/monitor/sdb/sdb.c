@@ -20,7 +20,7 @@
 #include "sdb.h"
 #include <memory/vaddr.h>
 
-static int is_batch_mode = false;
+static int is_batch_mode = true;
 
 void init_regex();
 void init_wp_pool();
@@ -86,7 +86,7 @@ static int cmd_p(char *args){
   else {
     bool *success = false;
     uint64_t value = expr(arg,success);
-    printf("value = %lx\n",value);
+    printf("result = %lx\n",value);
   }
   return 0;
 }
