@@ -18,11 +18,10 @@
 void init_monitor(int, char *[]);
 void am_init_monitor();
 void engine_start();
-uint32_t expr(char *e, bool *success);
-word_t isa_reg_str2val(const char *s, bool *success);
+/* uint32_t expr(char *e, bool *success);
+word_t isa_reg_str2val(const char *s, bool *success); */
 void isa_reg_display(void);
 int is_exit_status_bad();
-
 
 int main(int argc, char *argv[]) {
   /* Initialize the monitor. */
@@ -31,15 +30,6 @@ int main(int argc, char *argv[]) {
 #else
   init_monitor(argc, argv);
 #endif
-/*
-// used for test reg
-    bool *succ = false;
-    char *str2 = "pc";
-    word_t reg_value;
-    //isa_reg_display();
-    reg_value = isa_reg_str2val(str2,succ);
-    printf("reg_value = %ld \n",reg_value);
-*/
 /*   //used for test expr
    uint32_t result=0;
    bool* success = false;
