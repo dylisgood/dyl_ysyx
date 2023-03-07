@@ -1,4 +1,5 @@
-#include <nvboard.h>
+
+/*#include <nvboard.h>
 #include <Vtop.h>
 
 static TOP_NAME dut;
@@ -27,3 +28,4 @@ int main() {
   single_cycle();
 }
 }
+*/
