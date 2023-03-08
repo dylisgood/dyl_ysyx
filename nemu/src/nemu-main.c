@@ -19,8 +19,8 @@ void init_monitor(int, char *[]);
 void am_init_monitor();
 void engine_start();
 /* uint32_t expr(char *e, bool *success);
-word_t isa_reg_str2val(const char *s, bool *success); */
-void isa_reg_display(void);
+word_t isa_reg_str2val(const char *s, bool *success);
+void isa_reg_display(void); */
 int is_exit_status_bad();
 
 int main(int argc, char *argv[]) {
