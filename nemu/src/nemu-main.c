@@ -25,12 +25,11 @@ int is_exit_status_bad();
 
 int main(int argc, char *argv[]) {
   /* Initialize the monitor. */
-  char *ar1 = "-b";
- char **ar = &ar1;
+  char *ar1[] = {"-b"};
 #ifdef CONFIG_TARGET_AM
   am_init_monitor();
 #else
-  init_monitor(argc, ar);
+  init_monitor(argc, ar1);
 #endif
 /*   //used for test expr
    uint32_t result=0;
