@@ -53,6 +53,7 @@ char *strncat(char *dst, const char *src, size_t n){
   return dst;
 }
 
+//  ‘\0’ = 0
 int strcmp(const char *s1, const char *s2) {
   while(*s1 && *s1 == *s2){
       s1++;
@@ -73,6 +74,8 @@ int strncmp(const char *s1, const char *s2, size_t n) {
 }
 
 void *memset(void *s, int c, size_t n) {
+  if(s == NULL || n < 0)
+  return NULL;
   size_t i = 0;
   char *dest = (char *)s;
   for(i = 0 ; i < n; i++){
@@ -82,7 +85,25 @@ void *memset(void *s, int c, size_t n) {
 }
 
 void *memmove(void *dst, const void *src, size_t n) {
-  panic("Not implemented");
+  if(dst == NULL || src == NULL || !n)
+    return NULL;
+  char* buf1 = (char *)dst;
+  const char* buf2 = (const char *)src;
+  if(src > dst)
+  {
+    while(n--){
+    *buf1 = *buf2;
+    buf1++;
+    buf2++;
+  }
+  }
+  else  //consider override
+  {
+    while(n--){
+      *(buf1 + n) = *(buf2 + n);
+    }
+  }
+  return dst;
 }
 
 void *memcpy(void *out, const void *in, size_t n) {
