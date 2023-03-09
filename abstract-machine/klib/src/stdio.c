@@ -19,10 +19,11 @@ int sprintf(char *out, const char *fmt, ...) {
   char *s;
   va_start(ap,fmt);
   int i = 0;
-  int d_tmp;
   int j = 0;
-  for(int n=0;n<100;n++){
-   out[n] = 0;
+  static int last_num = 0;
+  int d_tmp;
+  for(int n = 0 ; n < last_num; n++){
+    out[n] = 0;
    }
   while(*fmt)
   {
@@ -52,6 +53,7 @@ int sprintf(char *out, const char *fmt, ...) {
           j--;
         }
         i = i + j_tmp;
+        last_num = i;
         break;
      default:
         out[i++] = *(fmt-1);
