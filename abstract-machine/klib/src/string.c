@@ -97,9 +97,9 @@ void *memmove(void *dst, const void *src, size_t n) {
     buf2++;
   }
   }
-  else  //consider override
+  else  //Consideration of coverage
   {
-    while(n--){
+    while(n--){  //Copies from back to forth
       *(buf1 + n) = *(buf2 + n);
     }
   }

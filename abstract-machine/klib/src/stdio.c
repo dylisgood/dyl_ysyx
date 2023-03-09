@@ -14,7 +14,48 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
 }
 
 int sprintf(char *out, const char *fmt, ...) {
-  panic("Not implemented");
+  va_list ap;
+  int d;
+  char *s;
+  va_start(ap,fmt);
+  int i = 0;
+  int d_tmp;
+  int j = 0;
+  while(*fmt)
+  {
+    switch(*fmt++){
+      case '%':break;
+      case 's':
+        s = va_arg(ap,char *);
+        while(*s)
+        {
+          out[i++] = *s;
+          s++;
+        }
+        break;
+      case 'd':
+        d = va_arg(ap,int);
+        d_tmp = d;
+        while(d>0){ // the bit count of d
+         d = d / 10;
+         out[i+j] = '1';  //firstly open bits
+         j++;
+        }
+        int j_tmp = j;
+        while(d_tmp) 
+        {
+          out[i+j-1] = d_tmp % 10 + '0'; //from back to head
+          d_tmp = d_tmp / 10;
+          j--;
+        }
+        i = i + j_tmp;
+        break;
+     default:
+        out[i++] = *(fmt-1);
+        break;
+    }
+  }
+  return i;
 }
 
 int snprintf(char *out, size_t n, const char *fmt, ...) {
