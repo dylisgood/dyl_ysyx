@@ -21,6 +21,9 @@ int sprintf(char *out, const char *fmt, ...) {
   int i = 0;
   int d_tmp;
   int j = 0;
+  for(int n=0;n<100;n++){
+   out[n] = 0;
+   }
   while(*fmt)
   {
     switch(*fmt++){
