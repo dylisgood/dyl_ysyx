@@ -53,13 +53,13 @@ int sprintf(char *out, const char *fmt, ...) {
           j--;
         }
         i = i + j_tmp;
-        last_num = i;
         break;
      default:
         out[i++] = *(fmt-1);
         break;
     }
   }
+  last_num = i;
   return i;
 }
 
