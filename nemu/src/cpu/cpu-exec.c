@@ -89,7 +89,7 @@ static void execute(uint64_t n) {
     exec_once(&s, cpu.pc);
     g_nr_guest_inst ++;
     trace_and_difftest(&s, cpu.pc);
-    if (nemu_state.state != NEMU_RUNNING) {print_iringbuf();break; }
+    if (nemu_state.state != NEMU_RUNNING) {break; }
     IFDEF(CONFIG_DEVICE, device_update());
   }
 }
@@ -130,7 +130,7 @@ void cpu_exec(uint64_t n) {
 
     case NEMU_END: case NEMU_ABORT:
       Log("nemu: %s at pc = " FMT_WORD,
-          (nemu_state.state == NEMU_ABORT ? ANSI_FMT("ABORT", ANSI_FG_RED) :
+          (nemu_state.state == NEMU_ABORT ? (print_iringbuf(),ANSI_FMT("ABORT", ANSI_FG_RED)) :
            (nemu_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) :
             ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED))),
           nemu_state.halt_pc);
