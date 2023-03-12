@@ -24,7 +24,7 @@
  * This is useful when you use the `si' command.
  * You can modify this value as you want.
  */
-#define MAX_INST_TO_PRINT 11
+#define MAX_INST_TO_PRINT 21
 
 char iringbuf[10][128] = {};
 CPU_state cpu = {};
