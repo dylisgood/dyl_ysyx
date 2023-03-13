@@ -15,6 +15,7 @@
 
 #include <isa.h>
 #include <memory/paddr.h>
+#include <elf.h>
 
 void init_rand();
 void init_log(const char *log_file);
@@ -67,11 +68,88 @@ static long load_img() {
   return size;
 }
 
-static void load_elf() {
+typedef struct {
+    char*      name;
+    Elf64_Shdr shdr;
+} SectionMap;
+
+/**
+ * 判断是否是ELF64文件。
+ */
+int is_elf_64(FILE* fp)
+{
+    char buf[16];
+    int  nread = fread(buf, 1, 16, fp);
+    fseek(fp, 0, SEEK_SET);
+    if (nread < 16) {
+        return 1;
+    }
+
+    if (strncmp(buf, ELFMAG, SELFMAG)) {
+        return 1;
+    }
+
+    if (buf[EI_CLASS] != ELFCLASS64) {
+        return 1;
+    }
+    return 0;
+}
+
+static void init_ftrace() {
   if(elf_file == NULL) {
     Log("No elf is given. Can't trace function.");
+    return;
   }
-  else printf("I find elf-----------------------------------------\n");
+  else{
+    FILE *felf = fopen(elf_file,"r");
+    if(!felf){
+      printf("open %s failed. \n",elf_file);
+    }
+    if(is_elf_64(felf)){
+      printf("file type mismatch. \n");
+    }
+    
+    Elf64_Ehdr m_elf;
+    int jj=fread(&m_elf, 1, sizeof(m_elf), felf);
+
+    Elf64_Shdr arSection[m_elf.e_shnum];
+    fseek(felf, m_elf.e_shoff, SEEK_SET);
+    jj=fread(&arSection[0], 1, (m_elf.e_shnum * m_elf.e_shentsize), felf);
+
+    // 3 读取段名字索引
+    char arSectionNames[arSection[m_elf.e_shstrndx].sh_size];
+    fseek(felf, arSection[m_elf.e_shstrndx].sh_offset, SEEK_SET);
+    jj=fread(&arSectionNames, 1, sizeof(arSectionNames), felf);
+
+    // 4 读取段结构和段名字
+    SectionMap m_mpSections[m_elf.e_shnum];
+    for (Elf64_Half i = 0; i < m_elf.e_shnum; i++) {
+        m_mpSections[i].name = &arSectionNames[0] + arSection[i].sh_name;
+        m_mpSections[i].shdr = arSection[i];
+    }
+
+    const char findSectionName[] = ".dynstr";
+    // 遍历每一个段
+    for (Elf64_Half i = 0; i < m_elf.e_shnum; i++) {
+        // 输出每个段的名字
+        printf("section name :%s\n", m_mpSections[i].name);
+
+        // 输出“.dynstr”段的内容
+        if (!strcmp(m_mpSections[i].name, findSectionName)) {
+            unsigned char content[m_mpSections[i].shdr.sh_size];
+            fseek(felf, m_mpSections[i].shdr.sh_offset, SEEK_SET);
+            jj=fread(content, 1, m_mpSections[i].shdr.sh_size, felf);
+            for (Elf64_Xword j = 0; j < m_mpSections[i].shdr.sh_size; ++j)
+                printf("%c", content[j]);
+            // printf("%02x", content[i]);对于非字符内容，应该输出十六机制。
+        }
+    }
+    printf("jj = %d",jj);
+    printf("\n");
+    fclose(felf);
+    return;
+  }
+
 }
 
 static int parse_args(int argc, char *argv[]) {
@@ -90,7 +168,7 @@ static int parse_args(int argc, char *argv[]) {
       case 'b': sdb_set_batch_mode(); break;
       case 'p': sscanf(optarg, "%d", &difftest_port); break;
       case 'l': log_file = optarg; break;
-      case 'e': elf_file = optarg; load_elf();  break;
+      case 'e': elf_file = optarg; break;
       case 'd': diff_so_file = optarg; break;
       case 1: img_file = optarg; return 0;
       default:
@@ -136,6 +214,8 @@ void init_monitor(int argc, char *argv[]) {
 
   /* Initialize the simple debugger. */
   init_sdb();
+
+  init_ftrace();
 
   IFDEF(CONFIG_ITRACE, init_disasm(
     MUXDEF(CONFIG_ISA_x86,     "i686",
