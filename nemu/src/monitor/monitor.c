@@ -67,10 +67,18 @@ static long load_img() {
   return size;
 }
 
+static void load_elf() {
+  if(elf_file == NULL) {
+    Log("No elf is given. Can't trace function.");
+  }
+  else printf("I find elf-----------------------------------------\n");
+}
+
 static int parse_args(int argc, char *argv[]) {
   const struct option table[] = {
     {"batch"    , no_argument      , NULL, 'b'},
     {"log"      , required_argument, NULL, 'l'},
+    {"elf"      , required_argument, NULL, 'e'},
     {"diff"     , required_argument, NULL, 'd'},
     {"port"     , required_argument, NULL, 'p'},
     {"help"     , no_argument      , NULL, 'h'},
@@ -82,7 +90,7 @@ static int parse_args(int argc, char *argv[]) {
       case 'b': sdb_set_batch_mode(); break;
       case 'p': sscanf(optarg, "%d", &difftest_port); break;
       case 'l': log_file = optarg; break;
-      case 'e': elf_file = optarg; break;
+      case 'e': elf_file = optarg; load_elf();  break;
       case 'd': diff_so_file = optarg; break;
       case 1: img_file = optarg; return 0;
       default:
