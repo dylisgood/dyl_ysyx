@@ -25,7 +25,7 @@ $(BINARY): compile_git
 # Some convenient rules
 
 ARGS ?= --log=$(BUILD_DIR)/nemu-log.txt
-ARGS += -b
+#ARGS += -b
 #override ARGS += --elf=
 ARGS += $(ARGS_DIFF)
 
