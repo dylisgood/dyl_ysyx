@@ -104,14 +104,18 @@ static void init_ftrace() {
     FILE *felf = fopen(elf_file,"r");
     if(!felf){
       printf("open %s failed. \n",elf_file);
+      return;
     }
     if(is_elf_64(felf)){
       printf("file type mismatch. \n");
+      return;
     }
     
+    // 1 读取elf头文件
     Elf64_Ehdr m_elf;
     int jj=fread(&m_elf, 1, sizeof(m_elf), felf);
 
+    // 2 读取所有段结构
     Elf64_Shdr arSection[m_elf.e_shnum];
     fseek(felf, m_elf.e_shoff, SEEK_SET);
     jj=fread(&arSection[0], 1, (m_elf.e_shnum * m_elf.e_shentsize), felf);
@@ -128,13 +132,13 @@ static void init_ftrace() {
         m_mpSections[i].shdr = arSection[i];
     }
 
-    const char findSectionName[] = ".dynstr";
+    //const char findSectionName[] = ".dynstr";
     // 遍历每一个段
     for (Elf64_Half i = 0; i < m_elf.e_shnum; i++) {
         // 输出每个段的名字
         printf("section name :%s\n", m_mpSections[i].name);
 
-        // 输出“.dynstr”段的内容
+/*         // 输出“.dynstr”段的内容
         if (!strcmp(m_mpSections[i].name, findSectionName)) {
             unsigned char content[m_mpSections[i].shdr.sh_size];
             fseek(felf, m_mpSections[i].shdr.sh_offset, SEEK_SET);
@@ -142,7 +146,7 @@ static void init_ftrace() {
             for (Elf64_Xword j = 0; j < m_mpSections[i].shdr.sh_size; ++j)
                 printf("%c", content[j]);
             // printf("%02x", content[i]);对于非字符内容，应该输出十六机制。
-        }
+        } */
     }
     printf("jj = %d",jj);
     printf("\n");
