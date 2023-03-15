@@ -64,7 +64,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
   int i;
   uint8_t *inst = (uint8_t *)&s->isa.inst.val;
   if((s->isa.inst.val & 0x6f) == 0x6f){
-    printf("s->snpc = %lx\n",s->snpc);
+    printf("s->snpc = %lx\n",s->dnpc);
     printf("find jal!\n");
   }
   else if((s->isa.inst.val & 0x67) == 0x67){
