@@ -63,7 +63,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
   int ilen = s->snpc - s->pc;
   int i;
   uint8_t *inst = (uint8_t *)&s->isa.inst.val;
-  if(*inst & 0x6f){
+  if(*inst & 0x0000006f){
     printf("find jal!\n");
   }    
   for (i = ilen - 1; i >= 0; i --) {
