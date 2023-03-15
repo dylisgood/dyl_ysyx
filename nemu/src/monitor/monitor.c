@@ -68,32 +68,8 @@ static long load_img() {
   return size;
 }
 
-typedef struct {
-    char*      name;
-    Elf64_Shdr shdr;
-} SectionMap;
-
-/**
- * 判断是否是ELF64文件。
- */
-int is_elf_64(FILE* fp)
-{
-    char buf[16];
-    int  nread = fread(buf, 1, 16, fp);
-    fseek(fp, 0, SEEK_SET);
-    if (nread < 16) {
-        return 1;
-    }
-
-    if (strncmp(buf, ELFMAG, SELFMAG)) {
-        return 1;
-    }
-
-    if (buf[EI_CLASS] != ELFCLASS64) {
-        return 1;
-    }
-    return 0;
-}
+Elf64_Sym *symbols = NULL;
+char *strtab1 = NULL;
 
 static void init_ftrace() {
   int jj = 0;
@@ -141,7 +117,7 @@ static void init_ftrace() {
         return;
     }
 
-    Elf64_Sym *symbols = malloc(symtab->sh_size);
+    symbols = malloc(symtab->sh_size);
     fseek(fp, symtab->sh_offset, SEEK_SET);
     jj=fread(symbols, symtab->sh_size, 1, fp);
 
@@ -150,7 +126,7 @@ static void init_ftrace() {
         return;
     }
 
-    char *strtab1 = malloc(strtab_hdr->sh_size);
+    strtab1 = malloc(strtab_hdr->sh_size);
     fseek(fp, strtab_hdr->sh_offset, SEEK_SET);
     jj=fread(strtab1, strtab_hdr->sh_size, 1, fp);
 
