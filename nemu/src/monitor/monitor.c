@@ -115,41 +115,43 @@ static void init_ftrace() {
     Elf64_Ehdr m_elf;
     int jj=fread(&m_elf, 1, sizeof(m_elf), felf);
 
-    // 2 读取所有段结构
-    Elf64_Shdr arSection[m_elf.e_shnum];
     fseek(felf, m_elf.e_shoff, SEEK_SET);
-    jj=fread(&arSection[0], 1, (m_elf.e_shnum * m_elf.e_shentsize), felf);
+    Elf64_Shdr shdr[m_elf.e_shnum];
+    jj=fread(shdr, sizeof(shdr[0]), m_elf.e_shnum, felf);
 
-    // 3 读取段名字索引
-    char arSectionNames[arSection[m_elf.e_shstrndx].sh_size];
-    fseek(felf, arSection[m_elf.e_shstrndx].sh_offset, SEEK_SET);
-    jj=fread(&arSectionNames, 1, sizeof(arSectionNames), felf);
+    Elf64_Shdr *strtab_shdr = &shdr[m_elf.e_shstrndx];
+    char *strtab = (char*)malloc(strtab_shdr->sh_size);
+    fseek(felf, strtab_shdr->sh_offset, SEEK_SET);
+    jj=fread(strtab, 1, strtab_shdr->sh_size, felf);
 
-    // 4 读取段结构和段名字
-    SectionMap m_mpSections[m_elf.e_shnum];
-    for (Elf64_Half i = 0; i < m_elf.e_shnum; i++) {
-        m_mpSections[i].name = &arSectionNames[0] + arSection[i].sh_name;
-        m_mpSections[i].shdr = arSection[i];
+    Elf64_Shdr *symtab_shdr = NULL;
+    //Elf64_Shdr *strtab_shdr = NULL;
+    for (int i = 0; i < m_elf.e_shnum; i++) {
+        if (shdr[i].sh_type == SHT_SYMTAB) {
+            symtab_shdr = &shdr[i];
+            strtab_shdr = &shdr[symtab_shdr->sh_link];
+            break;
+        }
     }
 
-    //const char findSectionName[] = ".dynstr";
-    // 遍历每一个段
-    for (Elf64_Half i = 0; i < m_elf.e_shnum; i++) {
-        // 输出每个段的名字
-        printf("section name :%s\n", m_mpSections[i].name);
+    if (symtab_shdr == NULL || strtab_shdr == NULL) {
+        printf("No symbol table found in file %s\n", elf_file);
+        return ;
+    }
 
-/*         // 输出“.dynstr”段的内容
-        if (!strcmp(m_mpSections[i].name, findSectionName)) {
-            unsigned char content[m_mpSections[i].shdr.sh_size];
-            fseek(felf, m_mpSections[i].shdr.sh_offset, SEEK_SET);
-            jj=fread(content, 1, m_mpSections[i].shdr.sh_size, felf);
-            for (Elf64_Xword j = 0; j < m_mpSections[i].shdr.sh_size; ++j)
-                printf("%c", content[j]);
-            // printf("%02x", content[i]);对于非字符内容，应该输出十六机制。
-        } */
+    Elf64_Sym *symtab = (Elf64_Sym*)malloc(symtab_shdr->sh_size);
+    fseek(felf, symtab_shdr->sh_offset, SEEK_SET);
+    jj=fread(symtab, 1, symtab_shdr->sh_size, felf);
+
+    for (int i = 0; i < symtab_shdr->sh_size / sizeof(symtab[0]); i++) {
+        Elf64_Sym *sym = &symtab[i];
+        const char *name = strtab + sym->st_name;
+        printf("%s\n", name);
     }
     printf("jj = %d",jj);
     printf("\n");
+    free(strtab);
+    free(symtab);
     fclose(felf);
     return;
   }
