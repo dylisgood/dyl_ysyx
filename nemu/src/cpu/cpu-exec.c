@@ -144,7 +144,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
 #ifdef CONFIG_FTRACE
   static int kong = 0;
   int j = 0;
-  if( ((s->isa.inst.val & 0xef) == 0xef) || ((s->isa.inst.val & 0x0e7) == 0x0e7) ){  //jal && x1 || jalr && x1
+  if( ((s->isa.inst.val & 0x6f) == 0x6f) || ((s->isa.inst.val & 0x0e7) == 0x0e7) ){  //jal && x1 || jalr && x1
       for (int i = 0; i < jj; i++) {
         Elf64_Sym *sym = &symbols[i];
         if(sym->st_info == 18){
