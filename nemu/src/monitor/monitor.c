@@ -138,6 +138,7 @@ static void init_ftrace() {
     if (symtab != NULL && strtab != NULL) {
       printf("hahahh ------------\n");
       for (i = 0; i < shdr[i].sh_size / sizeof(Elf64_Sym); i++) {
+        printf("%d \n",i);
         printf("hello world\n");
         printf("%s\n", strtab + symtab[i].st_name);
       }
