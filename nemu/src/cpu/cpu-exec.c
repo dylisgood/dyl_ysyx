@@ -143,20 +143,20 @@ static void exec_once(Decode *s, vaddr_t pc) {
   cpu.pc = s->dnpc;
 #ifdef CONFIG_FTRACE
   
-  if((s->isa.inst.val & 0x6f) == 0x6f){
+  if((s->isa.inst.val & 0x6f) == 0x6f){  //jal
     //printf("s->snpc = %lx\n",s->dnpc);
     // printf("find jal!   ");
     for (int i = 0; i < jj; i++) {
         Elf64_Sym *sym = &symbols[i];
         if(sym->st_info == 18){
         if(s->dnpc == sym->st_value)
-         printf("%lx: call %s[@%p] \n",s->pc,&strtab1[sym->st_name],(void *) sym->st_value);
+         printf("0x%lx: call %s[@%p] \n",s->pc,&strtab1[sym->st_name],(void *) sym->st_value);
 /*        printf("%-20s %-20p %-20lu %-20d\n",
                &strtab1[sym->st_name], (void *) sym->st_value, (unsigned long) sym->st_size, sym->st_info); */
         }
     }
   }
-  else if((s->isa.inst.val & 0x67) == 0x67){
+  else if((s->isa.inst.val & 0x67) == 0x67){  //jalr
 /*     printf("find jalr!   ");
     printf("s->pc = %lx ",s->pc);
     printf("s->pc = %lx ",s->dnpc); */
@@ -164,7 +164,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
         Elf64_Sym *sym = &symbols[i];
         if(sym->st_info == 18){
         if(s->pc >= sym->st_value && s->pc <= (sym->st_value + sym->st_size))
-         printf("%lx: ret %s \n",s->pc,&strtab1[sym->st_name]);
+         printf("0x%lx: ret %s \n",s->pc,&strtab1[sym->st_name]);
         }
     }
   }  
