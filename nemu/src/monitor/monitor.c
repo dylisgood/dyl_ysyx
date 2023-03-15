@@ -143,7 +143,7 @@ static void init_ftrace() {
         printf("%d \n",j);
         printf("hello world\n");
         printf("symtab.stname = %d\n",symtab[j].st_info);
-        printf("%s \n",strtab+147);
+        printf("%s \n",strtab+3);
         //printf("%s\n", strtab + symtab[j].st_name);
       }
     }
