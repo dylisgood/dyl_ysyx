@@ -18,6 +18,7 @@
 #include <cpu/difftest.h>
 #include <locale.h>
 #include <../src/monitor/sdb/sdb.h> 
+#include <elf.h>
 
 /* The assembly code of instructions executed is only output to the screen
  * when the number of instructions executed is less than this value.
@@ -25,18 +26,97 @@
  * You can modify this value as you want.
  */
 #define MAX_INST_TO_PRINT 21
-
+#define CONFIG_FTRACE 1
 char iringbuf[10][128] = {};
 CPU_state cpu = {};
 uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
 static bool g_print_step = false;
 
+Elf64_Sym *symbols = NULL;
+char *strtab1 = NULL;
+
+
 void device_update();
 
 void print_iringbuf(){
   for(int x = 0; x < 10; x++){
     puts(iringbuf[x]);
+  }
+}
+
+extern char *elf_file;
+static void init_ftrace() {
+  int jj = 0;
+  if(elf_file == NULL) {
+    Log("No elf is given. Can't trace function.");
+    return;
+  }
+  else{
+    Elf64_Ehdr elf_header;
+    FILE *fp = fopen(elf_file, "rb");
+    if (!fp) {
+        perror("Failed to open file");
+        return;
+    }
+
+    jj=fread(&elf_header, sizeof(Elf64_Ehdr), 1, fp);
+    if (memcmp(elf_header.e_ident, ELFMAG, SELFMAG) != 0) {
+        fprintf(stderr, "Not an ELF file: %s\n", elf_file);
+        return;
+    }
+
+    Elf64_Shdr *sh_table = malloc(sizeof(Elf64_Shdr) * elf_header.e_shnum);
+    fseek(fp, elf_header.e_shoff, SEEK_SET);
+    jj=fread(sh_table, sizeof(Elf64_Shdr), elf_header.e_shnum, fp);
+
+    Elf64_Shdr *strtab = &sh_table[elf_header.e_shstrndx];
+    char *sh_strtab = malloc(strtab->sh_size);
+    fseek(fp, strtab->sh_offset, SEEK_SET);
+    jj=fread(sh_strtab, strtab->sh_size, 1, fp);
+
+    Elf64_Shdr *symtab = NULL;
+    Elf64_Shdr *strtab_hdr = NULL;
+
+    for (int i = 0; i < elf_header.e_shnum; i++) {
+        if (sh_table[i].sh_type == SHT_SYMTAB) {
+            symtab = &sh_table[i];
+        } else if (sh_table[i].sh_type == SHT_STRTAB &&
+                   strcmp(&sh_strtab[sh_table[i].sh_name], ".strtab") == 0) {
+            strtab_hdr = &sh_table[i];
+        }
+    }
+
+    if (!symtab) {
+        fprintf(stderr, "No symbol table found\n");
+        return;
+    }
+    symbols = malloc(symtab->sh_size);
+    fseek(fp, symtab->sh_offset, SEEK_SET);
+    jj=fread(symbols, symtab->sh_size, 1, fp);
+
+    if (!strtab_hdr) {
+        fprintf(stderr, "No string table found\n");
+        return;
+    }
+    strtab1 = malloc(strtab_hdr->sh_size);
+    fseek(fp, strtab_hdr->sh_offset, SEEK_SET);
+    jj=fread(strtab1, strtab_hdr->sh_size, 1, fp);
+
+    printf("%-20s %-20s %-20s %-20s\n", "Name", "Address", "Size", "Type");
+    for (int i = 0; i < symtab->sh_size / sizeof(Elf64_Sym); i++) {
+        Elf64_Sym *sym = &symbols[i];
+        printf("%-20s %-20p %-20lu %-20d\n",
+               &strtab1[sym->st_name], (void *) sym->st_value, (unsigned long) sym->st_size, sym->st_info);
+    }
+
+    printf("jj = %d \n",jj);
+    fclose(fp);
+    free(sh_table);
+    free(sh_strtab);
+    free(symbols);
+    free(strtab1);
+    return;
   }
 }
 
@@ -57,19 +137,23 @@ static void exec_once(Decode *s, vaddr_t pc) {
   s->snpc = pc;
   isa_exec_once(s);
   cpu.pc = s->dnpc;
+#ifdef CONFIG_FTRACE
+  init_ftrace();
+  if((s->isa.inst.val & 0x6f) == 0x6f){
+
+    printf("s->snpc = %lx\n",s->dnpc);
+    printf("find jal!\n");
+  }
+  else if((s->isa.inst.val & 0x67) == 0x67){
+    printf("find jalr!\n");
+  }  
+#endif
 #ifdef CONFIG_ITRACE
   char *p = s->logbuf;
   p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc); //16进制PC 64位 
   int ilen = s->snpc - s->pc;
   int i;
   uint8_t *inst = (uint8_t *)&s->isa.inst.val;
-  if((s->isa.inst.val & 0x6f) == 0x6f){
-    printf("s->snpc = %lx\n",s->dnpc);
-    printf("find jal!\n");
-  }
-  else if((s->isa.inst.val & 0x67) == 0x67){
-    printf("find jalr!\n");
-  }    
   for (i = ilen - 1; i >= 0; i --) {
     p += snprintf(p, 4, " %02x", inst[i]); 
   }
