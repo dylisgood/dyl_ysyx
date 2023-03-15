@@ -145,7 +145,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
   
   if((s->isa.inst.val & 0x6f) == 0x6f){
     //printf("s->snpc = %lx\n",s->dnpc);
-    printf("find jal!   ");
+    // printf("find jal!   ");
     for (int i = 0; i < jj; i++) {
         Elf64_Sym *sym = &symbols[i];
         if(sym->st_info == 18){
@@ -157,9 +157,9 @@ static void exec_once(Decode *s, vaddr_t pc) {
     }
   }
   else if((s->isa.inst.val & 0x67) == 0x67){
-    printf("find jalr!   ");
+/*     printf("find jalr!   ");
     printf("s->pc = %lx ",s->pc);
-    printf("s->pc = %lx ",s->dnpc);
+    printf("s->pc = %lx ",s->dnpc); */
     for (int i = 0; i < jj; i++) {
         Elf64_Sym *sym = &symbols[i];
         if(sym->st_info == 18){
