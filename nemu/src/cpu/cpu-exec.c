@@ -144,13 +144,13 @@ static void exec_once(Decode *s, vaddr_t pc) {
 #ifdef CONFIG_FTRACE
   
   if((s->isa.inst.val & 0x6f) == 0x6f){
-    printf("s->snpc = %lx\n",s->dnpc);
+    //printf("s->snpc = %lx\n",s->dnpc);
     printf("find jal!\n");
     for (int i = 0; i < jj; i++) {
         Elf64_Sym *sym = &symbols[i];
         if(sym->st_info == 18){
         if(s->dnpc == sym->st_value)
-         printf("call %-20s \n",&strtab1[sym->st_name]);
+         printf("call %-20s[@%p] \n",&strtab1[sym->st_name],(void *) sym->st_value);
 /*        printf("%-20s %-20p %-20lu %-20d\n",
                &strtab1[sym->st_name], (void *) sym->st_value, (unsigned long) sym->st_size, sym->st_info); */
         }
@@ -158,8 +158,16 @@ static void exec_once(Decode *s, vaddr_t pc) {
   }
   else if((s->isa.inst.val & 0x67) == 0x67){
     printf("find jalr!\n");
+    for (int i = 0; i < jj; i++) {
+        Elf64_Sym *sym = &symbols[i];
+        if(sym->st_info == 18){
+        if(s->pc >= sym->st_value && s->pc <= sym->st_value)
+         printf("ret %-20s[@%p] \n",&strtab1[sym->st_name],(void *) sym->st_value);
+        }
+    }
   }  
 #endif
+
 #ifdef CONFIG_ITRACE
   char *p = s->logbuf;
   p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc); //16进制PC 64位 
