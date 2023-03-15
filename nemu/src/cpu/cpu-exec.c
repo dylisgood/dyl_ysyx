@@ -171,7 +171,8 @@ static void exec_once(Decode *s, vaddr_t pc) {
         }
         }
     }
-  }  
+  }
+  printf("kong = %d\n",kong);  
 #endif
 
 #ifdef CONFIG_ITRACE
