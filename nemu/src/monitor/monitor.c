@@ -139,9 +139,9 @@ static void init_ftrace() {
       printf("hahahh ------------\n");
       printf("i = %d \n",i);
       
-      for(int j = 0; j < 35; j++) {
+      for(int j = 0; shdr[i].sh_size / sizeof(Elf64_Sym); j++) {
         printf("%d \n",j);
-        printf("shdr = %ld \n",shdr[j].sh_size / sizeof(Elf64_Sym));
+        printf("shdr = %ld \n",shdr[7].sh_size / sizeof(Elf64_Sym));
         printf("hello world\n");
         printf("symtab.stname = %d\n",symtab[j].st_info);
         printf("%s \n",strtab+3);
