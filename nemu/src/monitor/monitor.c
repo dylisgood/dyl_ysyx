@@ -139,7 +139,7 @@ static void init_ftrace() {
       printf("hahahh ------------\n");
       printf("i = %d \n",i);
       
-      for(int j = 0; j < (shdr[j].sh_size / sizeof(Elf64_Sym)); j++) {
+      for(int j = 0; j < 35; j++) {
         printf("%d \n",j);
         printf("shdr = %ld \n",shdr[j].sh_size / sizeof(Elf64_Sym));
         printf("hello world\n");
