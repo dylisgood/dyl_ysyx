@@ -128,8 +128,8 @@ static void init_ftrace() {
     for (i = 0; i < ehdr->e_shnum; i++) {
       if (shdr[i].sh_type == SHT_SYMTAB) {
           printf("haha---------------------------- \n");
-          symtab = (Elf64_Sym*)(shdr[i].sh_offset + (unsigned long long)ehdr);
-          strtab = (char*)(shdr[shdr[i].sh_link].sh_offset + (unsigned long long)ehdr);
+          symtab = (Elf64_Sym*)(shdr[i].sh_offset + (unsigned long)ehdr);
+          strtab = (char*)(shdr[shdr[i].sh_link].sh_offset + (unsigned long)ehdr);
       break;
     }
     }
