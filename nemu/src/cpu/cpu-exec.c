@@ -63,8 +63,11 @@ static void exec_once(Decode *s, vaddr_t pc) {
   int ilen = s->snpc - s->pc;
   int i;
   uint8_t *inst = (uint8_t *)&s->isa.inst.val;
-  if((s->isa.inst.val & 0x0000006f) == 0x6f){
+  if((s->isa.inst.val & 0x6f) == 0x6f){
     printf("find jal!\n");
+  }
+  else if((s->isa.inst.val & 0x67) == 0x67){
+    printf("find jalr!\n");
   }    
   for (i = ilen - 1; i >= 0; i --) {
     p += snprintf(p, 4, " %02x", inst[i]); 
