@@ -143,7 +143,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
   cpu.pc = s->dnpc;
 #ifdef CONFIG_FTRACE
   
-  if( ((s->isa.inst.val & 0xef) == 0xef) ){  //jal && x1
+  if( ((s->isa.inst.val & 0xef) == 0xef) || ((s->isa.inst.val & 0x0e7) == 0x0e7) ){  //jal && x1 || jalr && x1
       for (int i = 0; i < jj; i++) {
         Elf64_Sym *sym = &symbols[i];
         if(sym->st_info == 18){
@@ -152,7 +152,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
         }
     }
   }
-  else if((s->isa.inst.val & 0x0e7) == 0x0e7){  //jalr && x1 
+  else if( ((s->isa.inst.val & 0x067) == 0x067) || ((s->isa.inst.val & 0x06f) == 0x06f) ){  //jalr && x0 || jal && x0 
     for (int i = 0; i < jj; i++) {
         Elf64_Sym *sym = &symbols[i];
         if(sym->st_info == 18){
