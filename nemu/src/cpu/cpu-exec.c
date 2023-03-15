@@ -159,7 +159,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
   else if((s->isa.inst.val & 0x67) == 0x67){
     printf("find jalr!   ");
     printf("s->pc = %lx ",s->pc);
-    printf("s->pc = %lx\n",s->dnpc);
+    printf("s->pc = %lx ",s->dnpc);
     for (int i = 0; i < jj; i++) {
         Elf64_Sym *sym = &symbols[i];
         if(sym->st_info == 18){
