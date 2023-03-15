@@ -137,6 +137,7 @@ static void init_ftrace() {
     // Print out the symbol table
     if (symtab != NULL && strtab != NULL) {
       printf("hahahh ------------\n");
+      printf("i = %d \n",i);
       printf("shdr = %ld \n",shdr[i].sh_size / sizeof(Elf64_Sym));
       for (i = 0; i < shdr[i].sh_size / sizeof(Elf64_Sym); i++) {
         printf("%d \n",i);
