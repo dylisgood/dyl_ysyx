@@ -162,7 +162,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
     for (int i = 0; i < jj; i++) {
         Elf64_Sym *sym = &symbols[i];
         if(sym->st_info == 18){
-        if(s->pc >= sym->st_value && s->pc <= sym->st_value)
+        if(s->pc >= sym->st_value && s->pc <= (sym->st_value + sym->st_size))
          printf("ret %s[@%p] \n",&strtab1[sym->st_name],(void *) sym->st_value);
         }
     }
