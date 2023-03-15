@@ -102,59 +102,49 @@ static void init_ftrace() {
     return;
   }
   else{
-    const char *filename = elf_file;
-    FILE *file = fopen(elf_file, "rb");
-    if (file == NULL) {
-        printf("Unable to open file %s\n", filename);
-        return;
+    Elf64_Shdr *shdr = NULL;
+    Elf64_Ehdr *ehdr = NULL;
+    char *strtab = NULL;
+    Elf64_Sym *symtab = NULL;
+    int i;
+
+    // Open the ELF file
+    FILE *fp = fopen(elf_file, "rb");
+    if (fp == NULL) {
+      printf("Error: Unable to open file\n");
+    return;
     }
 
-    Elf64_Ehdr ehdr;
-    jj=fread(&ehdr, 1, sizeof(ehdr), file);
-    if (memcmp(ehdr.e_ident, ELFMAG, SELFMAG) != 0 ||
-            ehdr.e_ident[EI_CLASS] != ELFCLASS64) {
-        printf("File %s is not a valid ELF file\n", filename);
-        return;
+    // Read the ELF header
+    ehdr = malloc(sizeof(Elf64_Ehdr));
+    jj=fread(ehdr, sizeof(Elf64_Ehdr), 1, fp);
+
+    // Read the section header table
+    shdr = malloc(sizeof(Elf64_Shdr) * ehdr->e_shnum);
+    fseek(fp, ehdr->e_shoff, SEEK_SET);
+    jj=fread(shdr, sizeof(Elf64_Shdr), ehdr->e_shnum, fp);
+
+    // Find the symbol table and string table sections
+    for (i = 0; i < ehdr->e_shnum; i++) {
+    if (shdr[i].sh_type == SHT_SYMTAB) {
+    symtab = (Elf64_Sym*)(shdr[i].sh_offset + (unsigned long long)ehdr);
+    strtab = (char*)(shdr[shdr[i].sh_link].sh_offset + (unsigned long long)ehdr);
+    break;
+    }
     }
 
-    fseek(file, ehdr.e_shoff, SEEK_SET);
-    Elf64_Shdr shdr[ehdr.e_shnum];
-    jj=fread(shdr, sizeof(shdr[0]), ehdr.e_shnum, file);
-
-    Elf64_Shdr *strtab_shdr = &shdr[ehdr.e_shstrndx];
-    char *strtab = (char*)malloc(strtab_shdr->sh_size);
-    fseek(file, strtab_shdr->sh_offset, SEEK_SET);
-    jj=fread(strtab, 1, strtab_shdr->sh_size, file);
-
-    Elf64_Shdr *symtab_shdr = NULL;
-    //Elf64_Shdr *strtab_shdr = NULL;
-    for (int i = 0; i < ehdr.e_shnum; i++) {
-        if (shdr[i].sh_type == SHT_SYMTAB) {
-            symtab_shdr = &shdr[i];
-            strtab_shdr = &shdr[symtab_shdr->sh_link];
-            break;
-        }
+    // Print out the symbol table
+    if (symtab != NULL && strtab != NULL) {
+    for (i = 0; i < shdr[i].sh_size / sizeof(Elf64_Sym); i++) {
+    printf("%s\n", strtab + symtab[i].st_name);
+    }
     }
 
-    if (symtab_shdr == NULL || strtab_shdr == NULL) {
-        printf("No symbol table found in file %s\n", filename);
-        return;
-    }
-
-    Elf64_Sym *symtab = (Elf64_Sym*)malloc(symtab_shdr->sh_size);
-    fseek(file, symtab_shdr->sh_offset, SEEK_SET);
-    jj=fread(symtab, 1, symtab_shdr->sh_size, file);
-
-    for (int i = 0; i < symtab_shdr->sh_size / sizeof(symtab[0]); i++) {
-        Elf64_Sym *sym = &symtab[i];
-        const char *name = strtab + sym->st_name;
-        printf("%s\n", name);
-    }
-    printf("jj = %d",jj);
-    printf("\n");
-    free(strtab);
-    free(symtab);
-    fclose(file);
+    // Clean up
+    printf("jj = %d \n",jj);
+    free(ehdr);
+    free(shdr);
+    fclose(fp);
     return;
   }
 
