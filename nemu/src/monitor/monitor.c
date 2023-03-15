@@ -142,7 +142,7 @@ static void init_ftrace() {
       for(int j = 0; j < (shdr[i].sh_size / sizeof(Elf64_Sym)); j++) {
         printf("%d \n",j);
         printf("hello world\n");
-        printf("symtab.stname = %d\n",symtab[j].st_name);
+        printf("symtab.stname = %d\n",symtab[j].st_info);
         printf("%s \n",strtab);
         //printf("%s\n", strtab + symtab[j].st_name);
       }
