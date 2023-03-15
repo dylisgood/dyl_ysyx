@@ -143,8 +143,8 @@ static void exec_once(Decode *s, vaddr_t pc) {
   cpu.pc = s->dnpc;
 #ifdef CONFIG_FTRACE
   
-  if( ((s->isa.inst.val & 0x0ef) == 0xef) ){  //if x1(ra) is register----call function
-    for (int i = 0; i < jj; i++) {
+  if( ((s->isa.inst.val & 0xef) == 0xef) ){  //jal && x1
+      for (int i = 0; i < jj; i++) {
         Elf64_Sym *sym = &symbols[i];
         if(sym->st_info == 18){
         if(s->dnpc == sym->st_value)
@@ -152,7 +152,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
         }
     }
   }
-  else if((s->isa.inst.val & 0x0e7) == 0x0e7){  //if x0 is register----goto
+  else if((s->isa.inst.val & 0x0e7) == 0x0e7){  //jalr && x1 
     for (int i = 0; i < jj; i++) {
         Elf64_Sym *sym = &symbols[i];
         if(sym->st_info == 18){
