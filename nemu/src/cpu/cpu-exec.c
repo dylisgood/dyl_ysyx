@@ -45,9 +45,10 @@ void print_iringbuf(){
   }
 }
 
+int jj = 0;
 extern char *elf_file;
-static void init_ftrace() {
-  int jj = 0;
+void init_ftrace() {
+  
   if(elf_file == NULL) {
     Log("No elf is given. Can't trace function.");
     return;
@@ -102,22 +103,25 @@ static void init_ftrace() {
     strtab1 = malloc(strtab_hdr->sh_size);
     fseek(fp, strtab_hdr->sh_offset, SEEK_SET);
     jj=fread(strtab1, strtab_hdr->sh_size, 1, fp);
-
+/* 
     printf("%-20s %-20s %-20s %-20s\n", "Name", "Address", "Size", "Type");
     for (int i = 0; i < symtab->sh_size / sizeof(Elf64_Sym); i++) {
         Elf64_Sym *sym = &symbols[i];
         printf("%-20s %-20p %-20lu %-20d\n",
-               &strtab1[sym->st_name], (void *) sym->st_value, (unsigned long) sym->st_size, sym->st_info);
-    }
+               &strtab1[sym->st_name], (void *) sym->st_value, (unsigned long) sym->st_size, sym->st_info); 
+    }*/
 
-    printf("jj = %d \n",jj);
+    jj = symtab->sh_size / sizeof(Elf64_Sym);
     fclose(fp);
     free(sh_table);
     free(sh_strtab);
-    free(symbols);
-    free(strtab1);
     return;
   }
+}
+
+void close_ftrace(){
+    free(symbols);
+    free(strtab1);
 }
 
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
@@ -140,9 +144,16 @@ static void exec_once(Decode *s, vaddr_t pc) {
 #ifdef CONFIG_FTRACE
   
   if((s->isa.inst.val & 0x6f) == 0x6f){
-
     printf("s->snpc = %lx\n",s->dnpc);
     printf("find jal!\n");
+    for (int i = 0; i < jj; i++) {
+        Elf64_Sym *sym = &symbols[i];
+        if(sym->st_info == 18){
+        if(s->dnpc == sym->st_value)
+        printf("%-20s %-20p %-20lu %-20d\n",
+               &strtab1[sym->st_name], (void *) sym->st_value, (unsigned long) sym->st_size, sym->st_info);
+        }
+    }
   }
   else if((s->isa.inst.val & 0x67) == 0x67){
     printf("find jalr!\n");
@@ -209,14 +220,14 @@ void cpu_exec(uint64_t n) {
     default: nemu_state.state = NEMU_RUNNING;
   }
 
-  init_ftrace();
+  
   uint64_t timer_start = get_time();
 
   execute(n);
 
   uint64_t timer_end = get_time();
   g_timer += timer_end - timer_start;
-
+  close_ftrace();
   switch (nemu_state.state) {
     case NEMU_RUNNING: nemu_state.state = NEMU_STOP; break;
 

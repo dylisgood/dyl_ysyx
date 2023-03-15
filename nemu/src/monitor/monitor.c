@@ -39,6 +39,7 @@ static void welcome() {
 #include <getopt.h>
 
 void sdb_set_batch_mode();
+void init_ftrace();
 
 static char *log_file = NULL;
 static char *diff_so_file = NULL;
@@ -131,7 +132,7 @@ void init_monitor(int argc, char *argv[]) {
   /* Initialize the simple debugger. */
   init_sdb();
 
-  //init_ftrace();
+  init_ftrace();
 
   IFDEF(CONFIG_ITRACE, init_disasm(
     MUXDEF(CONFIG_ISA_x86,     "i686",
