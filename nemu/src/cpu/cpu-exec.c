@@ -158,7 +158,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
         }
     }
   }
-  else if( ((s->isa.inst.val & 0x8067) == 0x8067) || ((s->isa.inst.val & 0x06f) == 0x06f) ){  //jalr && x0 || jal && x0 
+  else if( ((s->isa.inst.val & 0x8067) == 0x8067)){  //jalr && x0 || jal && x0 
     for (int i = 0; i < jj; i++) {
         Elf64_Sym *sym = &symbols[i];
         if(sym->st_info == 18){
