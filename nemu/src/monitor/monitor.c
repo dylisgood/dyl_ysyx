@@ -154,7 +154,7 @@ static void init_ftrace() {
     fseek(fp, strtab_hdr->sh_offset, SEEK_SET);
     jj=fread(strtab1, strtab_hdr->sh_size, 1, fp);
 
-    printf("%-20s %-20s %-20s\n", "Name", "Address", "Size");
+    printf("%-20s %-20s %-20s %-20s\n", "Name", "Address", "Size", "Type");
     for (int i = 0; i < symtab->sh_size / sizeof(Elf64_Sym); i++) {
         Elf64_Sym *sym = &symbols[i];
         printf("%-20s %-20p %-20lu %-20c\n",
