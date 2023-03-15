@@ -154,9 +154,10 @@ static void exec_once(Decode *s, vaddr_t pc) {
           for(j = 0; j < kong; j++) printf(" ");
           kong++;
           printf("call %s[@%p] \n",&strtab1[sym->st_name],(void *) sym->st_value);
+          printf("kong = %d\n",kong); 
         }
         }
-        printf("kong = %d\n",kong); 
+        
     }
   }
   else if( ((s->isa.inst.val & 0x8067) == 0x8067)){  //jalr && x0 || jal && x0 
@@ -169,8 +170,9 @@ static void exec_once(Decode *s, vaddr_t pc) {
           for(j = 0; j< kong; j++) printf(" ");
           kong--;
           printf("ret %s \n",&strtab1[sym->st_name]);
+          printf("kong = %d\n",kong);
         }
-        printf("kong = %d\n",kong); 
+         
         }
     }
   }
