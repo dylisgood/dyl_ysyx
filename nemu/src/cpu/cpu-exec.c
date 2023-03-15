@@ -62,7 +62,10 @@ static void exec_once(Decode *s, vaddr_t pc) {
   p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc); //16进制PC 64位 
   int ilen = s->snpc - s->pc;
   int i;
-  uint8_t *inst = (uint8_t *)&s->isa.inst.val;    
+  uint8_t *inst = (uint8_t *)&s->isa.inst.val;
+  if(*inst & 0x6f){
+    printf("find jal!\n");
+  }    
   for (i = ilen - 1; i >= 0; i --) {
     p += snprintf(p, 4, " %02x", inst[i]); 
   }
