@@ -127,6 +127,7 @@ static void init_ftrace() {
     // Find the symbol table and string table sections
     for (i = 0; i < ehdr->e_shnum; i++) {
     if (shdr[i].sh_type == SHT_SYMTAB) {
+      printf("haha---------------------------- \n");
     symtab = (Elf64_Sym*)(shdr[i].sh_offset + (unsigned long long)ehdr);
     strtab = (char*)(shdr[shdr[i].sh_link].sh_offset + (unsigned long long)ehdr);
     break;
@@ -135,10 +136,10 @@ static void init_ftrace() {
 
     // Print out the symbol table
     if (symtab != NULL && strtab != NULL) {
-    for (i = 0; i < shdr[i].sh_size / sizeof(Elf64_Sym); i++) {
-      printf("hello world\n");
-    printf("%s\n", strtab + symtab[i].st_name);
-    }
+      for (i = 0; i < shdr[i].sh_size / sizeof(Elf64_Sym); i++) {
+        printf("hello world\n");
+        printf("%s\n", strtab + symtab[i].st_name);
+      }
     }
 
     // Clean up
