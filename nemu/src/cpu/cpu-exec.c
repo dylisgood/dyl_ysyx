@@ -138,7 +138,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
   isa_exec_once(s);
   cpu.pc = s->dnpc;
 #ifdef CONFIG_FTRACE
-  init_ftrace();
+  
   if((s->isa.inst.val & 0x6f) == 0x6f){
 
     printf("s->snpc = %lx\n",s->dnpc);
@@ -209,6 +209,7 @@ void cpu_exec(uint64_t n) {
     default: nemu_state.state = NEMU_RUNNING;
   }
 
+  init_ftrace();
   uint64_t timer_start = get_time();
 
   execute(n);
