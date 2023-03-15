@@ -150,7 +150,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
         Elf64_Sym *sym = &symbols[i];
         if(sym->st_info == 18){
         if(s->dnpc == sym->st_value)
-         printf("call %s[@%p] \n",&strtab1[sym->st_name],(void *) sym->st_value);
+         printf("%lx: call %s[@%p] \n",s->pc,&strtab1[sym->st_name],(void *) sym->st_value);
 /*        printf("%-20s %-20p %-20lu %-20d\n",
                &strtab1[sym->st_name], (void *) sym->st_value, (unsigned long) sym->st_size, sym->st_info); */
         }
@@ -164,7 +164,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
         Elf64_Sym *sym = &symbols[i];
         if(sym->st_info == 18){
         if(s->pc >= sym->st_value && s->pc <= (sym->st_value + sym->st_size))
-         printf("ret %s \n",&strtab1[sym->st_name]);
+         printf("%lx: ret %s \n",s->pc,&strtab1[sym->st_name]);
         }
     }
   }  
