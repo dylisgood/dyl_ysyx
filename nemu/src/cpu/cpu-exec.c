@@ -143,23 +143,16 @@ static void exec_once(Decode *s, vaddr_t pc) {
   cpu.pc = s->dnpc;
 #ifdef CONFIG_FTRACE
   
-  if( ((s->isa.inst.val & 0x0ef) == 0x6f) || ((s->isa.inst.val & 0x0e7) == 0x0e7) ){  //if x1(ra) is register----call function
-    //printf("s->snpc = %lx\n",s->dnpc);
-    // printf("find jal!   ");
+  if( ((s->isa.inst.val & 0x0ef) == 0xef) ){  //if x1(ra) is register----call function
     for (int i = 0; i < jj; i++) {
         Elf64_Sym *sym = &symbols[i];
         if(sym->st_info == 18){
         if(s->dnpc == sym->st_value)
          printf("0x%lx: call %s[@%p] \n",s->pc,&strtab1[sym->st_name],(void *) sym->st_value);
-/*        printf("%-20s %-20p %-20lu %-20d\n",
-               &strtab1[sym->st_name], (void *) sym->st_value, (unsigned long) sym->st_size, sym->st_info); */
         }
     }
   }
-  else if((s->isa.inst.val & 0x067) == 0x67){  //if x0 is register----goto
-/*     printf("find jalr!   ");
-    printf("s->pc = %lx ",s->pc);
-    printf("s->pc = %lx ",s->dnpc); */
+  else if((s->isa.inst.val & 0x0e7) == 0x0e7){  //if x0 is register----goto
     for (int i = 0; i < jj; i++) {
         Elf64_Sym *sym = &symbols[i];
         if(sym->st_info == 18){
