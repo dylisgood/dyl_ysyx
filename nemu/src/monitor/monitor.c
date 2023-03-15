@@ -157,7 +157,7 @@ static void init_ftrace() {
     printf("%-20s %-20s %-20s %-20s\n", "Name", "Address", "Size", "Type");
     for (int i = 0; i < symtab->sh_size / sizeof(Elf64_Sym); i++) {
         Elf64_Sym *sym = &symbols[i];
-        printf("%-20s %-20p %-20lu %-20c\n",
+        printf("%-20s %-20p %-20lu %-20d\n",
                &strtab1[sym->st_name], (void *) sym->st_value, (unsigned long) sym->st_size, sym->st_info);
     }
 
