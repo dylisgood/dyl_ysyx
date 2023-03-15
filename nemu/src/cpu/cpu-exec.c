@@ -142,13 +142,19 @@ static void exec_once(Decode *s, vaddr_t pc) {
   isa_exec_once(s);
   cpu.pc = s->dnpc;
 #ifdef CONFIG_FTRACE
-  
+  static int kong = 0;
+  int j = 0;
   if( ((s->isa.inst.val & 0xef) == 0xef) || ((s->isa.inst.val & 0x0e7) == 0x0e7) ){  //jal && x1 || jalr && x1
       for (int i = 0; i < jj; i++) {
         Elf64_Sym *sym = &symbols[i];
         if(sym->st_info == 18){
-        if(s->dnpc == sym->st_value)
-         printf("0x%lx: call %s[@%p] \n",s->pc,&strtab1[sym->st_name],(void *) sym->st_value);
+        if(s->pc >= sym->st_value && s->pc <= (sym->st_value + sym->st_size) )
+        {
+          printf("0x%lx: ",s->pc);
+          for(j = 0; j < kong; j++) printf(" ");
+          kong++;
+          printf("call %s[@%p] \n",&strtab1[sym->st_name],(void *) sym->st_value);
+          }
         }
     }
   }
@@ -157,7 +163,12 @@ static void exec_once(Decode *s, vaddr_t pc) {
         Elf64_Sym *sym = &symbols[i];
         if(sym->st_info == 18){
         if(s->pc >= sym->st_value && s->pc <= (sym->st_value + sym->st_size))
-         printf("0x%lx: ret %s \n",s->pc,&strtab1[sym->st_name]);
+        {
+          printf("0x%lx: ",s->pc);
+          for(j = 0; j< kong; j++) printf(" ");
+          kong--;
+          printf("ret %s \n",&strtab1[sym->st_name]);
+        }
         }
     }
   }  
