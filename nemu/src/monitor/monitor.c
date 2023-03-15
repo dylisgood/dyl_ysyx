@@ -96,37 +96,39 @@ int is_elf_64(FILE* fp)
 }
 
 static void init_ftrace() {
+  int jj = 0;
   if(elf_file == NULL) {
     Log("No elf is given. Can't trace function.");
     return;
   }
   else{
-    FILE *felf = fopen(elf_file,"r");
-    if(!felf){
-      printf("open %s failed. \n",elf_file);
-      return;
+    const char *filename = elf_file;
+    FILE *file = fopen(elf_file, "rb");
+    if (file == NULL) {
+        printf("Unable to open file %s\n", filename);
+        return;
     }
-    if(is_elf_64(felf)){
-      printf("file type mismatch. \n");
-      return;
+
+    Elf64_Ehdr ehdr;
+    jj=fread(&ehdr, 1, sizeof(ehdr), file);
+    if (memcmp(ehdr.e_ident, ELFMAG, SELFMAG) != 0 ||
+            ehdr.e_ident[EI_CLASS] != ELFCLASS64) {
+        printf("File %s is not a valid ELF file\n", filename);
+        return;
     }
-    
-    // 1 读取elf头文件
-    Elf64_Ehdr m_elf;
-    int jj=fread(&m_elf, 1, sizeof(m_elf), felf);
 
-    fseek(felf, m_elf.e_shoff, SEEK_SET);
-    Elf64_Shdr shdr[m_elf.e_shnum];
-    jj=fread(shdr, sizeof(shdr[0]), m_elf.e_shnum, felf);
+    fseek(file, ehdr.e_shoff, SEEK_SET);
+    Elf64_Shdr shdr[ehdr.e_shnum];
+    jj=fread(shdr, sizeof(shdr[0]), ehdr.e_shnum, file);
 
-    Elf64_Shdr *strtab_shdr = &shdr[m_elf.e_shstrndx];
+    Elf64_Shdr *strtab_shdr = &shdr[ehdr.e_shstrndx];
     char *strtab = (char*)malloc(strtab_shdr->sh_size);
-    fseek(felf, strtab_shdr->sh_offset, SEEK_SET);
-    jj=fread(strtab, 1, strtab_shdr->sh_size, felf);
+    fseek(file, strtab_shdr->sh_offset, SEEK_SET);
+    jj=fread(strtab, 1, strtab_shdr->sh_size, file);
 
     Elf64_Shdr *symtab_shdr = NULL;
     //Elf64_Shdr *strtab_shdr = NULL;
-    for (int i = 0; i < m_elf.e_shnum; i++) {
+    for (int i = 0; i < ehdr.e_shnum; i++) {
         if (shdr[i].sh_type == SHT_SYMTAB) {
             symtab_shdr = &shdr[i];
             strtab_shdr = &shdr[symtab_shdr->sh_link];
@@ -135,13 +137,13 @@ static void init_ftrace() {
     }
 
     if (symtab_shdr == NULL || strtab_shdr == NULL) {
-        printf("No symbol table found in file %s\n", elf_file);
-        return ;
+        printf("No symbol table found in file %s\n", filename);
+        return;
     }
 
     Elf64_Sym *symtab = (Elf64_Sym*)malloc(symtab_shdr->sh_size);
-    fseek(felf, symtab_shdr->sh_offset, SEEK_SET);
-    jj=fread(symtab, 1, symtab_shdr->sh_size, felf);
+    fseek(file, symtab_shdr->sh_offset, SEEK_SET);
+    jj=fread(symtab, 1, symtab_shdr->sh_size, file);
 
     for (int i = 0; i < symtab_shdr->sh_size / sizeof(symtab[0]); i++) {
         Elf64_Sym *sym = &symtab[i];
@@ -152,7 +154,7 @@ static void init_ftrace() {
     printf("\n");
     free(strtab);
     free(symtab);
-    fclose(felf);
+    fclose(file);
     return;
   }
 
