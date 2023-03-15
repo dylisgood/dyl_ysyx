@@ -143,7 +143,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
   cpu.pc = s->dnpc;
 #ifdef CONFIG_FTRACE
   
-  if((s->isa.inst.val & 0x6f) == 0x6f){  //jal
+  if( ((s->isa.inst.val & 0x0ef) == 0x6f) || ((s->isa.inst.val & 0x0e7) == 0x0e7) ){  //if x1(ra) is register----call function
     //printf("s->snpc = %lx\n",s->dnpc);
     // printf("find jal!   ");
     for (int i = 0; i < jj; i++) {
@@ -156,7 +156,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
         }
     }
   }
-  else if((s->isa.inst.val & 0x67) == 0x67){  //jalr
+  else if((s->isa.inst.val & 0x067) == 0x67){  //if x0 is register----goto
 /*     printf("find jalr!   ");
     printf("s->pc = %lx ",s->pc);
     printf("s->pc = %lx ",s->dnpc); */
