@@ -62,7 +62,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
   s->snpc = pc;
   isa_exec_once(s);
   cpu.pc = s->dnpc;
-#ifdef CONFIG_FTRACE
+/* #ifdef CONFIG_FTRACE
   static int kong = 0;
   int j = 0;
   if( ((s->isa.inst.val & 0x0ef) == 0x0ef) || ((s->isa.inst.val & 0x0e7) == 0x0e7) \
@@ -98,7 +98,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
     }
   }
    
-#endif
+#endif */
 
 #ifdef CONFIG_ITRACE
   char *p = s->logbuf;
