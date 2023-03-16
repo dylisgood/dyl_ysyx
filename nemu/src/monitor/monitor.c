@@ -15,7 +15,7 @@
 
 #include <isa.h>
 #include <memory/paddr.h>
-//#include <elf.h>
+#include <elf.h>
 
 void init_rand();
 void init_log(const char *log_file);
@@ -25,15 +25,6 @@ void init_device();
 void init_sdb();
 void init_disasm(const char *triple);
 
-static void welcome() {
-  Log("Trace: %s", MUXDEF(CONFIG_TRACE, ANSI_FMT("ON", ANSI_FG_GREEN), ANSI_FMT("OFF", ANSI_FG_RED)));
-  IFDEF(CONFIG_TRACE, Log("If trace is enabled, a log file will be generated "
-        "to record the trace. This may lead to a large log file. "
-        "If it is not necessary, you can disable it in menuconfig"));
-  Log("Build time: %s, %s", __TIME__, __DATE__);
-  printf("Welcome to %s-NEMU!\n", ANSI_FMT(str(__GUEST_ISA__), ANSI_FG_YELLOW ANSI_BG_RED));
-  printf("For help, type \"help\"\n");
-}
 
 #ifndef CONFIG_TARGET_AM
 #include <getopt.h>
@@ -45,7 +36,121 @@ static char *log_file = NULL;
 static char *diff_so_file = NULL;
 static char *img_file = NULL;
 static int difftest_port = 1234;
- char *elf_file = NULL;
+char *elf_file = NULL;
+
+
+struct func_trace{
+  char *name;
+  uint64_t address;
+  uint64_t size;
+};
+
+struct func_trace *func_struct;
+
+int sym_num = 0;
+int func_num = 0;
+void init_ftrace() {
+  
+  if(elf_file == NULL) {
+    Log("No elf is given. Can't trace function.");
+    return;
+  }
+  else{
+    Elf64_Ehdr elf_header;
+    FILE *fp = fopen(elf_file, "rb");
+    if (!fp) {
+        perror("Failed to open file");
+        return;
+    }
+
+    sym_num=fread(&elf_header, sizeof(Elf64_Ehdr), 1, fp);
+    if (memcmp(elf_header.e_ident, ELFMAG, SELFMAG) != 0) {
+        fprintf(stderr, "Not an ELF file: %s\n", elf_file);
+        return;
+    }
+
+    Elf64_Shdr *sh_table = malloc(sizeof(Elf64_Shdr) * elf_header.e_shnum);
+    fseek(fp, elf_header.e_shoff, SEEK_SET);
+    sym_num=fread(sh_table, sizeof(Elf64_Shdr), elf_header.e_shnum, fp);
+
+    Elf64_Shdr *strtab = &sh_table[elf_header.e_shstrndx];
+    char *sh_strtab = malloc(strtab->sh_size);
+    fseek(fp, strtab->sh_offset, SEEK_SET);
+    sym_num=fread(sh_strtab, strtab->sh_size, 1, fp);
+
+    Elf64_Shdr *symtab = NULL;
+    Elf64_Shdr *strtab_hdr = NULL;
+
+    for (int i = 0; i < elf_header.e_shnum; i++) {
+        if (sh_table[i].sh_type == SHT_SYMTAB) {
+            symtab = &sh_table[i];
+        } else if (sh_table[i].sh_type == SHT_STRTAB &&
+                   strcmp(&sh_strtab[sh_table[i].sh_name], ".strtab") == 0) {
+            strtab_hdr = &sh_table[i];
+        }
+    }
+
+    if (!symtab) {
+        fprintf(stderr, "No symbol table found\n");
+        return;
+    }
+    Elf64_Sym *symbols = malloc(symtab->sh_size);
+    fseek(fp, symtab->sh_offset, SEEK_SET);
+    sym_num=fread(symbols, symtab->sh_size, 1, fp);
+
+    if (!strtab_hdr) {
+        fprintf(stderr, "No string table found\n");
+        return;
+    }
+    char *strtab1 = malloc(strtab_hdr->sh_size);
+    fseek(fp, strtab_hdr->sh_offset, SEEK_SET);
+    sym_num=fread(strtab1, strtab_hdr->sh_size, 1, fp);
+
+    sym_num = symtab->sh_size / sizeof(Elf64_Sym);
+    for (int i = 0; i < sym_num; i++) {
+      Elf64_Sym *sym = &symbols[i];
+       if(sym->st_info == 18){
+         func_num++;
+      }
+    }
+    func_struct = (struct func_trace*)malloc(func_num *sizeof(struct func_trace));
+    for (int i = 0; i < sym_num; i++) {
+      Elf64_Sym *sym = &symbols[i];
+       if(sym->st_info == 18){
+         strcpy(func_struct->name,&strtab1[sym->st_name]);
+         func_struct->address = sym->st_value;
+         func_struct->size = sym->st_size;
+      }
+      func_struct++;
+    }
+    for(int i=0; i<func_num;i++){
+      printf("func_struct[%d].name = %s\n",i,func_struct->name);
+    }
+/* 
+    printf("%-20s %-20s %-20s %-20s\n", "Name", "Address", "Size", "Type");
+    for (int i = 0; i < symtab->sh_size / sizeof(Elf64_Sym); i++) {
+        Elf64_Sym *sym = &symbols[i];
+        printf("%-20s %-20p %-20lu %-20d\n",
+               &strtab1[sym->st_name], (void *) sym->st_value, (unsigned long) sym->st_size, sym->st_info); 
+    }*/
+    fclose(fp);
+    free(sh_table);
+    free(sh_strtab);
+    free(symbols);
+    free(strtab1);
+    return;
+  }
+}
+
+static void welcome() {
+  Log("Trace: %s", MUXDEF(CONFIG_TRACE, ANSI_FMT("ON", ANSI_FG_GREEN), ANSI_FMT("OFF", ANSI_FG_RED)));
+  IFDEF(CONFIG_TRACE, Log("If trace is enabled, a log file will be generated "
+        "to record the trace. This may lead to a large log file. "
+        "If it is not necessary, you can disable it in menuconfig"));
+  Log("Build time: %s, %s", __TIME__, __DATE__);
+  printf("Welcome to %s-NEMU!\n", ANSI_FMT(str(__GUEST_ISA__), ANSI_FG_YELLOW ANSI_BG_RED));
+  printf("For help, type \"help\"\n");
+}
 
 static long load_img() {
   if (img_file == NULL) {
@@ -132,7 +237,7 @@ void init_monitor(int argc, char *argv[]) {
   /* Initialize the simple debugger. */
   init_sdb();
 
-  init_ftrace();
+  IFDEF(CONFIIG_FTRACE,init_ftrace());
 
   IFDEF(CONFIG_ITRACE, init_disasm(
     MUXDEF(CONFIG_ISA_x86,     "i686",

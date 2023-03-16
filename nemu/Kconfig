@@ -143,7 +143,11 @@ config ITRACE
 
 config MTRACE
   bool "Enable memory tracer"
-  default y
+  default n
+
+config FTRACE
+  bool "Enable function tracer"
+  default n
 
 config ITRACE_COND
   depends on ITRACE
