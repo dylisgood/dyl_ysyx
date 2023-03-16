@@ -117,7 +117,7 @@ void init_ftrace() {
       Elf64_Sym *sym = &symbols[i];
        if(sym->st_info == 18){
          //strcpy(func_struct->name,"hello");
-         func_struct->address = sym->st_value;
+         func_struct->address = 2;
          func_struct->size = sym->st_size;
       }
       func_struct++;
