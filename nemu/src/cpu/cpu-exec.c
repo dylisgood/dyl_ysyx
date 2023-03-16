@@ -39,7 +39,7 @@ struct func_struct{
   uint64_t size;
 };
 
-extern struct func_struct func_trace[10];
+extern struct func_struct func_trace[];
 extern int func_num;
 
 void device_update();
