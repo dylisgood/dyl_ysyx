@@ -123,7 +123,7 @@ void init_ftrace() {
          func_trace->address = sym->st_value;
          func_trace->size = sym->st_size;
       }
-      func_trace++;
+      //func_trace++;
     }
     for(int i=0; i<func_num;i++){
       printf("func_struct[%d].name = %s     ",i,func_trace[i].name);
