@@ -145,7 +145,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
   static int kong = 0;
   int j = 0;
   if( ((s->isa.inst.val & 0x0ef) == 0x0ef) || ((s->isa.inst.val & 0x0e7) == 0x0e7) \
-         ){  //jal && x1 || jalr && !x1
+        || ((s->isa.inst.val & 0x00078067) == 0x00078067) ){  //jal && x1 || jalr && !x1
       for (int i = 0; i < jj; i++) {
         Elf64_Sym *sym = &symbols[i];
         if(sym->st_info == 18){
@@ -161,7 +161,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
         
     }
   }
-  else if( ((s->isa.inst.val & 0x00008067) == 0x00008067) || ((s->isa.inst.val & 0x00078067) == 0x00078067) ){  //jalr && x0 || jal && x0 
+  else if( ((s->isa.inst.val & 0x00008067) == 0x00008067)  ){  //jalr && x0 || jal && x0 
     for (int i = 0; i < jj; i++) {
         Elf64_Sym *sym = &symbols[i];
         if(sym->st_info == 18){
