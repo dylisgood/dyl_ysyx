@@ -40,7 +40,7 @@ char *elf_file = NULL;
 
 
 struct func_struct{
-  char *name;
+  char name[20];
   uint64_t address;
   uint64_t size;
 };
@@ -112,18 +112,18 @@ void init_ftrace() {
          func_num++;
       }
     }
-    //func_struct = (struct func_trace*)malloc(func_num *sizeof(struct func_trace));
+    //struct func_struct *func_trace = malloc(func_num *sizeof(struct func_struct));
     //printf("the size of func_struct = %ld \n",sizeof(func_struct));
     for (int i = 0; i < sym_num; i++) {
       Elf64_Sym *sym = &symbols[i];
        if(sym->st_info == 18){
-         strcpy(func_trace[0].name,"hello");
+         strcpy(func_trace[0].name,&strtab1[sym->st_name]);
          func_trace[0].address = sym->st_value;
          func_trace[0].size = sym->st_size;
       }
     }
     for(int i=0; i<func_num;i++){
-      printf("func_struct[%d].name = %lx\n",i,func_trace[i].address);
+      printf("func_struct[%d].name = %s\n",i,func_trace[i].name);
     }
 
 /*     printf("%-20s %-20s %-20s %-20s\n", "Name", "Address", "Size", "Type");
