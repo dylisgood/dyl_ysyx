@@ -36,7 +36,6 @@ static bool g_print_step = false;
 Elf64_Sym *symbols = NULL;
 char *strtab1 = NULL;
 
-
 void device_update();
 
 void print_iringbuf(){
@@ -173,7 +172,6 @@ static void exec_once(Decode *s, vaddr_t pc) {
           printf("ret %s \n",&strtab1[sym->st_name]);
           printf("kong = %d\n",kong);
         }
-         
         }
     }
   }
