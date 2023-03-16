@@ -39,13 +39,13 @@ static int difftest_port = 1234;
 char *elf_file = NULL;
 
 
-struct func_trace{
+struct func_struct{
   char *name;
   uint64_t address;
   uint64_t size;
 };
 
-struct func_trace *func_struct;
+struct func_struct func_trace[10];
 
 int sym_num = 0;
 int func_num = 0;
@@ -112,19 +112,18 @@ void init_ftrace() {
          func_num++;
       }
     }
-    func_struct = (struct func_trace*)malloc(func_num *sizeof(struct func_trace));
-    printf("the size of func_struct = %ld \n",sizeof(func_struct));
+    //func_struct = (struct func_trace*)malloc(func_num *sizeof(struct func_trace));
+    //printf("the size of func_struct = %ld \n",sizeof(func_struct));
     for (int i = 0; i < sym_num; i++) {
       Elf64_Sym *sym = &symbols[i];
        if(sym->st_info == 18){
          //strcpy(func_struct->name,"hello");
-         func_struct->address = 2;
-         func_struct->size = sym->st_size;
+         func_trace[0].address = sym->st_value;
+         func_trace[0].size = sym->st_size;
       }
-      func_struct++;
     }
     for(int i=0; i<func_num;i++){
-      printf("func_struct[%d].name = %lx\n",i,func_struct[i].address);
+      printf("func_struct[%d].name = %lx\n",i,func_trace[i].address);
     }
 
 /*     printf("%-20s %-20s %-20s %-20s\n", "Name", "Address", "Size", "Type");
