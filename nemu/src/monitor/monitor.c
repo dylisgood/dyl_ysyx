@@ -45,7 +45,7 @@ struct func_struct{
   uint64_t size;
 };
 
-struct func_struct *func_trace;
+struct func_struct func_trace[10];
 
 int sym_num = 0;
 int func_num = 0;
@@ -105,25 +105,17 @@ void init_ftrace() {
     fseek(fp, strtab_hdr->sh_offset, SEEK_SET);
     sym_num=fread(strtab1, strtab_hdr->sh_size, 1, fp);
 
+    int k = 0;
     sym_num = symtab->sh_size / sizeof(Elf64_Sym);
     for (int i = 0; i < sym_num; i++) {
       Elf64_Sym *sym = &symbols[i];
        if(sym->st_info == 18){
+         strcpy(func_trace[k].name,&strtab1[sym->st_name]);
+         func_trace[k].address = sym->st_value;
+         func_trace[k].size = sym->st_size;
          func_num++;
+         k++;
       }
-    }
-
-    //int k = 0;
-    struct func_struct *func_trace = malloc(func_num * sizeof(struct func_struct));
-    printf("the size of func_struct = %ld \n",sizeof(*func_trace));
-    for (int i = 0; i < sym_num; i++) {
-      Elf64_Sym *sym = &symbols[i];
-       if(sym->st_info == 18){
-         strcpy(func_trace->name,&strtab1[sym->st_name]);
-         func_trace->address = sym->st_value;
-         func_trace->size = sym->st_size;
-      }
-      //func_trace++;
     }
     for(int i=0; i<func_num;i++){
       printf("func_struct[%d].name = %s     ",i,func_trace[i].name);
