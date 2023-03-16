@@ -33,8 +33,15 @@ uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
 static bool g_print_step = false;
 
+struct func_struct{
+  char name[20];
+  uint64_t address;
+  uint64_t size;
+};
 
-extern struct func_struct* func_trace;
+extern struct func_struct func_trace[10];
+extern int func_num;
+
 void device_update();
 
 void print_iringbuf(){
@@ -42,8 +49,6 @@ void print_iringbuf(){
     puts(iringbuf[x]);
   }
 }
-
-
 
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #ifdef CONFIG_ITRACE_COND
@@ -62,43 +67,38 @@ static void exec_once(Decode *s, vaddr_t pc) {
   s->snpc = pc;
   isa_exec_once(s);
   cpu.pc = s->dnpc;
-/* #ifdef CONFIG_FTRACE
+#ifdef CONFIG_FTRACE
   static int kong = 0;
   int j = 0;
   if( ((s->isa.inst.val & 0x0ef) == 0x0ef) || ((s->isa.inst.val & 0x0e7) == 0x0e7) \
         || ((s->isa.inst.val & 0x00078067) == 0x00078067) ){  //jal && x1 || jalr && !x1
-      for (int i = 0; i < jj; i++) {
-        Elf64_Sym *sym = &symbols[i];
-        if(sym->st_info == 18){
-        if(s->pc >= sym->st_value && s->pc <= (sym->st_value + sym->st_size) )
+      for (int i = 0; i < func_num; i++) {
+        if(s->pc >= func_trace[i].address && s->pc <= (func_trace[i].address + func_trace[i].size) )
         {
           printf("0x%lx: ",s->pc);
           for(j = 0; j < kong; j++) printf(" ");
           kong++;
-          printf("call %s[@%p] \n",&strtab1[sym->st_name],(void *) sym->st_value);
+          printf("call %s[@%lx] \n",func_trace[i].name,func_trace[i].address);
           printf("kong = %d\n",kong); 
         }
-        }
+        
         
     }
   }
   else if( ((s->isa.inst.val & 0x00008067) == 0x00008067)  ){  //jalr && x0 || jal && x0 
-    for (int i = 0; i < jj; i++) {
-        Elf64_Sym *sym = &symbols[i];
-        if(sym->st_info == 18){
-        if(s->pc >= sym->st_value && s->pc <= (sym->st_value + sym->st_size))
+    for (int i = 0; i < func_num; i++) {
+        if(s->pc >= func_trace[i].address && s->pc <= (func_trace[i].address + func_trace[i].size))
         {
           printf("0x%lx: ",s->pc);
           for(j = 0; j< kong; j++) printf(" ");
           kong--;
-          printf("ret %s \n",&strtab1[sym->st_name]);
+          printf("ret %s \n",func_trace[i].name);
           printf("kong = %d\n",kong);
-        }
         }
     }
   }
    
-#endif */
+#endif
 
 #ifdef CONFIG_ITRACE
   char *p = s->logbuf;
