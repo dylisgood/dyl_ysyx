@@ -45,7 +45,7 @@ struct func_trace{
   uint64_t size;
 };
 
-struct func_trace *func_struct;
+struct func_trace func_struct[10];
 
 int sym_num = 0;
 int func_num = 0;
@@ -112,18 +112,17 @@ void init_ftrace() {
          func_num++;
       }
     }
-    func_struct = (struct func_trace*)malloc(func_num *sizeof(struct func_trace));
+    //func_struct = (struct func_trace*)malloc(func_num *sizeof(struct func_trace));
     for (int i = 0; i < sym_num; i++) {
       Elf64_Sym *sym = &symbols[i];
        if(sym->st_info == 18){
-         strcpy(func_struct->name,&strtab1[sym->st_name]);
-         func_struct->address = sym->st_value;
-         func_struct->size = sym->st_size;
+         strcpy(func_struct[0].name,&strtab1[sym->st_name]);
+         func_struct[0].address = sym->st_value;
+         func_struct[0].size = sym->st_size;
       }
-      func_struct++;
     }
     for(int i=0; i<func_num;i++){
-      printf("func_struct[%d].name = %s\n",i,func_struct->name);
+      printf("func_struct[%d].name = %s\n",i,func_struct[0].name);
     }
 /* 
     printf("%-20s %-20s %-20s %-20s\n", "Name", "Address", "Size", "Type");
