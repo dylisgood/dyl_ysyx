@@ -126,7 +126,9 @@ void init_ftrace() {
       k++;
     }
     for(int i=0; i<func_num;i++){
-      printf("func_struct[%d].name = %s\n",i,func_trace[i].name);
+      printf("func_struct[%d].name = %s     ",i,func_trace[i].name);
+      printf("func_struct[%d].address = %ld    ",i,func_trace[i].address);
+      printf("func_struct[%d].size = %ld\n",i,func_trace[i].size);
     }
 
 /*     printf("%-20s %-20s %-20s %-20s\n", "Name", "Address", "Size", "Type");
