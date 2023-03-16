@@ -40,7 +40,7 @@ char *elf_file = NULL;
 
 
 struct func_struct{
-  char *name;
+  char name[20];
   uint64_t address;
   uint64_t size;
 };
@@ -117,7 +117,7 @@ void init_ftrace() {
     for (int i = 0; i < sym_num; i++) {
       Elf64_Sym *sym = &symbols[i];
        if(sym->st_info == 18){
-         //strcpy(func_struct->name,"hello");
+         strcpy(func_trace[0].name,"hello");
          func_trace[0].address = sym->st_value;
          func_trace[0].size = sym->st_size;
       }
