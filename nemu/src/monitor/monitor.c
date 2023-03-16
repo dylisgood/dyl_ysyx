@@ -114,14 +114,14 @@ void init_ftrace() {
     }
 
     int k = 0;
-    struct func_struct *func_trace = malloc(5 * sizeof(struct func_struct));
+    struct func_struct *func_trace = malloc(func_num * sizeof(struct func_struct));
     printf("the size of func_struct = %ld \n",sizeof(*func_trace));
     for (int i = 0; i < sym_num; i++) {
       Elf64_Sym *sym = &symbols[i];
        if(sym->st_info == 18){
-         strcpy(func_trace[k].name,&strtab1[sym->st_name]);
-         func_trace[k].address = sym->st_value;
-         func_trace[k].size = sym->st_size;
+         strcpy(func_trace->name,&strtab1[sym->st_name]);
+         func_trace->address = sym->st_value;
+         func_trace->size = sym->st_size;
       }
       k++;
     }
