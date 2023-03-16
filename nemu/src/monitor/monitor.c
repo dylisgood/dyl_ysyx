@@ -40,7 +40,7 @@ char *elf_file = NULL;
 
 
 struct func_struct{
-  char name[20];
+  char *name;
   uint64_t address;
   uint64_t size;
 };
