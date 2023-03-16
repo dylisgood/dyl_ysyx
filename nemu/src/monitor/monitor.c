@@ -50,7 +50,6 @@ struct func_trace *func_struct;
 int sym_num = 0;
 int func_num = 0;
 void init_ftrace() {
-  
   if(elf_file == NULL) {
     Log("No elf is given. Can't trace function.");
     return;
@@ -237,7 +236,7 @@ void init_monitor(int argc, char *argv[]) {
   /* Initialize the simple debugger. */
   init_sdb();
 
-  IFDEF(CONFIIG_FTRACE,init_ftrace());
+  IFDEF(CONFIG_FTRACE,init_ftrace());
 
   IFDEF(CONFIG_ITRACE, init_disasm(
     MUXDEF(CONFIG_ISA_x86,     "i686",
