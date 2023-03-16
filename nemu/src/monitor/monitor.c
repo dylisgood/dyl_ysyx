@@ -116,7 +116,7 @@ void init_ftrace() {
     for (int i = 0; i < sym_num; i++) {
       Elf64_Sym *sym = &symbols[i];
        if(sym->st_info == 18){
-         //strcpy(func_struct[0].name,&strtab1[sym->st_name]);
+         strcpy(func_struct[0].name,&strtab1[sym->st_name]);
          func_struct[0].address = sym->st_value;
          func_struct[0].size = sym->st_size;
       }
