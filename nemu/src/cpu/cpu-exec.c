@@ -34,7 +34,7 @@ static uint64_t g_timer = 0; // unit: us
 static bool g_print_step = false;
 
 
-extern struct func_trace* func_struct;
+extern struct func_struct* func_trace;
 void device_update();
 
 void print_iringbuf(){
@@ -180,6 +180,6 @@ void cpu_exec(uint64_t n) {
           nemu_state.halt_pc);
     
       // fall through
-    case NEMU_QUIT: {statistic();free(func_struct);}
+    case NEMU_QUIT: {statistic();}
   }
 }
