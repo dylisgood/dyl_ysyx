@@ -113,7 +113,7 @@ void init_ftrace() {
       }
     }
 
-    int k = 0;
+    //int k = 0;
     struct func_struct *func_trace = malloc(func_num * sizeof(struct func_struct));
     printf("the size of func_struct = %ld \n",sizeof(*func_trace));
     for (int i = 0; i < sym_num; i++) {
@@ -123,12 +123,12 @@ void init_ftrace() {
          func_trace->address = sym->st_value;
          func_trace->size = sym->st_size;
       }
-      k++;
+      func_trace++;
     }
     for(int i=0; i<func_num;i++){
       printf("func_struct[%d].name = %s     ",i,func_trace[i].name);
-      printf("func_struct[%d].address = %ld    ",i,func_trace[i].address);
-      printf("func_struct[%d].size = %ld\n",i,func_trace[i].size);
+      printf("func_struct[%d].address = %lx    ",i,func_trace[i].address);
+      printf("func_struct[%d].size = %lx\n",i,func_trace[i].size);
     }
 
 /*     printf("%-20s %-20s %-20s %-20s\n", "Name", "Address", "Size", "Type");
