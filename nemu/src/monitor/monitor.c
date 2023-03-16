@@ -113,6 +113,7 @@ void init_ftrace() {
       }
     }
     func_struct = (struct func_trace*)malloc(func_num *sizeof(struct func_trace));
+    printf("the size of func_struct = %ld \n",sizeof(func_struct));
     for (int i = 0; i < sym_num; i++) {
       Elf64_Sym *sym = &symbols[i];
        if(sym->st_info == 18){
