@@ -122,7 +122,7 @@ void init_ftrace() {
       }
     }
     for(int i=0; i<func_num;i++){
-      printf("func_struct[%d].name = %s\n",i,func_struct[0].name);
+      printf("func_struct[%d].name = %lx\n",i,func_struct[0].address);
     }
 
 /*     printf("%-20s %-20s %-20s %-20s\n", "Name", "Address", "Size", "Type");
