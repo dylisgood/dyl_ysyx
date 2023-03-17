@@ -79,7 +79,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
           for(j = 0; j < kong; j++) printf(" ");
           kong++;
           printf("call %s[@%lx] \n",func_trace[i].name,func_trace[i].address);
-          printf("kong = %d\n",kong); 
+          //printf("kong = %d\n",kong); 
         }
         
         
@@ -93,7 +93,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
           for(j = 0; j< kong; j++) printf(" ");
           kong--;
           printf("ret %s \n",func_trace[i].name);
-          printf("kong = %d\n",kong);
+          //printf("kong = %d\n",kong);
         }
     }
   }
