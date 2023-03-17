@@ -47,9 +47,10 @@ struct func_struct{
 
 struct func_struct func_trace[10];
 
-int sym_num = 0;
+
 int func_num = 0;
 void init_ftrace() {
+  int sym_num = 0;
   if(elf_file == NULL) {
     Log("No elf is given. Can't trace function.");
     return;
@@ -117,11 +118,11 @@ void init_ftrace() {
          k++;
       }
     }
-    for(int i=0; i<func_num;i++){
+/*     for(int i=0; i<func_num;i++){
       printf("func_struct[%d].name = %s     ",i,func_trace[i].name);
       printf("func_struct[%d].address = %lx    ",i,func_trace[i].address);
       printf("func_struct[%d].size = %lx\n",i,func_trace[i].size);
-    }
+    } */
 
 /*     printf("%-20s %-20s %-20s %-20s\n", "Name", "Address", "Size", "Type");
     for (int i = 0; i < symtab->sh_size / sizeof(Elf64_Sym); i++) {
