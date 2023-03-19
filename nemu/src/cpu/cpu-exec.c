@@ -183,5 +183,5 @@ void cpu_exec(uint64_t n) {
       // fall through
     case NEMU_QUIT: {statistic();}
   }
-  if(nemu_state.state == NEMU_ABORT)print_iringbuf();
+  //if(nemu_state.state == NEMU_ABORT)print_iringbuf();
 }
