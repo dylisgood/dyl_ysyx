@@ -1,4 +1,4 @@
-`timescale 1ns/1ps
+//`timescale 1ns/1ps
 module ysyx_22050854_write_back(
     input clk,
     input MemtoReg,

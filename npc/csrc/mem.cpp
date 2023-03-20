@@ -51,8 +51,11 @@ void init_mem() {
   }
 #else
   uint32_t *p = (uint32_t *)pmem;
-  p[0] = 0x06428313;  //addi rd,rs,imm  x6=x5+imm
-  p[1] = 0x00100073;  //ebreak
+  p[0] = 0x00400293;  //addi rd,rs,imm  x5=x0+4;
+  p[1] = 0x00328313;  //addi rd,rs,imm  x6=x5+3
+  p[2] = 0x00228313;  //addi rd,rs,imm  x6=x5+2
+  p[3] = 0x00128313;  //addi rd,rs,imm  x6=x5+1
+  p[4] = 0x00100073;  //ebreak
 #endif
   //Log("physical memory area [" FMT_PADDR ", " FMT_PADDR "]", PMEM_LEFT, PMEM_RIGHT);    
 }

@@ -80,7 +80,7 @@ module ysyx_22050854_cpu(
     .pc(pc)
 );
 
-    wire [63:0]mem_data = 64'd0;
+/*     wire [63:0]mem_data = 64'd0;
     ysyx_22050854_write_back rd_wb(
     .clk(clk),
     .MemtoReg(MemtoReg),
@@ -88,6 +88,27 @@ module ysyx_22050854_cpu(
     .alu_out(alu_out),
     .mem_data(mem_data),
     .rd(rd)
-);  
+);   */
+
+/*    ysyx_22050854_RegisterFile inst_wb(
+    .clk(clk),
+    .wdata(64'd5),
+    .waddr(5'd6),
+    .wen(RegWr),
+    .raddra(),
+    .raddrb(),
+    .rdata1(),
+    .rdata2()     
+    );
+ */
+  register i_re1 (
+  .clk(clk),
+  .wdata(64'd5),
+  .waddr(5'd6),
+  .wen(1'd1),
+  .ren(1'd0),
+  .raddra(),
+  .rdata()
+);
 
 endmodule 

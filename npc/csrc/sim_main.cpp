@@ -52,7 +52,7 @@ int main(int argc, char** argv, char** env){
       sim_exit();
       printf("pc = %x\n",top->pc);
       printf("inst = %x\n",top->inst);
-      printf("x5 = %ld\nx6 = %ld\n\n",top->x5,top->x6);  
+      printf("x6 = %ld\n\n",top->x6);  
   }
   delete top;
   tfp->close();
