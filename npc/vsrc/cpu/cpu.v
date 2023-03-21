@@ -4,7 +4,9 @@ module ysyx_22050854_cpu(
     input clk,
     input [31:0]inst,
     output [31:0]pc,
-    output ebreak
+    output ebreak,
+    output reg [63:0]x5,
+    output reg [63:0]x6
 );   
     //ysyx_22050854_ifu fetch_instr(.clk(clk), .pc(pc), .instr(instr));   
     wire [4:0]rs1,rs2,rd;
@@ -43,13 +45,27 @@ module ysyx_22050854_cpu(
 
     wire [63:0]src1;
     wire [63:0]src2;
+    ysyx_22050854_RegisterFile regfile_inst(
+    .clk(clk),
+    .wdata(alu_out),
+    .waddr(rd),
+    .wen(RegWr),
+    .raddra(rs1),
+    .raddrb(rs2),
+    .rdata1(src1),
+    .rdata2(src2),
+    .test_addr1(5'd5),
+    .test_addr2(5'd6),
+    .test_rdata1(x5),
+    .test_rdata2(x6)    
+    );
+
+
     wire [63:0]alu_src1;
     wire [63:0]alu_src2;
     ysyx_22050854_src_gen gen_src(
         .ALUsrc1(ALUsrc1),
         .ALUsrc2(ALUsrc2),
-        .rs1(rs1),
-        .rs2(rs2),
         .pc(pc),
         .imm(imm),
         .src1(src1),
@@ -90,18 +106,9 @@ module ysyx_22050854_cpu(
     .rd(rd)
 );   */
 
-/*    ysyx_22050854_RegisterFile inst_wb(
-    .clk(clk),
-    .wdata(64'd5),
-    .waddr(5'd6),
-    .wen(RegWr),
-    .raddra(),
-    .raddrb(),
-    .rdata1(),
-    .rdata2()     
-    );
- */
-  register i_re1 (
+
+
+/*   register i_re1 (
   .clk(clk),
   .wdata(64'd5),
   .waddr(5'd6),
@@ -109,6 +116,6 @@ module ysyx_22050854_cpu(
   .ren(1'd0),
   .raddra(),
   .rdata()
-);
+); */
 
 endmodule 

@@ -2,7 +2,7 @@
 module ysyx_22050854_imm_gen(
     input [31:0]instr,
     input [2:0]ExtOP,
-    output [63:0]imm
+    output reg[63:0]imm
 );
     wire [63:0]immI,immU,immS,immB,immJ;
     assign immI = {{52{instr[31]}},instr[31:20]};

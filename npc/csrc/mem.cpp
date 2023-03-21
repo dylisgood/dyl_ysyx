@@ -1,8 +1,8 @@
 #include <stdint.h>
 #include <assert.h>
 //#include <debug.h>
-#define MEM_SIZE  0x8000000
-#define CONFIG_MBASE 0x80000000
+#define MEM_SIZE  0x8000000 //800
+#define CONFIG_MBASE 0x80000000 //8000
 #define PG_ALIGN __attribute((aligned(4096)))
 
 #define FMT_PADDR MUXDEF(PMEM64, "0x%016"PRIx64, "0x%08"PRIx32)
@@ -31,7 +31,7 @@ static inline void host_write(void *addr, int len, uint64_t data){
     }
 }
 
-uint8_t* guest_to_host(uint32_t paddr) { return pmem + paddr - CONFIG_MBASE; }
+uint8_t* guest_to_host(uint32_t paddr) { return pmem + paddr - CONFIG_MBASE; } //pmem + paddr - 0x80000000
 
 uint64_t pmem_read(uint32_t addr,int len){
     uint64_t ret = host_read(guest_to_host(addr),len);

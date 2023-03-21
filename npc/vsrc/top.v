@@ -5,7 +5,7 @@ module top(
     input [31:0]inst,
     output [31:0]pc,
     output [63:0]x6,
-    //output [63:0]x5,
+    output [63:0]x5,
     output ebreak
 );
     ysyx_22050854_cpu inst_cpu(
@@ -13,7 +13,9 @@ module top(
         .rst(rst),
         .inst(inst),
         .pc(pc),
-        .ebreak(ebreak)
+        .ebreak(ebreak),
+        .x5(x5),
+        .x6(x6)
     );
 
 /*     ysyx_22050854_RegisterFile read_x6(
@@ -26,7 +28,7 @@ module top(
         .rdata1(x6),
         .rdata2(x5)      
     ); */
-   register i_re2 (
+ /*   register i_re2 (
   .clk(clk),
   .wdata(),
   .waddr(),
@@ -34,6 +36,6 @@ module top(
   .ren(1'd1),
   .raddra(5'd6),
   .rdata(x6)
-);
+); */
 
 endmodule

@@ -13,7 +13,7 @@ module ysyx_22050854_write_back(
         1'b1,mem_data
     });
 
-    ysyx_22050854_RegisterFile inst_wb(
+/*     ysyx_22050854_RegisterFile inst_wb(
     .clk(clk),
     .wdata(wb_data),
     .waddr(rd),
@@ -22,7 +22,7 @@ module ysyx_22050854_write_back(
     .raddrb(),
     .rdata1(),
     .rdata2()     
-    );
+    ); */
 
 endmodule
 

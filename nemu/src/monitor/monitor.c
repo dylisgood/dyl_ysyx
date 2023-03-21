@@ -36,7 +36,7 @@ static char *log_file = NULL;
 static char *diff_so_file = NULL;
 static char *img_file = NULL;
 static int difftest_port = 1234;
-char *elf_file = NULL;
+static char *elf_file = NULL;
 
 
 struct func_struct{
@@ -118,18 +118,6 @@ void init_ftrace() {
          k++;
       }
     }
-/*     for(int i=0; i<func_num;i++){
-      printf("func_struct[%d].name = %s     ",i,func_trace[i].name);
-      printf("func_struct[%d].address = %lx    ",i,func_trace[i].address);
-      printf("func_struct[%d].size = %lx\n",i,func_trace[i].size);
-    } */
-
-/*     printf("%-20s %-20s %-20s %-20s\n", "Name", "Address", "Size", "Type");
-    for (int i = 0; i < symtab->sh_size / sizeof(Elf64_Sym); i++) {
-        Elf64_Sym *sym = &symbols[i];
-        printf("%-20s %-20p %-20lu %-20d\n",
-               &strtab1[sym->st_name], (void *) sym->st_value, (unsigned long) sym->st_size, sym->st_info); 
-    } */
     fclose(fp);
     free(sh_table);
     free(sh_strtab);
@@ -182,7 +170,7 @@ static int parse_args(int argc, char *argv[]) {
     {0          , 0                , NULL,  0 },
   };
   int o;
-  while ( (o = getopt_long(argc, argv, "-bhl:d:p:", table, NULL)) != -1) {
+  while ( (o = getopt_long(argc, argv, "-bhl:e:d:p:", table, NULL)) != -1) {
     switch (o) {
       case 'b': sdb_set_batch_mode(); break;
       case 'p': sscanf(optarg, "%d", &difftest_port); break;

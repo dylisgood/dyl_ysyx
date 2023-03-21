@@ -3,18 +3,18 @@
 //2.get operate num from resiger file
 module ysyx_22050854_IDU(
     input [31:0]instr,
-    output [4:0]rs1,
-    output [4:0]rs2,
-    output [4:0]rd,
-    output [2:0]ExtOP,
-    output RegWr,
-    output [2:0]Branch,
-    output MemtoReg,
-    output MemWr,
-    output [2:0]MemOP,
-    output ALUsrc1,
-    output [1:0]ALUsrc2,
-    output [3:0]ALUctr,
+    output reg[4:0]rs1,
+    output reg[4:0]rs2,
+    output reg[4:0]rd,
+    output reg[2:0]ExtOP,
+    output reg RegWr,
+    output reg [2:0]Branch,
+    output reg MemtoReg,
+    output reg MemWr,
+    output reg [2:0]MemOP,
+    output reg ALUsrc1,
+    output reg [1:0]ALUsrc2,
+    output reg [3:0]ALUctr,
     output ebreak
 ); 
     wire [6:0]op;
