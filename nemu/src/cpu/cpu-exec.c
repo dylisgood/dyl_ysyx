@@ -18,7 +18,7 @@
 #include <cpu/difftest.h>
 #include <locale.h>
 #include <../src/monitor/sdb/sdb.h> 
-///#include <elf.h>
+//#include <elf.h>
 
 /* The assembly code of instructions executed is only output to the screen
  * when the number of instructions executed is less than this value.
@@ -108,7 +108,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
   int i;
   uint8_t *inst = (uint8_t *)&s->isa.inst.val;
   for (i = ilen - 1; i >= 0; i --) {
-    p += snprintf(p, 4, " %02x", inst[i]); 
+    p += snprintf(p, 4, " %02x", inst[i]); //指令 16进制 32位
   }
   int ilen_max = MUXDEF(CONFIG_ISA_x86, 8, 4);
   int space_len = ilen_max - ilen;
@@ -119,12 +119,14 @@ static void exec_once(Decode *s, vaddr_t pc) {
 
   void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
   disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
-      MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst.val, ilen);
-#endif
+      MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst.val, ilen); //反汇编
+  
   for(int x = 0; x < 9; x++){
     strcpy(iringbuf[x],iringbuf[x+1]);
   }
   strcpy(iringbuf[9],s->logbuf);
+
+#endif
 }
 
 static void execute(uint64_t n) {
@@ -161,8 +163,6 @@ void cpu_exec(uint64_t n) {
       return;
     default: nemu_state.state = NEMU_RUNNING;
   }
-
-  
   uint64_t timer_start = get_time();
 
   execute(n);

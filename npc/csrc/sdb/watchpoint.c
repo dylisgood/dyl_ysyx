@@ -1,21 +1,7 @@
-/***************************************************************************************
-* Copyright (c) 2014-2022 Zihao Yu, Nanjing University
-*
-* NEMU is licensed under Mulan PSL v2.
-* You can use this software according to the terms and conditions of the Mulan PSL v2.
-* You may obtain a copy of Mulan PSL v2 at:
-*          http://license.coscl.org.cn/MulanPSL2
-*
-* THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
-* EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
-* MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
-*
-* See the Mulan PSL v2 for more details.
-***************************************************************************************/
-
 #include "sdb.h"
-
 #define NR_WP 32
+
+uint64_t expr(char *arg);
 
 typedef struct watchpoint {
   int NO;
@@ -24,7 +10,6 @@ typedef struct watchpoint {
   uint64_t cur_value;
   struct watchpoint *next;
 } WP;
-
 
 static WP wp_pool[NR_WP] = {};
 static WP *head = NULL, *free_ = NULL;
@@ -70,7 +55,7 @@ void print_wp(){
   bool *su=false;
   while(PB != free_)
   {
-    printf("wp_pool.NO = %d  expr = (%s)  value = %ld\n",PB->NO,PB->expr,expr(PB->expr,su));
+    printf("wp_pool.NO = %d  expr = (%s)  value = %ld\n",PB->NO,PB->expr,expr(PB->expr));
     PB = PB->next;
   }
   }
@@ -116,10 +101,9 @@ void wp_detect(){
     pb = head;
     while(pb != free_)
     {
-      pb->cur_value = expr(pb->expr,suc); 
+      pb->cur_value = expr(pb->expr); 
       if(pb->cur_value != pb->last_value && count !=0)
       {
-        nemu_state.state = NEMU_STOP;
         printf("The NO.%d Watchpoint %s change! \n",pb->NO,pb->expr);
         printf("Old value = %ld \nNew value = %ld \n",pb->last_value, pb->cur_value);
       }
@@ -130,3 +114,4 @@ void wp_detect(){
   }
  // else printf("There is no watchpoint! \n"); 
 }
+

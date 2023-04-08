@@ -1,7 +1,8 @@
 #include <stdint.h>
 #include <assert.h>
+#include <stdlib.h>
 //#include <debug.h>
-#define MEM_SIZE  0x8000000 //800
+#define CONFIG_MSIZE  0x8000000 //800
 #define CONFIG_MBASE 0x80000000 //8000
 #define PG_ALIGN __attribute((aligned(4096)))
 
@@ -9,7 +10,8 @@
 #define PMEM_LEFT  ((uint64_t)CONFIG_MBASE)
 #define PMEM_RIGHT ((uint64_t)CONFIG_MBASE + CONFIG_MSIZE - 1)
 
-static uint8_t pmem[MEM_SIZE] PG_ALIGN = {};
+//static uint8_t pmem[MEM_SIZE] PG_ALIGN = {};
+static uint8_t *pmem = NULL;
 
 static inline uint64_t host_read(void *addr, int len){
     switch (len){
@@ -31,7 +33,7 @@ static inline void host_write(void *addr, int len, uint64_t data){
     }
 }
 
-uint8_t* guest_to_host(uint32_t paddr) { return pmem + paddr - CONFIG_MBASE; } //pmem + paddr - 0x80000000
+uint8_t* guest_to_host(uint32_t paddr) { return pmem + paddr - CONFIG_MBASE; } //pmem + paddr - 0x80000000 = pmem + 
 
 uint64_t pmem_read(uint32_t addr,int len){
     uint64_t ret = host_read(guest_to_host(addr),len);
@@ -43,6 +45,8 @@ void pmem_write(int addr, int len, uint64_t data){
 }
 
 void init_mem() {
+  pmem = (uint8_t *)malloc(CONFIG_MSIZE);
+  assert(pmem);
 #ifdef CONFIG_MEM_RANDOM
   uint32_t *p = (uint32_t *)pmem;
   int i;

@@ -47,7 +47,6 @@ struct func_struct{
 
 struct func_struct func_trace[10];
 
-
 int func_num = 0;
 void init_ftrace() {
   int sym_num = 0;

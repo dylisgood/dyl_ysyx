@@ -36,7 +36,9 @@ static void restart() {
 
 void init_isa() {
   /* Load built-in image. */
-  memcpy(guest_to_host(RESET_VECTOR), img, sizeof(img));
+  printf("I enter inst_isa in nemu--------------------\n");
+  memcpy(guest_to_host(0x80000000), img, sizeof(img));
+  printf("I finish memcpy in init_isa \n");
 
   /* Initialize this virtual computer system. */
   restart();

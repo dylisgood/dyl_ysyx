@@ -18,10 +18,12 @@ module ysyx_22050854_RegisterFile  (
   always @(posedge clk) begin
     if(wen) rf[waddr] <= wdata;
   end
-
-/*   always @(*) begin
+  import "DPI-C" function void set_gpr_ptr(input logic [63:0] a []);
+  initial set_gpr_ptr(rf);  // rf为通用寄存器的二维数组变量
+  
+  always @(*) begin
       rf[5'b0] = 64'b0;
-  end */
+  end
 
   always@(*)begin
     if(raddra==5'd0)

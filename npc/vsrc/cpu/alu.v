@@ -9,10 +9,11 @@ module ysyx_22050854_alu(
     output zero 
 );
 
-    ysyx_22050854_MuxKeyWithDefault #(3,4,64) i0 (alu_out,ALUctr,64'd0,{
+    ysyx_22050854_MuxKeyWithDefault #(4,4,64) i0 (alu_out,ALUctr,64'd0,{
         4'b0000,src1 + src2,
         4'b0001,src1 << src2[4:0],
-        4'b0010,src1 - src2
+        4'b0010,src1 - src2,
+        4'b0011,src2
     });
 
     assign zero = alu_out == 64'd0 ? 1 : 0;

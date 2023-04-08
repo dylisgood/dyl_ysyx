@@ -1,35 +1,8 @@
-/****************************************************************************************
-* Copyright (c) 2014-2022 Zihao Yu, Nanjing University
-*
-* NEMU is licensed under Mulan PSL v2.
-* You can use this software according to the terms and conditions of the Mulan PSL v2.
-* You may obtain a copy of Mulan PSL v2 at:
-*          http://license.coscl.org.cn/MulanPSL2
-*
-* THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
-* EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
-* MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
-*
-* See the Mulan PSL v2 for more details.
-***************************************************************************************/
-
-#include <isa.h>
-//#include "local-include/reg.h"
-/* We use the POSIX regex functions to process regular expressions.
- * Type 'man regex' for more information about POSIX regex functions.
- */
-#include <string.h>
-#include <stdlib.h>
 #include <regex.h>
 
-//new add
-#include <stdint.h>  //for uint64_t etc
-#include <stdbool.h>  //for bool
-#include <common.h>
-#include <memory/vaddr.h> //for DEREF
+#include "sdb.h"
 
-#define false 0
-#define true 1
+extern uint64_t *cpu_gpr;
 
 enum {
   TK_NOTYPE = 2, TK_EQ = 1, NUM = 10,TK_UNIEQ = 0,
@@ -65,9 +38,6 @@ static struct rule {
 
 static regex_t re[NR_REGEX] = {};
 
-/* Rules are used for many times.
- * Therefore we compile them only once before any usage.
- */
 void init_regex() {
   int i;
   char error_msg[128];
@@ -77,7 +47,7 @@ void init_regex() {
     ret = regcomp(&re[i], rules[i].regex, REG_EXTENDED);
     if (ret != 0) {
       regerror(ret, &re[i], error_msg, 128);
-      panic("regex compilation failed: %s\n%s", error_msg, rules[i].regex);
+      //panic("regex compilation failed: %s\n%s", error_msg, rules[i].regex);
     }
   }
 }
@@ -89,6 +59,7 @@ typedef struct token {
 
 static Token tokens[1000] __attribute__((used)) = {};
 static int nr_token __attribute__((used))  = 0;
+
 
 static bool make_token(char *e) {
   int position = 0;
@@ -233,7 +204,6 @@ bool check_bracket(int p,int count , int q){
 
 }
 
-
 //get main_operator_position
 int first=1;
 int first_FLAG=1;
@@ -273,7 +243,8 @@ uint64_t eval(int p,int q){
     else if(p == q){
       if(tokens[p].type == TK_REG)
       {
-        uint64_t reg_value = isa_reg_str2val(tokens[p].str,succ);
+        int reg_num = atoi(tokens[p].str);
+        uint64_t reg_value = cpu_gpr[reg_num]; //isa_reg_str2val(tokens[p].str,succ);
         return reg_value; 
         
       }        
@@ -297,7 +268,7 @@ uint64_t eval(int p,int q){
       {
         if(tokens[p].type == DEREF)
         {
-          return vaddr_read(eval(p+1,q),8);
+          return 1; //vaddr_read(eval(p+1,q),8);
         }
         else if(tokens[p].type == NEG_NUM)
         {
@@ -338,8 +309,8 @@ void tokens_handle() {     //become reg and pointer to num
     }
    }
    
-/*   for(int i=0;i <= nr_token;i++)
-  { printf("after handle:  j = %d, type = %d,  str= %s \n", i,tokens[i].type, tokens[i].str); } */
+//  for(int i=0;i <= nr_token;i++)
+//  { printf("after handle:  j = %d, type = %d,  str= %s \n", i,tokens[i].type, tokens[i].str); }
 
 }
 
@@ -349,9 +320,8 @@ void init_tokens() {
   }
 }
 
-word_t expr(char *e, bool *success) {
+uint64_t expr(char *e) {
   if (!make_token(e)) {
-    *success = false;
     return 0;
   }
 

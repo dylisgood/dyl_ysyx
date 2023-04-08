@@ -8,7 +8,7 @@ module ysyx_22050854_IDU(
     output reg[4:0]rd,
     output reg[2:0]ExtOP,
     output reg RegWr,
-    output reg [2:0]Branch,
+    output [2:0]Branch,
     output reg MemtoReg,
     output reg MemWr,
     output reg [2:0]MemOP,
@@ -41,16 +41,16 @@ module ysyx_22050854_IDU(
         5'b00110,3'b000,
         5'b01001,3'b010,
         5'b11000,3'b011,
-        5'b01101,3'b001,
-        5'b00101,3'b001,
+        5'b01101,3'b001, //lui
+        5'b00101,3'b001, //auipc
         5'b11011,3'b100
     });
 
     //generate RegWr 是否写回寄存器
     ysyx_22050854_MuxKeyWithDefault #(11,5,1) RegWr_gen (RegWr,op[6:2],1'b0,{
-        5'b01101,1'b1,
-        5'b00101,1'b1,
-        5'b00100,1'b1,//addi
+        5'b01101,1'b1,  //lui
+        5'b00101,1'b1,  //auipc
+        5'b00100,1'b1,  //addi
         5'b01100,1'b1,
         5'b11011,1'b1,
         5'b11001,1'b1,
@@ -58,62 +58,67 @@ module ysyx_22050854_IDU(
         5'b00000,1'b1,
         5'b01000,1'b0,
         5'b00110,1'b1, //ADDIW
-        5'b01110,1'b1 //ADDW
+        5'b01110,1'b1  //ADDW
     });
 
     //generate Branch 
-    ysyx_22050854_MuxKeyWithDefault #(17,8,3) Branch_gen (Branch,{op[6:2],func3},3'b111,{
-        8'b01101xxx,3'b000,
-        8'b00101xxx,3'b000,
-        8'b00100000,3'b000, //addi
-        8'b00100xxx,3'b000,
-        8'b01100xxx,3'b000,
-        8'b11011xxx,3'b001,
-        8'b11001xxx,3'b010,
+    ysyx_22050854_MuxKey #(22,8,3) Branch_gen (Branch,{op[6:2],func3},{
+        8'b11011000,3'b001, //jal
+        8'b11011001,3'b001, //jal
+        8'b11011010,3'b001, //jal
+        8'b11011011,3'b001, //jal
+        8'b11011100,3'b001, //jal
+        8'b11011101,3'b001, //jal
+        8'b11011110,3'b001, //jal
+        8'b11011111,3'b001, //jal
+        8'b11001000,3'b010, //jalr
+        8'b11001001,3'b010, //jalr
+        8'b11001010,3'b010, //jalr
+        8'b11001011,3'b010, //jalr
+        8'b11001100,3'b010, //jalr
+        8'b11001101,3'b010, //jalr
+        8'b11001110,3'b010, //jalr
+        8'b11001111,3'b010, //jalr
         8'b11000000,3'b100,
         8'b11000001,3'b101,
         8'b11000100,3'b110,
         8'b11000101,3'b111,
         8'b11000110,3'b110,
-        8'b11000111,3'b111,
-        8'b00000xxx,3'b000,
-        8'b01000xxx,3'b000,
-        8'b00110xxx,3'b000, //ADDIW
-        8'b01110xxx,3'b000 //ADDW
+        8'b11000111,3'b111
     });
 
     //generate MemtoReg 写回寄存器的内容来自哪里 0-alu_out 1-mem_data
     ysyx_22050854_MuxKeyWithDefault #(11,5,1) MemtoReg_gen (MemtoReg,op[6:2],1'b0,{
-        5'b01101,1'b0,
-        5'b00101,1'b0,
+        5'b01101,1'b0, //lui
+        5'b00101,1'b0, //auipc
         5'b00100,1'b0, //addi
-        5'b01100,1'b0,
-        5'b11011,1'b0,
-        5'b11001,1'b0,
+        5'b01100,1'b0, 
+        5'b11011,1'b0, //jal
+        5'b11001,1'b0, //jalr
         5'b11000,1'b0,
         5'b00000,1'b1, //load
         5'b01000,1'b0, //store
         5'b00110,1'b0, //ADDIW
-        5'b01110,1'b0 //ADDW       
+        5'b01110,1'b0  //ADDW       
     });
 
     //generate MemWr 是否写存储器
     ysyx_22050854_MuxKeyWithDefault #(11,5,1) MemWr_gen (MemtoReg,op[6:2],1'b0,{
-        5'b01101,1'b0,
-        5'b00101,1'b0,
+        5'b01101,1'b0, //lui
+        5'b00101,1'b0, //auipc
         5'b00100,1'b0, //addi
         5'b01100,1'b0,
-        5'b11011,1'b0,
-        5'b11001,1'b0,
+        5'b11011,1'b0, //jal
+        5'b11001,1'b0, //jalr
         5'b11000,1'b0,
         5'b00000,1'b0, //load
         5'b01000,1'b1, //store
         5'b00110,1'b0, //ADDIW
-        5'b01110,1'b0 //ADDW       
+        5'b01110,1'b0  //ADDW       
     });
 
     //generate MemOP 如何写存储器
-    ysyx_22050854_MuxKeyWithDefault #(10,8,3) MemOP_gen (Branch,{op[6:2],func3},3'b111,{
+    ysyx_22050854_MuxKeyWithDefault #(10,8,3) MemOP_gen (MemOP,{op[6:2],func3},3'b111,{
         8'b00000000,3'b000,  //lb
         8'b00000001,3'b001,  //lh
         8'b00000010,3'b010,  //lw
@@ -129,9 +134,9 @@ module ysyx_22050854_IDU(
 
     //generate ALUsrc1    0---rs1  1---pc
    ysyx_22050854_MuxKeyWithDefault #(11,5,1) ALUsrc1_gen (ALUsrc1,op[6:2],1'b1,{
-        5'b01101,1'b0, //lui
+        5'b01101,1'b0, //lui (copy,don't need alu_src1)
         5'b00101,1'b1, //auipc
-        5'b00100,1'b0, //addi
+        5'b00100,1'b0, //addiq
         5'b01100,1'b0, //add mul
         5'b11011,1'b1, //jal
         5'b11001,1'b1, //jalr
@@ -139,7 +144,7 @@ module ysyx_22050854_IDU(
         5'b00000,1'b0, //load
         5'b01000,1'b0, //store
         5'b00110,1'b0, //ADDIW
-        5'b01110,1'b0 //ADDW MULW    
+        5'b01110,1'b0  //ADDW MULW    
     });
 
     //generate ALUsrc2   00---rs2   01---imm  10---4
@@ -158,9 +163,39 @@ module ysyx_22050854_IDU(
     });
 
     //generate ALUctr according to op funct3,funct7
-    ysyx_22050854_MuxKeyWithDefault #(39,9,4) ALUctr_gen (ALUctr,{op[6:2],func3,func7[5]},4'b1111,{
-        9'b01101xxxx,4'b0011,
-        9'b00101xxxx,4'b0000,   // +
+    ysyx_22050854_MuxKeyWithDefault #(85,9,4) ALUctr_gen (ALUctr,{op[6:2],func3,func7[5]},4'b1111,{
+        9'b011010000,4'b0011,  // lui copy
+        9'b011010001,4'b0011,  // lui copy
+        9'b011010010,4'b0011,  // lui copy
+        9'b011010011,4'b0011,  // lui copy
+        9'b011010100,4'b0011,  // lui copy
+        9'b011010101,4'b0011,  // lui copy
+        9'b011010110,4'b0011,  // lui copy
+        9'b011010111,4'b0011,  // lui copy
+        9'b011011000,4'b0011,  // lui copy
+        9'b011011001,4'b0011,  // lui copy
+        9'b011011010,4'b0011,  // lui copy
+        9'b011011011,4'b0011,  // lui copy
+        9'b011011100,4'b0011,  // lui copy
+        9'b011011101,4'b0011,  // lui copy
+        9'b011011110,4'b0011,  // lui copy
+        9'b011011111,4'b0011,  // lui copy
+        9'b001010000,4'b0000,  // auipc +
+        9'b001010001,4'b0000,  // auipc +
+        9'b001010010,4'b0000,  // auipc +
+        9'b001010011,4'b0000,  // auipc +
+        9'b001010100,4'b0000,  // auipc +
+        9'b001010101,4'b0000,  // auipc +
+        9'b001010110,4'b0000,  // auipc +
+        9'b001010111,4'b0000,  // auipc +
+        9'b001011000,4'b0000,  // auipc +
+        9'b001011001,4'b0000,  // auipc +
+        9'b001011010,4'b0000,  // auipc +
+        9'b001011011,4'b0000,  // auipc +
+        9'b001011100,4'b0000,  // auipc +
+        9'b001011101,4'b0000,  // auipc +
+        9'b001011110,4'b0000,  // auipc +
+        9'b001011111,4'b0000,  // auipc +
         9'b001000000,4'b0000,  // + addi
         9'b001000001,4'b0000,  //   addi  
         9'b00100010x,4'b0010,  //  compare
@@ -181,8 +216,24 @@ module ysyx_22050854_IDU(
         9'b011001011,4'b1101,  // >>>
         9'b011001100,4'b0110,  // |
         9'b011001110,4'b0111,  // &
-        9'b11011xxxx,4'b0000,  // pc + 4 
-        9'b11001000x,4'b0000,  // pc + 4
+        9'b110110000,4'b0000,  // pc + 4 jal
+        9'b110110001,4'b0000,  // pc + 4 jal
+        9'b110110010,4'b0000,  // pc + 4 jal
+        9'b110110011,4'b0000,  // pc + 4 jal
+        9'b110110100,4'b0000,  // pc + 4 jal
+        9'b110110101,4'b0000,  // pc + 4 jal
+        9'b110110110,4'b0000,  // pc + 4 jal
+        9'b110110111,4'b0000,  // pc + 4 jal
+        9'b110111000,4'b0000,  // pc + 4 jal
+        9'b110111001,4'b0000,  // pc + 4 jal
+        9'b110111010,4'b0000,  // pc + 4 jal
+        9'b110111011,4'b0000,  // pc + 4 jal
+        9'b110111100,4'b0000,  // pc + 4 jal
+        9'b110111101,4'b0000,  // pc + 4 jal
+        9'b110111110,4'b0000,  // pc + 4 jal
+        9'b110111111,4'b0000,  // pc + 4 jal
+        9'b110010000,4'b0000,  // pc + 4 jalr
+        9'b110010001,4'b0000,  // pc + 4 jalr 
         9'b11000000x,4'b0010,  // compare
         9'b11000001x,4'b0010,
         9'b11000100x,4'b0010,
