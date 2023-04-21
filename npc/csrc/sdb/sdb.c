@@ -58,7 +58,7 @@ static int cmd_p(char *args) {
     if(arg == NULL) {printf("please add expresion to evalation\n");}
     else {
         uint64_t value = expr(arg);
-        printf("result = %ld \n", value);
+        printf("result = %lx \n", value);
     }
     return 0;
 }
@@ -127,6 +127,10 @@ static struct {
 
 //enter sdb loop, get command in command line, press q stop loop
 void sdb_mainloop(){
+  if (Execute) {
+    cmd_c(NULL);
+    return;
+  }
     for (char *str; (str = rl_gets()) != NULL; ){
         char *str_end = str + strlen(str);
 

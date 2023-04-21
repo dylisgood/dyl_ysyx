@@ -11,7 +11,7 @@ OBJ_DIR = $(BUILD_DIR)/obj_dir
 BIN = $(BUILD_DIR)/$(TOPNAME)
 
 #DIFF_REF_PATH = $(NEMU_HOME)
-DIFF_REF_SO = $(NEMU_HOME)/build/riscv64-nemu-interpreter
+DIFF_REF_SO = $(NEMU_HOME)/build/riscv64-nemu-interpreter-so
 #MKFLAGS = GUEST_ISA=riscv64 SHARE=1 ENGINE=interpreter
 
 ARGS_DIFF = --diff=$(NEMU_HOME)/build/riscv64-nemu-interpreter-so
@@ -41,15 +41,21 @@ CFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
 #CFLAGS += fPIC
 CXXFLAGS += $(shell llvm-config-11 --cxxflags) -fPIE
 
+
 LDFLAGS += -O2 -lSDL2 -lSDL2_image -lreadline
 #LDFLAGS += -rdynamic -shared -fPIC
 LD2FLAGS += $(shell llvm-config-11 --ldflags)
 LD2FLAGS += $(shell llvm-config-11 --libs)
-LD3FLAGS += -L$(NEMU_HOME)/build
-#LD3FLAGS += -lriscv64-nemu-interpreter-so
+#LD3FLAGS += -shared
+#LD3FALGS += -Wl -rpath=/home/dyl/ysyx-workbench/nemu/build
+LD3FLAGS += -L/home/dyl/ysyx-workbench/nemu/build
+LD3FLAGS += -l:riscv64-nemu-interpreter-so
 
-ARGS += $(ARGS_DIFF)
+#aurgument  to execute npc
 IMG ?= 
+#override ARGS ?= -b
+override ARGS += $(ARGS_DIFF)
+
 NPC_ECEC = $^ $(ARGS) $(IMG)
 
 $(BIN): $(VSRCS) $(CSRCS) #$(NVBOARD_ARCHIVE)
@@ -59,10 +65,8 @@ $(BIN): $(VSRCS) $(CSRCS) #$(NVBOARD_ARCHIVE)
 		$(addprefix -CFLAGS , $(CFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
 		--Mdir $(OBJ_DIR) --exe -o $(abspath $(BIN))\
 		$(addprefix -LDFLAGS , $(LD3FLAGS))\
- 		$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LD2FLAGS))
+		$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LD2FLAGS))
 		
-		
-
 all: default
 
 run: $(BIN)
@@ -78,6 +82,6 @@ clean:
 
 sim: $(BIN)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
-	@$^
+	@$(NPC_ECEC)
 	
 include ../Makefile

@@ -16,8 +16,12 @@ module ysyx_22050854_RegisterFile  (
 );
   reg [63:0] rf [31:0];
   always @(posedge clk) begin
-    if(wen) rf[waddr] <= wdata;
+    if(waddr==5'd0)
+      rf[waddr] <= 64'd0;
+    else 
+      if(wen) rf[waddr] <= wdata;
   end
+
   import "DPI-C" function void set_gpr_ptr(input logic [63:0] a []);
   initial set_gpr_ptr(rf);  // rf为通用寄存器的二维数组变量
   

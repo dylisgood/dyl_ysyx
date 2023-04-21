@@ -2,8 +2,6 @@
 #include "utils.h"
 #include "mem.h"
 
-
-
 uint64_t *cpu_gpr = NULL;
 extern "C" void set_gpr_ptr(const svOpenArrayHandle r) {
   cpu_gpr = (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());
@@ -15,12 +13,34 @@ extern "C" void get_pc_value(int data)
   verilog_pc = data;
 }
 
+uint32_t verilog_inst = 0;
+extern "C" void get_inst_value(int data)
+{
+  verilog_inst = data;
+}
 
+extern "C" void v_pmem_read(long long raddr, long long *rdata) {
+  //printf("the orign raddr is %llx     ",raddr);
+  // 总是读取地址为`raddr & ~0x7ull`的8字节返回给`rdata`
+  *rdata = pmem_read(raddr & ~0x7ull, 8);
+}
+extern "C" void v_pmem_write(long long waddr, long long wdata, long long wmask) {
+  // 总是往地址为`waddr & ~0x7ull`的8字节按写掩码`wmask`写入`wdata`
+  // `wmask`中每比特表示`wdata`中1个字节的掩码,
+  // 如`wmask = 0x3`代表只写入最低2个字节, 内存中的其它字节保持不变
+  //printf("the orign raddr is %llx     ",waddr);
+  int n = waddr - (waddr & ~0x7ull);
+  wdata = wdata & wmask;//取出要读的数，其他的置0
+  wmask = wmask << (n << 3);
+  pmem_write(waddr & ~0x7ull, 8, (wdata << (n << 3)),wmask);
+}
+
+extern const char *regs[];
 // 一个输出RTL中通用寄存器的值的示例
 void dump_gpr() {
   int i;
   for (i = 0; i < 32; i++) {
-    printf("gpr[%d] = 0x%lx\n", i, cpu_gpr[i]);
+    printf("%s = 0x%lx\n", regs[i], cpu_gpr[i]);
   }
 }
 
@@ -50,95 +70,83 @@ static void single_cycle(){
   top->clk = 0; sim_exit();
   top->clk = 1; sim_exit();
 }
-
+//printf("alu_src1 = 0x%lx ,alusrc2 = 0x%lx, alu_out = 0x%lx top->x10 = %lx  \n",top->alu_src1,top->alu_src2,top->alu_out,top->x10);
 static void reset(int n){
   top->rst = 1;
   while (n -- > 0) single_cycle();
   top->rst = 0;
 }
-
-void cpu_exec(int instr_num){
-  int n = instr_num * 2;
-  static int last_clk=0;
-
+void cpu_exec(int n){
   while(n || Execute){  //!contextp->gotFinish()
-    if(top->ebreak) {break;}
-    if(n-- == 0 && !Execute) { break; } 
-    last_clk = top->clk; 
-    top->clk = !top->clk;
-    if(!top->clk && last_clk && !top->rst)
-    { top->inst = pmem_read(top->pc,4); }
-    if(top->clk){
-      difftest_step(top->pc,top->pc);
-    }
-    sim_exit();
-    
-    if(!top->clk)
-    {
-    #ifdef CONFIG_WATCHPOINT 
-    wp_detect();
-    #endif
-
+    if(top->ebreak || (n-- == 0 && !Execute)) {break;}
+    top->clk = 0; sim_exit();
+    uint64_t top_pc = verilog_pc;
+    uint32_t top_inst = verilog_inst;
+    top->clk = 1; sim_exit();
     #ifdef CONFIG_ITRACE
     char logbuf[127];
     char *p = logbuf;
-    uint64_t top_pc = verilog_pc;
+    
     p += snprintf(p, sizeof(logbuf), "0x%016" PRIx64 ":", top_pc); //16进制PC 64位 
     int ilen = 4;
     int i;
-    uint8_t *inst = (uint8_t *)(&top->inst);
+    uint8_t *inst = (uint8_t *)(&top_inst);
     for (i = ilen - 1; i >= 0; i --) {
       p += snprintf(p, 4, " %02x", inst[i]); 
     }
     writeIringbuf(iringbuf,logbuf);
     memset(p, ' ', 1); 
     p += 1; 
-    disassemble(p, logbuf + sizeof(logbuf) - p, top->pc, (uint8_t *)&top->inst, 4);
+    disassemble(p, logbuf + sizeof(logbuf) - p, top_pc, (uint8_t *)&top_inst, 4);
+    if(!Execute && instr_num < 21) { puts(logbuf);printf("\n"); }
     #endif
-    
+
+    #ifdef CONFIG_WATCHPOINT 
+    wp_detect();
+    #endif
+
     #ifdef CONFIG_FTRACE
     static int kong = 0;
     int j = 0;
-    if( ((top->inst & 0x0ef) == 0x0ef) || ((top->inst & 0x0e7) == 0x0e7) \
-          || ((top->inst & 0x00078067) == 0x00078067) )  //jal && x1 || jalr && !x1
+    if( ((verilog_inst & 0x0ef) == 0x0ef) || ((verilog_inst & 0x0e7) == 0x0e7) \
+          || ((verilog_inst & 0x00078067) == 0x00078067) )  //jal && x1 || jalr && !x1
     {
         for (int i = 0; i < func_num; i++) 
         {
-          if(top->pc >= func_trace[i].address && top->pc <= (func_trace[i].address + func_trace[i].size) )
+          if(verilog_pc >= func_trace[i].address && verilog_pc < (func_trace[i].address + func_trace[i].size) )
           {
-            printf("0x%x: ",top->pc);
+            printf("0x%x: ",verilog_pc);
             for(j = 0; j < kong; j++) printf(" ");
             kong++;
             printf("call %s[@%lx] \n",func_trace[i].name,func_trace[i].address);
-            //printf("kong = %d\n",kong); 
           }
         }
     }
-    else if( ((top->inst & 0x00008067) == 0x00008067)  ) //jalr && x0 || jal && x0 
+    else if( ((verilog_inst & 0x00008067) == 0x00008067)  ) //jalr && x0 || jal && x0 
     {
       for (int i = 0; i < func_num; i++) 
       {
-        if(top->pc >= func_trace[i].address && top->pc <= (func_trace[i].address + func_trace[i].size))
+        if(verilog_pc >= func_trace[i].address && verilog_pc < (func_trace[i].address + func_trace[i].size))
           {
-            printf("0x%x: ",top->pc);
+            printf("0x%x: ",verilog_pc);
             for(j = 0; j< kong; j++) printf(" ");
             kong--;
             printf("ret %s \n",func_trace[i].name);
-            //printf("kong = %d\n",kong);
           }
       }
     }
     #endif
-  
-    if(!Execute) puts(logbuf);
-    //printf("pc = %x   inst = %x \n",verilog_pc,top->inst);
-    }
+    
+    #ifdef CONFIG_DIFFTEST
+      difftest_step(verilog_pc,verilog_pc);
+    #endif
   }
-  if( top->x10 == 0 && top->ebreak == 1 ){
-    Log("npc = %s at pc = 0x%x" ,ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN),top->pc);
+
+  if( !top->x10 && top->ebreak ){
+    Log("npc = %s at pc = 0x%x" ,ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN),verilog_pc);
   }
-  else if ( top->ebreak == 1 && top->x10 != 0 ){
-    Log("npc = %s at pc = 0x%x" ,ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED),top->pc); 
+  else if ( top->ebreak && top->x10 != 0 ){
+    Log("npc = %s at pc = 0x%x" ,ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED),verilog_pc); 
     printIringbuf(iringbuf);
   }
   tfp->close();
@@ -152,14 +160,12 @@ int main(int argc, char** argv, char** env){
   top->trace(tfp,0);
   tfp->open("wave.vcd");
 
-  init_monitor(argc,argv);
-  
   top->rst = 0;
   top->clk = 0;
   reset(2);
-  dump_gpr();
-  cpu.gpr = cpu_gpr;
-  cpu.pc = verilog_pc;
+
+  cpu.pc = (uint32_t)0x800000000;
+  init_monitor(argc,argv);
   sdb_mainloop();
   
   delete contextp;

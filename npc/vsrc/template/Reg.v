@@ -1,5 +1,4 @@
-//trigger
-/*
+
 module ysyx_22050854_Reg #(WIDTH = 1, RESET_VAL = 0) (
     input clk,
     input rst,
@@ -12,4 +11,4 @@ module ysyx_22050854_Reg #(WIDTH = 1, RESET_VAL = 0) (
         else if(wen) dout <= din;
     end
 endmodule
-*/
+

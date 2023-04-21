@@ -10,10 +10,10 @@
 #include "verilated_dpi.h"
 #include "svdpi.h"
 
-
-#define CONFIG_WATCHPOINT 0
-#define CONFIG_ITRACE 0
-#define CONFIG_FTRACE 0
+#define CONFIG_ITRACE 
+#define CONFIG_WATCHPOINT 
+#define CONFIG_FTRACE 
+#define CONFIG_DIFFTEST
 
 #define iringbuf_num 10
 #define iringbuf_size 128
@@ -25,7 +25,7 @@ struct func_struct{
 };
 
 typedef struct {
-  uint64_t* gpr;
+  uint64_t gpr[31];
   uint32_t pc;
 } CPU_state;
 

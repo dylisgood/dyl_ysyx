@@ -6,7 +6,7 @@ module ysyx_22050854_imm_gen(
 );
     wire [63:0]immI,immU,immS,immB,immJ;
     assign immI = {{52{instr[31]}},instr[31:20]};
-    assign immU = {instr[31:12],44'b0};
+    assign immU = {{32{instr[31]}},instr[31:12],12'b0};
     assign immS = {{52{instr[31]}},instr[31:25],instr[11:7]};
     assign immB = {{52{instr[31]}},instr[7],instr[30:25],instr[11:8],1'b0};
     assign immJ = {{44{instr[31]}},instr[19:12],instr[20],instr[30:21],1'b0};

@@ -3,8 +3,6 @@
 #include "sdb.h"
 #include <../../csrc/mem.h>
 
-
-
 struct func_struct{
   char name[20];
   uint64_t address;
@@ -17,12 +15,13 @@ static char *img_file = NULL;
 static char *elf_file = NULL;
 static char *diff_so_file = NULL;
 static int difftest_port = 1234;
+void dump_gpr();
 
 void init_regex();   //expr.c
 void init_wp_pool();  //watchpoint.c
 extern "C" void init_disasm(const char *triple);
 void init_difftest(char *ref_so_file, long img_size, int port);
-
+extern bool Execute;
 int func_num = 0;
 void init_ftrace() {
   int sym_num = 0;
@@ -105,7 +104,7 @@ void init_ftrace() {
 static long load_img() {
   if(img_file == NULL){
     printf("No image is given, Use the default build-in image.\n");
-    return 1024;
+    return 64;
   }
 
   FILE *fp = fopen(img_file,"rb");
@@ -135,10 +134,10 @@ static int parse_args(int argc, char *argv[]){
   int o;
   while( (o = getopt_long(argc,argv,"-be:d:p:",table,NULL) ) != -1){
     switch (o) {
-      case 'b': printf("I enter batch-----------------------\n"); break;
+      case 'b': Execute = true; break;
       case 'p': sscanf(optarg, "%d", &difftest_port);break;
       case 'e': elf_file = optarg;break;
-      case 'd': diff_so_file = optarg;printf("I get diff_so_diff\n");break;
+      case 'd': diff_so_file = optarg;break;
       case 1: img_file = optarg;return 0;
       default: 
         printf("no img_file");
@@ -155,13 +154,11 @@ void init_monitor(int argc, char** argv) {
     
   init_mem();
   
-  int img_size = load_img();
+  int img_size = load_img();  
   /* Initialize differential testing. */
   init_difftest(diff_so_file, img_size, difftest_port);
-
   init_regex();
   init_wp_pool();
   init_ftrace();
   init_disasm("riscv64-pc-linux-gnu");
-  
 } 

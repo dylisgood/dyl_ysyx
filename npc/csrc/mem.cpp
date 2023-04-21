@@ -1,7 +1,6 @@
-#include <stdint.h>
-#include <assert.h>
-#include <stdlib.h>
-//#include <debug.h>
+#include "mem.h"
+#include "utils.h"
+
 #define CONFIG_MSIZE  0x8000000 //800
 #define CONFIG_MBASE 0x80000000 //8000
 #define PG_ALIGN __attribute((aligned(4096)))
@@ -23,12 +22,12 @@ static inline uint64_t host_read(void *addr, int len){
     }
 }
 
-static inline void host_write(void *addr, int len, uint64_t data){
+static inline void host_write(void *addr, int len, uint64_t data, uint64_t wmask){
     switch(len) {
         case 1: *(uint8_t *)addr = data; return;
         case 2: *(uint16_t *)addr = data; return;
         case 4: *(uint32_t *)addr = data; return;
-        case 8: *(uint64_t *)addr = data; return;
+        case 8: *(uint64_t *)addr = (*(uint64_t *)addr & ~wmask) | data; return;
         default: assert(0); return;
     }
 }
@@ -36,13 +35,31 @@ static inline void host_write(void *addr, int len, uint64_t data){
 uint8_t* guest_to_host(uint32_t paddr) { return pmem + paddr - CONFIG_MBASE; } //pmem + paddr - 0x80000000 = pmem + 
 
 uint64_t pmem_read(uint32_t addr,int len){
-    uint64_t ret = host_read(guest_to_host(addr),len);
-    return ret;
+  //printf("addr = %x\n",addr);
+  assert(addr >= 0x80000000);
+  uint64_t ret = host_read(guest_to_host(addr),len);
+  #ifdef CONFIG_MTRACE  
+    printf("read memory, read_addr = %x ,read data = %lx\n",addr,ret);
+  #endif
+  return ret;
 } 
 
-void pmem_write(int addr, int len, uint64_t data){
-    host_write(guest_to_host(addr), len, data);
+void pmem_write(int addr, int len, uint64_t data, uint64_t wmask){
+  //printf("addr = %x\n",addr);
+  assert(addr >= 0x80000000);
+  host_write(guest_to_host(addr), len, data, wmask);
+  #ifdef CONFIG_MTRACE  
+    Log("write memory, write_addr = %x ,write_data = %lx\n",addr,data);  
+  #endif
 }
+
+/* void pmem_write1(int addr, uint64_t wmask, uint64_t data){
+  assert(addr >= 0x80000000);
+  *(uint64_t *)addr = (*(uint64_t *)addr & ~wmask) | data;  //先擦出要写入内存的那几位，然后再写入
+  #ifdef CONFIG_MTRACE  
+    Log("write memory, write_addr = %x ,write_data = %lx\n",addr,data);  
+  #endif
+} */
 
 void init_mem() {
   pmem = (uint8_t *)malloc(CONFIG_MSIZE);
@@ -59,7 +76,10 @@ void init_mem() {
   p[1] = 0x00328313;  //addi rd,rs,imm  x6=x5+3
   p[2] = 0x00228313;  //addi rd,rs,imm  x6=x5+2
   p[3] = 0x00128313;  //addi rd,rs,imm  x6=x5+1
-  p[4] = 0x00100073;  //ebreak
+  p[4] = 0x00228313;  //addi rd,rs,imm  x6=x5+2
+  p[5] = 0x00328313;  //addi rd,rs,imm  x6=x5+3
+  p[6] = 0x00100073;  //ebreak
+  //p[0x23fa] = 0x8000011c;
 #endif
   //Log("physical memory area [" FMT_PADDR ", " FMT_PADDR "]", PMEM_LEFT, PMEM_RIGHT);    
 }
