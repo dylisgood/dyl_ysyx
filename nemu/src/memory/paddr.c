@@ -18,13 +18,13 @@
 #include <device/mmio.h>
 #include <isa.h>
 
-#if   defined(CONFIG_PMEM_MALLOC)
+/* #if   defined(CONFIG_PMEM_MALLOC)
 static uint8_t *pmem = NULL;
-#else // CONFIG_PMEM_GARRAY
+#else // CONFIG_PMEM_GARRAY */
 static uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
-#endif
+/* #endif */
 
-uint8_t* guest_to_host(paddr_t paddr) { return pmem + paddr - CONFIG_MBASE; }
+uint8_t* guest_to_host(paddr_t paddr) { return pmem + paddr - 0x80000000; }
 paddr_t host_to_guest(uint8_t *haddr) { return haddr - pmem + CONFIG_MBASE; }
 
 static word_t pmem_read(paddr_t addr, int len) {
@@ -43,10 +43,10 @@ static void out_of_bound(paddr_t addr) {
 }
 
 void init_mem() {
-#if   defined(CONFIG_PMEM_MALLOC)
+/* #if   defined(CONFIG_PMEM_MALLOC)
   pmem = malloc(CONFIG_MSIZE);
   assert(pmem);
-#endif
+#endif */
 #ifdef CONFIG_MEM_RANDOM
   uint32_t *p = (uint32_t *)pmem;
   int i;
@@ -58,14 +58,23 @@ void init_mem() {
 }
 
 word_t paddr_read(paddr_t addr, int len) {
-  if (likely(in_pmem(addr))) return pmem_read(addr, len);
+  if (likely(in_pmem(addr)))  
+  {
+    IFDEF(CONFIG_MTRACE,printf("read  %d bytes, read  addr: %x\n",len,addr);)
+    return pmem_read(addr, len);
+  }
   IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
   out_of_bound(addr);
   return 0;
 }
 
 void paddr_write(paddr_t addr, int len, word_t data) {
-  if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
+  if (likely(in_pmem(addr))) 
+  { 
+    pmem_write(addr, len, data);
+    IFDEF(CONFIG_MTRACE,printf("write %d bytes, write addr: %x, write data: %lx\n",len,addr,data);) 
+    return; 
+  }
   IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
   out_of_bound(addr);
 }

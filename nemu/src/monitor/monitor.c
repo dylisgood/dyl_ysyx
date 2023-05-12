@@ -15,6 +15,7 @@
 
 #include <isa.h>
 #include <memory/paddr.h>
+#include <elf.h>
 
 void init_rand();
 void init_log(const char *log_file);
@@ -23,6 +24,107 @@ void init_difftest(char *ref_so_file, long img_size, int port);
 void init_device();
 void init_sdb();
 void init_disasm(const char *triple);
+
+
+#ifndef CONFIG_TARGET_AM
+#include <getopt.h>
+
+void sdb_set_batch_mode();
+void init_ftrace();
+
+static char *log_file = NULL;
+static char *diff_so_file = NULL;
+static char *img_file = NULL;
+static int difftest_port = 1234;
+static char *elf_file = NULL;
+
+
+struct func_struct{
+  char name[20];
+  uint64_t address;
+  uint64_t size;
+};
+
+struct func_struct func_trace[10];
+
+int func_num = 0;
+void init_ftrace() {
+  int sym_num = 0;
+  if(elf_file == NULL) {
+    Log("No elf is given. Can't trace function.");
+    return;
+  }
+  else{
+    Elf64_Ehdr elf_header;
+    FILE *fp = fopen(elf_file, "rb");
+    if (!fp) {
+        perror("Failed to open file");
+        return;
+    }
+
+    sym_num=fread(&elf_header, sizeof(Elf64_Ehdr), 1, fp);
+    if (memcmp(elf_header.e_ident, ELFMAG, SELFMAG) != 0) {
+        fprintf(stderr, "Not an ELF file: %s\n", elf_file);
+        return;
+    }
+
+    Elf64_Shdr *sh_table = malloc(sizeof(Elf64_Shdr) * elf_header.e_shnum);
+    fseek(fp, elf_header.e_shoff, SEEK_SET);
+    sym_num=fread(sh_table, sizeof(Elf64_Shdr), elf_header.e_shnum, fp);
+
+    Elf64_Shdr *strtab = &sh_table[elf_header.e_shstrndx];
+    char *sh_strtab = malloc(strtab->sh_size);
+    fseek(fp, strtab->sh_offset, SEEK_SET);
+    sym_num=fread(sh_strtab, strtab->sh_size, 1, fp);
+
+    Elf64_Shdr *symtab = NULL;
+    Elf64_Shdr *strtab_hdr = NULL;
+
+    for (int i = 0; i < elf_header.e_shnum; i++) {
+        if (sh_table[i].sh_type == SHT_SYMTAB) {
+            symtab = &sh_table[i];
+        } else if (sh_table[i].sh_type == SHT_STRTAB &&
+                   strcmp(&sh_strtab[sh_table[i].sh_name], ".strtab") == 0) {
+            strtab_hdr = &sh_table[i];
+        }
+    }
+
+    if (!symtab) {
+        fprintf(stderr, "No symbol table found\n");
+        return;
+    }
+    Elf64_Sym *symbols = malloc(symtab->sh_size);
+    fseek(fp, symtab->sh_offset, SEEK_SET);
+    sym_num=fread(symbols, symtab->sh_size, 1, fp);
+
+    if (!strtab_hdr) {
+        fprintf(stderr, "No string table found\n");
+        return;
+    }
+    char *strtab1 = malloc(strtab_hdr->sh_size);
+    fseek(fp, strtab_hdr->sh_offset, SEEK_SET);
+    sym_num=fread(strtab1, strtab_hdr->sh_size, 1, fp);
+
+    int k = 0;
+    sym_num = symtab->sh_size / sizeof(Elf64_Sym);
+    for (int i = 0; i < sym_num; i++) {
+      Elf64_Sym *sym = &symbols[i];
+       if(sym->st_info == 18){
+         strcpy(func_trace[k].name,&strtab1[sym->st_name]);
+         func_trace[k].address = sym->st_value;
+         func_trace[k].size = sym->st_size;
+         func_num++;
+         k++;
+      }
+    }
+    fclose(fp);
+    free(sh_table);
+    free(sh_strtab);
+    free(symbols);
+    free(strtab1);
+    return;
+  }
+}
 
 static void welcome() {
   Log("Trace: %s", MUXDEF(CONFIG_TRACE, ANSI_FMT("ON", ANSI_FG_GREEN), ANSI_FMT("OFF", ANSI_FG_RED)));
@@ -33,16 +135,6 @@ static void welcome() {
   printf("Welcome to %s-NEMU!\n", ANSI_FMT(str(__GUEST_ISA__), ANSI_FG_YELLOW ANSI_BG_RED));
   printf("For help, type \"help\"\n");
 }
-
-#ifndef CONFIG_TARGET_AM
-#include <getopt.h>
-
-void sdb_set_batch_mode();
-
-static char *log_file = NULL;
-static char *diff_so_file = NULL;
-static char *img_file = NULL;
-static int difftest_port = 1234;
 
 static long load_img() {
   if (img_file == NULL) {
@@ -70,23 +162,26 @@ static int parse_args(int argc, char *argv[]) {
   const struct option table[] = {
     {"batch"    , no_argument      , NULL, 'b'},
     {"log"      , required_argument, NULL, 'l'},
+    {"elf"      , required_argument, NULL, 'e'},
     {"diff"     , required_argument, NULL, 'd'},
     {"port"     , required_argument, NULL, 'p'},
     {"help"     , no_argument      , NULL, 'h'},
     {0          , 0                , NULL,  0 },
   };
   int o;
-  while ( (o = getopt_long(argc, argv, "-bhl:d:p:", table, NULL)) != -1) {
+  while ( (o = getopt_long(argc, argv, "-bhl:e:d:p:", table, NULL)) != -1) {
     switch (o) {
       case 'b': sdb_set_batch_mode(); break;
       case 'p': sscanf(optarg, "%d", &difftest_port); break;
       case 'l': log_file = optarg; break;
+      case 'e': elf_file = optarg; break;
       case 'd': diff_so_file = optarg; break;
       case 1: img_file = optarg; return 0;
       default:
         printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
         printf("\t-b,--batch              run with batch mode\n");
         printf("\t-l,--log=FILE           output log to FILE\n");
+        printf("\t-e,--elf=elf_file       input elf from FILE\n");
         printf("\t-d,--diff=REF_SO        run DiffTest with reference REF_SO\n");
         printf("\t-p,--port=PORT          run DiffTest with port PORT\n");
         printf("\n");
@@ -126,6 +221,8 @@ void init_monitor(int argc, char *argv[]) {
   /* Initialize the simple debugger. */
   init_sdb();
 
+  IFDEF(CONFIG_FTRACE,init_ftrace());
+
   IFDEF(CONFIG_ITRACE, init_disasm(
     MUXDEF(CONFIG_ISA_x86,     "i686",
     MUXDEF(CONFIG_ISA_mips32,  "mipsel",
@@ -151,6 +248,6 @@ void am_init_monitor() {
   init_isa();
   load_img();
   IFDEF(CONFIG_DEVICE, init_device());
-  welcome();
+  //welcome();
 }
 #endif

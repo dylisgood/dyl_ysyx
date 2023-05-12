@@ -96,6 +96,9 @@ static void checkregs(CPU_state *ref, vaddr_t pc) {
     nemu_state.state = NEMU_ABORT;
     nemu_state.halt_pc = pc;
     isa_reg_display();
+    for(int i = 0; i < 32; i++){
+      printf("ref[%d] = %lx\n" ,i,ref->gpr[i]);
+    }
   }
 }
 

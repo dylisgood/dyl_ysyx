@@ -21,8 +21,9 @@ static uint32_t *rtc_port_base = NULL;
 
 static void rtc_io_handler(uint32_t offset, int len, bool is_write) {
   assert(offset == 0 || offset == 4);
-  if (!is_write && offset == 4) {
-    uint64_t us = get_time();
+  if (!is_write && (offset == 4 || offset == 0)) {  //如果是读IO 并且 读的地址是高4位  为什么是高四位？？
+    uint64_t us = get_time();      //让目标空间写入得到的时间
+/*     printf("I invoke rtc_io_handle the us = %ld \n",us); */
     rtc_port_base[0] = (uint32_t)us;
     rtc_port_base[1] = us >> 32;
   }
