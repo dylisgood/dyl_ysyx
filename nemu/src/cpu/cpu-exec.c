@@ -47,7 +47,7 @@ void device_update();
 
 void print_iringbuf(){
   for(int x = 0; x < 10; x++){
-    puts(iringbuf[x]);
+    IFDEF(CONFIG_ITRACE,puts(iringbuf[x]));
   }
 }
 

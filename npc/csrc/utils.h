@@ -3,6 +3,12 @@
 
 //#define FMT_WORD "0x%016"PRIx64
 
+/* #define CONFIG_ITRACE   */
+/* #define CONFIG_WATCHPOINT   */
+/* #define CONFIG_FTRACE  */
+/* #define CONFIG_MTRACE  */
+/* #define CONFIG_DIFFTEST */
+
 #define ANSI_FG_BLACK   "\33[1;30m"
 #define ANSI_FG_RED     "\33[1;31m"
 #define ANSI_FG_GREEN   "\33[1;32m"

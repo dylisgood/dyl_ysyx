@@ -147,16 +147,16 @@ module ysyx_22050854_cpu(
         3'b011,64'hffffffffffffffff   // sd
     });
 
-    //读取数据存储器
+    //读取数据存储器 异步读取
     always @(*) begin
-    if(MemRd==1'b1 && alu_out >= 64'h80000000) begin
+    if( MemRd==1'b1) begin
         v_pmem_read(alu_out, rdata);
     end
     else begin
-        rdata = 64'd0;
+        rdata = 64'd7;
     end
     end
-    
+    //write memory
     always @(posedge clk) begin
     if(MemWr==1'b1 && alu_out >= 64'h80000000) begin
         v_pmem_write(alu_out, src2, wmask);

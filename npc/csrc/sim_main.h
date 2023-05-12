@@ -10,11 +10,6 @@
 #include "verilated_dpi.h"
 #include "svdpi.h"
 
-#define CONFIG_ITRACE 
-#define CONFIG_WATCHPOINT 
-#define CONFIG_FTRACE 
-#define CONFIG_DIFFTEST
-
 #define iringbuf_num 10
 #define iringbuf_size 128
 
@@ -66,9 +61,6 @@ void printIringbuf(iringbuffer *iringbuf ){
         iringbuf->head = (iringbuf->head + 1) % iringbuf->size;
     }
 }
-
-#ifdef CONFIG_ITRACE
 iringbuffer *iringbuf = initIringbuf();
-#endif
 
 #endif

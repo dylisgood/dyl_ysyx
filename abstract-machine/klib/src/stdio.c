@@ -6,7 +6,54 @@
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 
 int printf(const char *fmt, ...) {
-  panic("Not implemented");
+  va_list args;
+  va_start(args, fmt);
+
+  for(; *fmt != '\0'; fmt++){
+    if(*fmt == '%'){
+      fmt++;
+      if(*fmt == 'c'){
+        char c = va_arg(args,int);
+        putch(c);
+      }
+      else if(*fmt == 's'){
+        char *s = va_arg(args,char *);
+        while(*s){
+          putch(*s++);
+        }
+      }
+      else if(*fmt == 'd'){
+        int num = va_arg(args,int);
+        int divisor = 1;
+        while(num / divisor > 9){
+          divisor *= 10;
+        }
+        while(divisor > 0){
+          putch('0' + num / divisor);
+          num %= divisor;
+          divisor /= 10;
+        }
+      }
+      else if(*fmt == 'x'){
+        int num = va_arg(args,int);
+        int divisor = 1;
+        while(num / divisor > 9){
+          divisor *= 10;
+        }
+        while(divisor > 0){
+          putch('0' + num / divisor);
+          num %= divisor;
+          divisor /= 10;
+        }
+      }
+    }
+    else{
+      putch(*fmt);
+    }
+  }
+
+  va_end(args);
+  return 0;
 }
 
 int vsprintf(char *out, const char *fmt, va_list ap) {

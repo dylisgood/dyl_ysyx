@@ -2,7 +2,7 @@
 #include <elf.h>
 #include "sdb.h"
 #include <../../csrc/mem.h>
-
+#include <../../csrc/utils.h>
 struct func_struct{
   char name[20];
   uint64_t address;
@@ -16,12 +16,11 @@ static char *elf_file = NULL;
 static char *diff_so_file = NULL;
 static int difftest_port = 1234;
 void dump_gpr();
-
-void init_regex();   //expr.c
-void init_wp_pool();  //watchpoint.c
+void init_sdb();
 extern "C" void init_disasm(const char *triple);
 void init_difftest(char *ref_so_file, long img_size, int port);
 extern bool Execute;
+
 int func_num = 0;
 void init_ftrace() {
   int sym_num = 0;
@@ -147,18 +146,24 @@ static int parse_args(int argc, char *argv[]){
   return 0;
 }
 
-
-
 void init_monitor(int argc, char** argv) {
   parse_args(argc, argv);
     
   init_mem();
   
-  int img_size = load_img();  
-  /* Initialize differential testing. */
-  init_difftest(diff_so_file, img_size, difftest_port);
-  init_regex();
-  init_wp_pool();
-  init_ftrace();
+  int img_size = load_img();
+
+  init_sdb();
+
+  #ifdef CONFIG_ITRACE
   init_disasm("riscv64-pc-linux-gnu");
+  #endif
+
+  #ifdef CONFIG_DIFFTEST
+  init_difftest(diff_so_file, img_size, difftest_port);
+  #endif
+  
+  #ifdef CONFIG_FTRACE
+  init_ftrace();
+  #endif
 } 

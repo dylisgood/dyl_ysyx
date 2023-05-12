@@ -15,15 +15,15 @@ void __am_audio_init() {
   wfd = fds[1];
 }
 
+int n = 0;
 static void audio_play(void *userdata, uint8_t *stream, int len) {
   int nread = len;
   if (count < len) nread = count;
   int b = 0;
   while (b < nread) {
-    int n = read(rfd, stream, nread);
+    int n = read(rfd, stream, nread);//什么时候往stream写的? 写了吗 你就读? 读哪去？
     if (n > 0) b += n;
   }
-
   count -= nread;
   if (len > nread) {
     memset(stream + nread, 0, len - nread);

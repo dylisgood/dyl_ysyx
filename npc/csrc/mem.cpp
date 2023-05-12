@@ -35,8 +35,8 @@ static inline void host_write(void *addr, int len, uint64_t data, uint64_t wmask
 uint8_t* guest_to_host(uint32_t paddr) { return pmem + paddr - CONFIG_MBASE; } //pmem + paddr - 0x80000000 = pmem + 
 
 uint64_t pmem_read(uint32_t addr,int len){
-  //printf("addr = %x\n",addr);
-  assert(addr >= 0x80000000);
+  //printf("pmem_read: addr = %x\n",addr);
+  assert((addr >= 0x80000000) && (addr <= 0x87ffffff));
   uint64_t ret = host_read(guest_to_host(addr),len);
   #ifdef CONFIG_MTRACE  
     printf("read memory, read_addr = %x ,read data = %lx\n",addr,ret);
@@ -45,21 +45,14 @@ uint64_t pmem_read(uint32_t addr,int len){
 } 
 
 void pmem_write(int addr, int len, uint64_t data, uint64_t wmask){
-  //printf("addr = %x\n",addr);
-  assert(addr >= 0x80000000);
+  //printf("pmem_write: addr = %x\n",addr);
+  assert( (addr >= 0x80000000) && (addr <= 0x87ffffff));
+  
   host_write(guest_to_host(addr), len, data, wmask);
   #ifdef CONFIG_MTRACE  
     Log("write memory, write_addr = %x ,write_data = %lx\n",addr,data);  
   #endif
 }
-
-/* void pmem_write1(int addr, uint64_t wmask, uint64_t data){
-  assert(addr >= 0x80000000);
-  *(uint64_t *)addr = (*(uint64_t *)addr & ~wmask) | data;  //先擦出要写入内存的那几位，然后再写入
-  #ifdef CONFIG_MTRACE  
-    Log("write memory, write_addr = %x ,write_data = %lx\n",addr,data);  
-  #endif
-} */
 
 void init_mem() {
   pmem = (uint8_t *)malloc(CONFIG_MSIZE);

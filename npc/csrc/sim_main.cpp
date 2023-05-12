@@ -1,7 +1,11 @@
 #include "sim_main.h"
 #include "utils.h"
 #include "mem.h"
+#include <sys/time.h>
 
+struct timeval currentTime;
+static int us;
+bool uptime_first = true;
 uint64_t *cpu_gpr = NULL;
 extern "C" void set_gpr_ptr(const svOpenArrayHandle r) {
   cpu_gpr = (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());
@@ -20,19 +24,50 @@ extern "C" void get_inst_value(int data)
 }
 
 extern "C" void v_pmem_read(long long raddr, long long *rdata) {
-  //printf("the orign raddr is %llx     ",raddr);
-  // 总是读取地址为`raddr & ~0x7ull`的8字节返回给`rdata`
-  *rdata = pmem_read(raddr & ~0x7ull, 8);
+  //printf("the orign raddr is %lx \n ",raddr);
+  //总是读取地址为`raddr & ~0x7ull`的8字节返回给`rdata`
+  if(raddr == 0xa0000048)  //时钟
+  {
+    if(uptime_first)
+    {
+      gettimeofday(&currentTime,NULL);
+      us = currentTime.tv_sec * 1000000 + currentTime.tv_usec;
+      uptime_first = false;
+    }
+    
+    gettimeofday(&currentTime,NULL);
+    uint64_t time_pass = currentTime.tv_sec *1000000 + currentTime.tv_usec - us;
+    *rdata = time_pass; 
+  }
+  else if(raddr >= 0x80000000 && raddr <= 0x87ffffff)
+  { 
+    *rdata = pmem_read(raddr & ~0x7ull, 8);
+  }
+  else
+  {
+    printf("the read address %lx  is invalid! \n",raddr);
+    *rdata = 404;
+  }
 }
+
 extern "C" void v_pmem_write(long long waddr, long long wdata, long long wmask) {
   // 总是往地址为`waddr & ~0x7ull`的8字节按写掩码`wmask`写入`wdata`
   // `wmask`中每比特表示`wdata`中1个字节的掩码,
   // 如`wmask = 0x3`代表只写入最低2个字节, 内存中的其它字节保持不变
-  //printf("the orign raddr is %llx     ",waddr);
   int n = waddr - (waddr & ~0x7ull);
   wdata = wdata & wmask;//取出要读的数，其他的置0
   wmask = wmask << (n << 3);
-  pmem_write(waddr & ~0x7ull, 8, (wdata << (n << 3)),wmask);
+  if( waddr == 0xa00003f8 )  //串口
+  {
+    putchar(wdata);
+  }
+  else if(waddr >= 0x80000000 && waddr <= 0x8fffffff) //内存
+  {
+    pmem_write(waddr & ~0x7ull, 8, (wdata << (n << 3)),wmask);
+  }
+  else{
+    printf("the write addr:%lx is invalid \n",waddr);
+  }
 }
 
 extern const char *regs[];
@@ -83,6 +118,7 @@ void cpu_exec(int n){
     uint64_t top_pc = verilog_pc;
     uint32_t top_inst = verilog_inst;
     top->clk = 1; sim_exit();
+
     #ifdef CONFIG_ITRACE
     char logbuf[127];
     char *p = logbuf;
@@ -147,13 +183,16 @@ void cpu_exec(int n){
   }
   else if ( top->ebreak && top->x10 != 0 ){
     Log("npc = %s at pc = 0x%x" ,ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED),verilog_pc); 
-    printIringbuf(iringbuf);
+    #ifdef CONFIG_ITRACE 
+      printIringbuf(iringbuf);
+    #endif
   }
   tfp->close();
   return;
 }
 
 CPU_state cpu = {};
+
 int main(int argc, char** argv, char** env){
   contextp -> traceEverOn(true);
   contextp -> commandArgs(argc, argv);  //传递参数以便于verilated可以看到    

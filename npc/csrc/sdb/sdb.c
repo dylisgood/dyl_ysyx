@@ -8,6 +8,8 @@ extern bool Execute;
 
 void cpu_exec(int n);
 uint64_t expr(char *arg);
+void init_regex();   //expr.c
+void init_wp_pool();  //watchpoint.c
 uint64_t pmem_read(uint32_t addr,int len);
 void dump_gpr();
 void set_wp(char *arg);
@@ -173,4 +175,9 @@ static int cmd_help(char *args) {
     printf("Unknown command '%s'\n", arg);
   }
   return 0;
+}
+
+void init_sdb(){
+  init_regex();
+  init_wp_pool();
 }

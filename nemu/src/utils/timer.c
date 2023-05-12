@@ -17,7 +17,7 @@
 #include MUXDEF(CONFIG_TIMER_GETTIMEOFDAY, <sys/time.h>, <time.h>)
 
 IFDEF(CONFIG_TIMER_CLOCK_GETTIME,
-    static_assert(CLOCKS_PER_SEC == 1000000, "CLOCKS_PER_SEC != 1000000"));
+    static_assert(CLOCKS_PER_SEC == 1000000, "CLOCKS_PER_SEC != 100"));
 IFDEF(CONFIG_TIMER_CLOCK_GETTIME,
     static_assert(sizeof(clock_t) == 8, "sizeof(clock_t) != 8"));
 
@@ -38,7 +38,7 @@ static uint64_t get_time_internal() {
   return us;
 }
 
-uint64_t get_time() {
+uint64_t get_time() {   //return 系统启动后经过的时间 单位 us
   if (boot_time == 0) boot_time = get_time_internal();
   uint64_t now = get_time_internal();
   return now - boot_time;

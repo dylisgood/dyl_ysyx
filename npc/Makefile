@@ -43,17 +43,14 @@ CXXFLAGS += $(shell llvm-config-11 --cxxflags) -fPIE
 
 
 LDFLAGS += -O2 -lSDL2 -lSDL2_image -lreadline
-#LDFLAGS += -rdynamic -shared -fPIC
 LD2FLAGS += $(shell llvm-config-11 --ldflags)
 LD2FLAGS += $(shell llvm-config-11 --libs)
-#LD3FLAGS += -shared
-#LD3FALGS += -Wl -rpath=/home/dyl/ysyx-workbench/nemu/build
 LD3FLAGS += -L/home/dyl/ysyx-workbench/nemu/build
 LD3FLAGS += -l:riscv64-nemu-interpreter-so
 
 #aurgument  to execute npc
 IMG ?= 
-#override ARGS ?= -b
+#override ARGS += -b
 override ARGS += $(ARGS_DIFF)
 
 NPC_ECEC = $^ $(ARGS) $(IMG)

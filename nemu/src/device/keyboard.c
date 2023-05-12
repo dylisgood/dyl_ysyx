@@ -83,9 +83,9 @@ static uint32_t key_dequeue() {
 static uint32_t *i8042_data_port_base = NULL;
 
 static void i8042_data_io_handler(uint32_t offset, int len, bool is_write) {
-  assert(!is_write);
+  assert(!is_write);         //键盘是外部输入设备，对于CPU来说，只能读键盘寄存器，不能写键盘寄存器
   assert(offset == 0);
-  i8042_data_port_base[0] = key_dequeue();
+  i8042_data_port_base[0] = key_dequeue();  //每次读键盘，就要给他写入相应的值，读不是在这个函数中读的，这只是个回调函数
 }
 
 void init_i8042() {
