@@ -45,7 +45,7 @@ extern "C" void v_pmem_read(long long raddr, long long *rdata) {
   }
   else
   {
-    printf("the read address %lx  is invalid! \n",raddr);
+   // printf("the read address %lx  is invalid! \n",raddr);
     *rdata = 404;
   }
 }
@@ -65,9 +65,9 @@ extern "C" void v_pmem_write(long long waddr, long long wdata, long long wmask) 
   {
     pmem_write(waddr & ~0x7ull, 8, (wdata << (n << 3)),wmask);
   }
-  else{
+/*   else{
     printf("the write addr:%lx is invalid \n",waddr);
-  }
+  } */
 }
 
 extern const char *regs[];
