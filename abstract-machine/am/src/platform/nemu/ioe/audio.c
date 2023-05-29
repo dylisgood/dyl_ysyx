@@ -28,18 +28,24 @@ void __am_audio_status(AM_AUDIO_STATUS_T *stat) {
 }
 
 void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
-  //static uint8_t *fr = (uint8_t *)(uintptr_t)AUDIO_SBUF_ADDR;
+  static int sbuf_rear = 0;
   int i = 0;
-  static int len = 0;
+  int count_t = inl(AUDIO_COUNT_ADDR);
   for(uint8_t *fb = (uint8_t *)(ctl->buf.start);fb < (uint8_t *)(ctl->buf.end);fb++){
-    //*fr = *fb;
-    //fr++;
-    outb(AUDIO_SBUF_ADDR + i,*fb);
-/*     printf("* fb = %d", 1); */
-/*     printf("* fb = %d", 2);
-    printf("* fb = %d ", 3); */
+    if( (sbuf_rear + i) >= 0x10000){
+      if(count_t < 0x10000){
+        sbuf_rear = 0;
+        i=0;
+      }
+      else {
+        printf("error ! the queue is full !\n");
+        assert(0);
+      }
+    }
+    outb(AUDIO_SBUF_ADDR + sbuf_rear + i,*fb);
     i++;
   }
-  len+=1;
-  printf("AM: write %d bytes, 第 %d 次\n",i,len);
+  sbuf_rear += i;
+  count_t = inl(AUDIO_COUNT_ADDR);
+  outl(AUDIO_COUNT_ADDR, count_t + i);
 }

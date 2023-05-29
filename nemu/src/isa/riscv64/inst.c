@@ -19,6 +19,7 @@
 #include <cpu/decode.h>
 
 #define R(i) gpr(i)
+#define SR(i) sr(i)
 #define Mr vaddr_read
 #define Mw vaddr_write
 
@@ -39,11 +40,15 @@ enum {
                            | (BITS(i,30,25) << 4) | BITS(i,11,8);\
                   } while(0)
 
+int sr_num;
+uint64_t sr_imm;
 static void decode_operand(Decode *s, int *dest, word_t *src1, word_t *src2, word_t *imm, int type) {
   uint32_t i = s->isa.inst.val;
   int rd  = BITS(i, 11, 7);         
   int rs1 = BITS(i, 19, 15);
   int rs2 = BITS(i, 24, 20);
+  sr_num = BITS(i,27,20);
+  sr_imm = BITS(i,19,15);
   *dest = rd;
   switch (type) {
     case TYPE_I: src1R();          immI(); break;
@@ -59,7 +64,6 @@ static int decode_exec(Decode *s) {
   int dest = 0;
   word_t src1 = 0, src2 = 0, imm = 0;
   s->dnpc = s->snpc;
-
 #define INSTPAT_INST(s) ((s)->isa.inst.val)
 #define INSTPAT_MATCH(s, name, type, ... /* execute body */ ) { \
   decode_operand(s, &dest, &src1, &src2, &imm, concat(TYPE_, type)); \
@@ -140,7 +144,18 @@ static int decode_exec(Decode *s) {
   INSTPAT("0000001 ????? ????? 110 ????? 01110 11", remw   , R, int32_t rs1=BITS(src1,31,0); int32_t rs2=BITS(src2,31,0); R(dest) = SEXT(BITS(rs1 % rs2,31,0),32));
   INSTPAT("0000001 ????? ????? 111 ????? 01110 11", remuw  , R, R(dest) = SEXT(BITS( BITS(src1,31,0) % BITS(src2,31,0), 31, 0), 32));
 
+  INSTPAT("??????? ????? ????? 001 ????? 11100 11", csrrw  , R, R(dest) = sr(sr_num), sr(sr_num) = src1);
+  INSTPAT("??????? ????? ????? 010 ????? 11100 11", csrrs  , R, R(dest) = sr(sr_num), sr(sr_num) = sr(sr_num) | src1);
+  INSTPAT("??????? ????? ????? 011 ????? 11100 11", csrrc  , R, R(dest) = sr(sr_num), sr(sr_num) = sr(sr_num) & ~src1);
+  INSTPAT("??????? ????? ????? 101 ????? 11100 11", csrrwi , I, R(dest) = sr(sr_num), sr(sr_num) = sr_imm);
+  INSTPAT("??????? ????? ????? 101 ????? 11100 11", csrrsi , I, R(dest) = sr(sr_num), sr(sr_num) = sr(sr_num) | sr_imm);
+  INSTPAT("??????? ????? ????? 101 ????? 11100 11", csrrci , I, R(dest) = sr(sr_num), sr(sr_num) = sr(sr_num) & ~sr_imm);
+
+  INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall  , N, s->dnpc = cpu.sr[0], isa_raise_intr(gpr(17), s->snpc));
   INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak , N, NEMUTRAP(s->pc, R(10))); // R(10) is $a0
+
+ // INSTPAT("0001000 00010 00000 000 00000 11100 11", sret   , N, s->dnpc = cpu.sr[1] );
+  INSTPAT("0011000 00010 00000 000 00000 11100 11", mret   , N, s->dnpc = cpu.sr[1] );
   INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv    , N, INV(s->pc));
   INSTPAT_END();
 

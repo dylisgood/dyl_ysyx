@@ -23,10 +23,6 @@ typedef struct watchpoint {
   uint64_t last_value;
   uint64_t cur_value;
   struct watchpoint *next;
-<<<<<<< HEAD
-
-=======
->>>>>>> pa2
 } WP;
 
 
@@ -125,20 +121,12 @@ void wp_detect(){
       {
         nemu_state.state = NEMU_STOP;
         printf("The NO.%d Watchpoint %s change! \n",pb->NO,pb->expr);
-<<<<<<< HEAD
-        printf("Old value = %ld \n New value = %ld \n",pb->last_value, pb->cur_value);
-=======
         printf("Old value = %ld \nNew value = %ld \n",pb->last_value, pb->cur_value);
->>>>>>> pa2
       }
       pb->last_value = pb->cur_value;
       pb = pb->next;
     }
     count ++;
   }
-<<<<<<< HEAD
-  else printf("There is no watchpoint! \n"); 
-=======
  // else printf("There is no watchpoint! \n"); 
->>>>>>> pa2
 }

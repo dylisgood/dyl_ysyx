@@ -56,5 +56,6 @@ bool ioe_init() {
 }
 
 //读寄存器 就是 调用这个寄存器为参数的函数 
-void ioe_read (int reg, void *buf) { ((handler_t)lut[reg])(buf); }// 读io就是 调用lut表中的函数，这些函数会通过inl获得指定内存的值，将该值写到buf中
+// 读io就是 调用lut表中的函数，这些函数会通过inl获得指定内存的值，将该值写到buf中
+void ioe_read (int reg, void *buf) { ((handler_t)lut[reg])(buf); }
 void ioe_write(int reg, void *buf) { ((handler_t)lut[reg])(buf); }

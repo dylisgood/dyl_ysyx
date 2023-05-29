@@ -23,7 +23,7 @@ enum {
   reg_samples,
   reg_sbuf_size,
   reg_init,
-  reg_count,
+  reg_count,  //当前流缓冲区已经使用的大小
   nr_reg
 };
 
@@ -32,33 +32,48 @@ static uint32_t *audio_base = NULL;
 
 int len_sbuf = 0;
 int copied_size = 0;
+int front = 0;  //维护队列 
 static void audio_callback(void *userdata, uint8_t *stream, int len){  //SDL回调函数，提供缓冲区，要求回调函数往缓冲区写入音频数据
   len_sbuf ++;
-  printf("NEMU: enter audio_callback! len = %d 第 %d 次 ",len,len_sbuf);
+  //printf("enter callback !  ");
+  //printf("NEMU: enter audio_callback! count = %d len = %d 第 %d 次  ",audio_base[reg_count],len,len_sbuf);
   Sint16* buffer = (Sint16*)stream;
-  int buffer_size = len;
+  int buffer_size = len ;  //2048 bytes 
 
   // 从sbuf中读取音频数据
-  int sbuf_size = CONFIG_SB_SIZE;
-  int remaining_size = sbuf_size - copied_size; // 剩余未读的字节数
-    if (remaining_size <= 0) {
-        // 数据已经读取完毕
+  //int sbuf_size = audio_base[reg_count]; //
+  int remaining_size = audio_base[reg_count]; // 剩余未读的字节数
+    if (remaining_size <= 0) { // 数据已经读取完毕
+        remaining_size = 0;
         SDL_memset(buffer, 0, len); // 设置缓冲区为0
+        //printf("nemu audio : nothing to read! sbuf = %d \n",audio_base[reg_count]);
         return;
     }
-    int copy_size = buffer_size < remaining_size ? buffer_size : remaining_size;
-    printf("copy_size = %d \n",copy_size);
-    copied_size += copy_size;
-    SDL_memcpy(buffer, sbuf + copied_size, copy_size); // 从sbuf中拷贝数据到缓冲区
 
-/*     // 更新user_data指针
-    userdata = (void*)((intptr_t)userdata + copy_size); */
+    int copy_size = buffer_size < remaining_size ? buffer_size : remaining_size;  //unit: bytes
+    //printf("copy_size = %d ",copy_size);
+
+    copied_size += copy_size;
+    //printf(" copied_size = %d ",copied_size);
+
+    if(copy_size != 0)
+    { 
+      if( front + copy_size >= CONFIG_SB_SIZE){
+        front = 0;
+      }
+      assert( ( front + copy_size ) <= CONFIG_SB_SIZE);
+      SDL_memcpy(buffer, (sbuf + front), copy_size); // 从sbuf中拷贝数据到缓冲区 按理说sbuf需要维护 但是我还没开始维护
+    }
+    front += copy_size;
+    //printf("front = %d  ",front);
 
     // 如果缓冲区未填满，则将其余部分设置为0
     if (copy_size < buffer_size) {
-        SDL_memset(buffer + copy_size, 0, len - copy_size * 2);
+        SDL_memset(buffer + copy_size, 0, len - copy_size);
     }
+    audio_base[reg_count] = audio_base[reg_count] - copy_size;
     SDL_PauseAudio(0);
+   // printf("after nemu read data the count = %d \n",audio_base[reg_count]);
 }
 
 static void audio_init(){
@@ -73,20 +88,24 @@ static void audio_init(){
   s.samples = audio_base[reg_samples];
   //s.samples = 1024;
   s.callback = audio_callback;
-  if(SDL_InitSubSystem(SDL_INIT_AUDIO)<0){
-    printf("error\n");
-  }
-  if(SDL_OpenAudio(&s, NULL) < 0){
-    printf("error\n");
-  }
+  int ret = SDL_InitSubSystem(SDL_INIT_AUDIO);
+  if(ret == 0){
+  SDL_OpenAudio(&s, NULL);
   SDL_PauseAudio(0);
+  //printf("finish audio_init!!! \n");
+  }
 }
 
-static void audio_io_handler(uint32_t offset, int len, bool is_write) {  //回调函数 在每次写内存的时候被调用，用来管理队列？
+static void audio_io_handler(uint32_t offset, int len, bool is_write) {
   if(is_write)
   {
     if(offset == 8) audio_init();
   }
+/*   else if(!is_write){
+    if(offset == 0x14){
+      audio_base[reg_count] = 666;
+    }
+  } */
 }
 
 void init_audio() {

@@ -23,18 +23,23 @@ const char *regs[] = {
   "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"
 };
 
+const char *regs_sr[] = {
+  "mtvec", "mepc", "mstatus", "mcause"
+};
+
 void isa_reg_display(void) {
   for (int i=0; i < 32; i++){
-//  printf("regs[%d] = %s \n",i,reg_name(i,64));
-<<<<<<< HEAD
-    printf("reg: %s = %ld\n",reg_name(i,64),gpr(i));
-=======
-    printf("reg: %s = %lx\n",reg_name(i,64),gpr(i));
->>>>>>> pa2
+    printf("reg[%d]: %s = 0x%lx\n",i ,reg_name(i,64) ,gpr(i));
 }
 }
 
-word_t isa_reg_str2val(const char *s, bool *success) {
+void isa_reg_sr_display(void) {
+  for(int i =0; i < 4; i++){
+    printf("reg_sr[%d]: %s = 0x%lx\n",i,reg_sr_name(i),cpu.sr[i]);
+  }
+}
+
+word_t isa_reg_str2val(const char *s, bool *success) {  //accroding reg name return reg value
   int i;
   for(i=0; i < 32; i++){
     if( !strcmp(s ,reg_name(i,64))) { return gpr(i);}
@@ -43,3 +48,13 @@ word_t isa_reg_str2val(const char *s, bool *success) {
   return 404;
 }
 
+word_t reg_sr_idx(char *sr_name){
+  int i;
+  for(i = 0; i < 4;i++){
+    if( !strcmp(sr_name,regs_sr[i]) ){
+      return i;
+    }
+  }
+  printf("sr not exist! \n");
+  assert(0);
+}

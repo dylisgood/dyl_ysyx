@@ -50,11 +50,11 @@ module ysyx_22050854_pc(
     always@(posedge clk)begin
         if(rst)
             next_pc <= 32'h80000000;
-        else if(Branch!=3'b000)       //跳转指令
+        else if(Branch != 3'b000)       //跳转指令
             next_pc <= PCsrc1 + PCsrc2;
-        else if(No_branch==1'b1)      //非跳转指令
+        else if(No_branch == 1'b1)      //非跳转指令
             next_pc <= pc + 32'd4;
-        else                           //非法指令
+        else                           //未定义指令
             next_pc <= pc + 32'd0;
     end 
 

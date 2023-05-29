@@ -18,10 +18,7 @@
 #include <cpu/difftest.h>
 #include <locale.h>
 #include <../src/monitor/sdb/sdb.h> 
-<<<<<<< HEAD
-=======
 //#include <elf.h>
->>>>>>> pa2
 
 /* The assembly code of instructions executed is only output to the screen
  * when the number of instructions executed is less than this value.
@@ -32,7 +29,9 @@
 
 char iringbuf[10][128] = {};
 
-CPU_state cpu = {};
+CPU_state cpu = {
+  .sr = { [2]= 0xa0001800 } //initialize mstatus
+};
 uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
 static bool g_print_step = false;
@@ -71,6 +70,9 @@ static void exec_once(Decode *s, vaddr_t pc) {
   s->snpc = pc;
   isa_exec_once(s);
   cpu.pc = s->dnpc;
+/*   if (s->isa.inst.val == 0x73)
+  { cpu.sr[1]+=4; } */
+
 #ifdef CONFIG_FTRACE
   static int kong = 0;
   int j = 0;
@@ -130,6 +132,20 @@ static void exec_once(Decode *s, vaddr_t pc) {
   strcpy(iringbuf[9],s->logbuf);
 
 #endif
+
+#ifdef CONFIG_ETRACE
+  uint32_t inst_e = s->isa.inst.val;
+  if(inst_e == 0x73)
+  {
+    printf("nemu: find ecall! \n");
+    isa_reg_display();
+    //nemu_state.state = NEMU_STOP;
+  } 
+/*   else if(inst_e == 0x30200073)
+  {
+    printf("nemu:find mret! \n");
+  } */
+#endif 
 }
 
 static void execute(uint64_t n) {

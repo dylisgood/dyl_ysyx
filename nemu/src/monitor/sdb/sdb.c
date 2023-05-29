@@ -47,17 +47,10 @@ static char* rl_gets() {
 
 static int cmd_si(char *args){
   char *arg = strtok(NULL , " ");
-<<<<<<< HEAD
-  int i;
-  if(arg == NULL) { i=1; }
-  else { i = *arg - '0';} 
-  cpu_exec(i);
-=======
   int N;
   if(arg == NULL) { N = 1; }
   else { N = atoi(arg);} 
   cpu_exec(N);
->>>>>>> pa2
   return 0;
 }
 
@@ -67,6 +60,7 @@ static int cmd_info(char *args){
   else 
   {
     if( *arg == 'r' ){ isa_reg_display(); }
+    else if( *arg == 's') { isa_reg_sr_display(); }
     else if( *arg == 'w') { print_wp(); }
     else { printf("Unknown command\n"); }
   }
@@ -78,21 +72,11 @@ static int cmd_x(char *args) {
   if( arg == NULL ) {printf("please add N and exp");  }
   else {
     int N = atoi(arg);
-<<<<<<< HEAD
-    printf("N = %d\n" , N);
-    arg = strtok(NULL , "\0");
-    bool *success = false;
-    uint64_t addr = expr(arg,success);
-    printf("addr = %lx\n",addr);
-    for(int i=0; i < N; i++) {
-    vaddr_read(addr + i,8); }
-=======
     arg = strtok(NULL , "\0");
     bool *success = false;
     uint64_t addr = expr(arg,success);
     for(int i=0; i < N; i++) {
     printf("mem[0x%lx] = 0x%lx\n",addr + i*8,vaddr_read(addr + i*8,8)); }
->>>>>>> pa2
   }
   return 0;
 }
@@ -103,11 +87,7 @@ static int cmd_p(char *args){
   else {
     bool *success = false;
     uint64_t value = expr(arg,success);
-<<<<<<< HEAD
-    printf("value = %lx\n",value);
-=======
     printf("result = %lx\n",value);
->>>>>>> pa2
   }
   return 0;
 }

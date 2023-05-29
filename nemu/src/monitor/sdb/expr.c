@@ -53,11 +53,7 @@ static struct rule {
   {"==", TK_EQ},        // equal 
   {"\\(", '('},
   {"\\)", ')'},
-<<<<<<< HEAD
-  {"0x[0-9][0-9]*", HEX_NUM},
-=======
   {"0x[0-9,a-f,A-F]*", HEX_NUM},
->>>>>>> pa2
   {"[0-9][0-9]*",NUM},
   {"!=", TK_UNIEQ},
   {"&&", '&'},
@@ -342,13 +338,8 @@ void tokens_handle() {     //become reg and pointer to num
     }
    }
    
-<<<<<<< HEAD
-  //for(int i=0;i <= nr_token;i++)
-  //{ printf("after handle:  j = %d, type = %d,  str= %s \n", i,tokens[i].type, tokens[i].str); }
-=======
 /*   for(int i=0;i <= nr_token;i++)
   { printf("after handle:  j = %d, type = %d,  str= %s \n", i,tokens[i].type, tokens[i].str); } */
->>>>>>> pa2
 
 }
 

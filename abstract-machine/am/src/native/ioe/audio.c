@@ -21,7 +21,7 @@ static void audio_play(void *userdata, uint8_t *stream, int len) {
   if (count < len) nread = count;
   int b = 0;
   while (b < nread) {
-    int n = read(rfd, stream, nread);//什么时候往stream写的? 写了吗 你就读? 读哪去？
+    int n = read(rfd, stream, nread);
     if (n > 0) b += n;
   }
   count -= nread;

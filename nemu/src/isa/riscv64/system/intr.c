@@ -19,7 +19,12 @@ word_t isa_raise_intr(word_t NO, vaddr_t epc) {
   /* TODO: Trigger an interrupt/exception with ``NO''.
    * Then return the address of the interrupt/exception vector.
    */
+  printf("nemu: the epc = %lx , the NO = %ld \n", epc, NO);
 
+  cpu.sr[reg_sr_idx("mepc")] = epc;  
+  cpu.sr[reg_sr_idx("mcause")] = NO;
+
+  printf("nemu : mcause = %ld \n",cpu.sr[reg_sr_idx("mcause")]);
   return 0;
 }
 

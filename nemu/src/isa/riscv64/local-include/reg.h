@@ -23,7 +23,23 @@ static inline int check_reg_idx(int idx) {
   return idx;
 }
 
+static inline int change_reg_sr_idx(int idx) {
+  if(idx == 0x5) return 0;         //mtvec
+  else if( idx == 0) return 2;   //mstatus
+  else if( idx == 0x41 ) return 1; //mepc
+  else if(idx == 0x42 ) return 3;  //mcause
+  else{
+    panic("sorry this sr is not implement!\n");
+  }
+}
+
 #define gpr(idx) (cpu.gpr[check_reg_idx(idx)])
+#define sr(idx) (cpu.sr[change_reg_sr_idx(idx)])
+
+static inline const char* reg_sr_name(int idx) {
+  extern const char* regs_sr[];
+  return regs_sr[check_reg_idx(idx)];
+}
 
 static inline const char* reg_name(int idx, int width) {  //according idx return reg_name
   extern const char* regs[];

@@ -18,15 +18,9 @@
 void init_monitor(int, char *[]);
 void am_init_monitor();
 void engine_start();
-<<<<<<< HEAD
-uint32_t expr(char *e, bool *success);
-word_t isa_reg_str2val(const char *s, bool *success);
-void isa_reg_display(void);
-=======
 /* uint32_t expr(char *e, bool *success);
 word_t isa_reg_str2val(const char *s, bool *success);
 void isa_reg_display(void); */
->>>>>>> pa2
 int is_exit_status_bad();
 
 
@@ -37,7 +31,6 @@ int main(int argc, char *argv[]) {
 #else
   init_monitor(argc, argv);
 #endif
-<<<<<<< HEAD
 /*
 // used for test reg
     bool *succ = false;
@@ -47,8 +40,6 @@ int main(int argc, char *argv[]) {
     reg_value = isa_reg_str2val(str2,succ);
     printf("reg_value = %ld \n",reg_value);
 */
-=======
->>>>>>> pa2
 /*   //used for test expr
    uint32_t result=0;
    bool* success = false;
@@ -83,14 +74,8 @@ int main(int argc, char *argv[]) {
    for(int i=0;i<100;i++){
    result = expr("1+1",success);
    printf("result = %d\n",result);
-<<<<<<< HEAD
-   }
-   
-  */ 
-=======
    } */
 
->>>>>>> pa2
   /* Start engine. */
   engine_start();
 

@@ -34,7 +34,9 @@ Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
 }
 
 void yield() {
+  printf("AM: ready to yield! \n");
   asm volatile("li a7, -1; ecall");
+  printf("AM: finish yield! \n");
 }
 
 bool ienabled() {
