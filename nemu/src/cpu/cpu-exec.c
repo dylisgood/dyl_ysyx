@@ -70,8 +70,11 @@ static void exec_once(Decode *s, vaddr_t pc) {
   s->snpc = pc;
   isa_exec_once(s);
   cpu.pc = s->dnpc;
-/*   if (s->isa.inst.val == 0x73)
-  { cpu.sr[1]+=4; } */
+  uint32_t inst_csr = s->isa.inst.val;
+  if( (inst_csr & 0x707f) == 0x1073 || (inst_csr & 0x707f) == 0x73 || \
+      (inst_csr & 0x707f) == 0x2073 || (inst_csr & 0x707f) == 0x3073 ){
+    difftest_skip_ref();
+  }
 
 #ifdef CONFIG_FTRACE
   static int kong = 0;
@@ -134,13 +137,13 @@ static void exec_once(Decode *s, vaddr_t pc) {
 #endif
 
 #ifdef CONFIG_ETRACE
-  uint32_t inst_e = s->isa.inst.val;
+/*   uint32_t inst_e = s->isa.inst.val;
   if(inst_e == 0x73)
   {
     printf("nemu: find ecall! \n");
-    isa_reg_display();
+    //isa_reg_display();
     //nemu_state.state = NEMU_STOP;
-  } 
+  }  */
 /*   else if(inst_e == 0x30200073)
   {
     printf("nemu:find mret! \n");
