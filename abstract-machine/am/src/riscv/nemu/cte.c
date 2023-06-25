@@ -17,20 +17,22 @@ Context* __am_irq_handle(Context *c) {
  // printf("user_handler address = %x \n",user_handler);
   if (user_handler) {
     Event ev = {0};
-  //  printf("AM: c->mcause = %d \n", c->mcause);
+    //printf("AM: c->mcause = %d \n", c->mcause);
 
     switch (c->mcause) {  //执行流切换的原因打包成事件
       case -1: ev.event = EVENT_YIELD; break;
       case  0: ev.event = EVENT_SYSCALL; break;
       case  1: ev.event = EVENT_SYSCALL; break;
+      case  2: ev.event = EVENT_SYSCALL; break;
+      case  3: ev.event = EVENT_SYSCALL; break;
       case  4: ev.event = EVENT_SYSCALL; break;
+      case  7: ev.event = EVENT_SYSCALL; break;
+      case  8: ev.event = EVENT_SYSCALL; break;
       case  9: ev.event = EVENT_SYSCALL; break;
+      case 19: ev.event = EVENT_SYSCALL; break;
       default: ev.event = EVENT_ERROR; break;
   }
-  //user_handler = (void *)0x800005d0;
-  //printf("user_handler address = %x \n",user_handler);
   c = user_handler(ev, c);
-  //printf("aaaaa\n");
 /*     for(int i =0;i < 32; i++)
     printf("c->gpr[%d] = %lx \n",i,c->gpr[i]);
     printf("c->epc = %lx \n", c->mepc);
@@ -51,8 +53,6 @@ bool cte_init(Context*(*handler)(Event, Context*)) {
   
   // register event handler
   user_handler = handler;
-  printf("cte_init : userhandle address = %x \n",&user_handler);
-  printf("cte_init : userhandle address = %x \n",user_handler);
   return true;
 }
 

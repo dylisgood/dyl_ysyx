@@ -40,7 +40,6 @@ void device_update() {
     return;
   }
   last = now;
-
   IFDEF(CONFIG_HAS_VGA, vga_update_screen());
 
 #ifndef CONFIG_TARGET_AM

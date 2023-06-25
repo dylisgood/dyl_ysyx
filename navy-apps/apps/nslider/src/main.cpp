@@ -12,9 +12,9 @@
 //   gg - first page
 
 // number of slides
-const int N = 10;
+const int N = 1;
 // slides path pattern (starts from 0)
-const char *path = "/share/slides/slides-%d.bmp";
+const char *path = "/share/slides/slides.bmp";
 
 static SDL_Surface *slide = NULL;
 static int cur = 0;
@@ -69,7 +69,7 @@ int main() {
         case SDLK_8: rep = rep * 10 + 8; break;
         case SDLK_9: rep = rep * 10 + 9; break;
         case SDLK_J:
-        case SDLK_DOWN: next(rep); rep = 0; g = 0; break;
+        case SDLK_DOWN: printf("find down\n");next(rep); rep = 0; g = 0; break;
         case SDLK_K:
         case SDLK_UP: prev(rep); rep = 0; g = 0; break;
         case SDLK_G:

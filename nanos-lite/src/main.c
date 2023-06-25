@@ -30,9 +30,7 @@ int main() {
   Log("Finish initialization");
 
 #ifdef HAS_CTE
-  printf("nanos-lite : ready to yield! \n");
   yield();
-  printf("nanos-lite : finish yield! \n");
 #endif
 
   panic("Should not reach here");

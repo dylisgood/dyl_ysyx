@@ -17,10 +17,12 @@ int main(int argc, char *argv[]) {
   // setup display
   int win_w = font->w * W;
   int win_h = font->h * H;
+  printf("win_w = %d, win_h = %d \n", win_w, win_h);
   screen = SDL_SetVideoMode(win_w, win_h, 32, SDL_HWSURFACE);
 
   term = new Terminal(W, H);
 
+  printf("argc = %d \n", argc);
   if (argc < 2) { builtin_sh_run(); }
   else { extern_app_run(argv[1]); }
 
@@ -36,6 +38,7 @@ static void draw_ch(int x, int y, char ch, uint32_t fg, uint32_t bg) {
 }
 
 void refresh_terminal() {
+  //printf("+++ refresh_terminal()+++++\n");
   int needsync = 0;
   for (int i = 0; i < W; i ++)
     for (int j = 0; j < H; j ++)
@@ -44,7 +47,7 @@ void refresh_terminal() {
         needsync = 1;
       }
   term->clear();
-
+  //while(1);
   static uint32_t last = 0;
   static int flip = 0;
   uint32_t now = SDL_GetTicks();

@@ -70,7 +70,6 @@ static void clear_display(void) {
 int main(int argc, char *argv[], char *envp[]) {
   SDL_Init(0);
   screen = SDL_SetVideoMode(0, 0, 32, SDL_HWSURFACE);
-
   font = new BDF_Font(font_fname);
   logo_sf = SDL_LoadBMP("/share/pictures/projectn.bmp");
   assert(logo_sf);
@@ -151,7 +150,6 @@ static void display_menu(int n) {
     sprintf(buf, "  [%d] %s", i, item->name);
     draw_text_row(buf, i);
   }
-
   i = 11;
 
   sprintf(buf, "  page = %2d, #total apps = %d", page, nitems);
@@ -173,7 +171,7 @@ static void display_menu(int n) {
   sprintf(buf, "  0-9 Choose");
   draw_text_row(buf, i);
   i ++;
-
+  //while(1);
   SDL_UpdateRect(screen, 0, 0, 0, 0);
 
   printf("========================================\n");

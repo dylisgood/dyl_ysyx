@@ -216,6 +216,7 @@ ssize_t read(int fd, void *buf, size_t count) {
 }
 
 ssize_t write(int fd, const void *buf, size_t count) {
+  //printf("native.cpp : enter write fd = %d count = %d \n", fd ,count);
   if (fd == sbctl_fd) {
     // open audio
     const int *args = (const int *)buf;

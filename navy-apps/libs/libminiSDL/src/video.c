@@ -4,15 +4,84 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <stdio.h>
+
 void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect) {
+  //SDL_BlitSurface(s, NULL, screen, &dstrect);
+  //printf("-----------------enter SDL_BlitSurface --------------------------\n");
   assert(dst && src);
   assert(dst->format->BitsPerPixel == src->format->BitsPerPixel);
+  uint16_t w,h;
+  int16_t x,y;
+  if(srcrect == NULL){
+    w = src->w;
+    h = src->h;
+  }
+  else{
+    w = srcrect->w;
+    h = srcrect->h;
+  }
+  if(dstrect == NULL){
+    x = 0;
+    y = 0;
+  }
+  else{
+    x = dstrect->x;
+    y = dstrect->y;
+  }
+  //printf("SDL_BlitSurface: x = %d ,y = %d, w = %d, h = %d \n", x, y, w, h);
+/*   for(int i = 0 ;i < 10; i++){
+    printf("draw_ch = %x \n", *(uint32_t *)src->pixels);
+    src->pixels++;
+  }
+  src->pixels = src->pixels - 10;  */
+  uint32_t *sptr = (uint32_t *)src->pixels;
+  uint32_t *ptr = (uint32_t *)dst->pixels;
+  for(int j = y; j < y + h; j++){
+    for(int i = x; i < x + w; i++){
+      ptr[(j * dst->w + i)] = *sptr;
+      sptr++;
+    }
+  }
+  //memcpy(dst->pixels, src->pixels, w * h * 4);
+  NDL_DrawRect((uint32_t *)src->pixels, x, y, w, h);
 }
 
 void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
+  printf("-----------------enter SDL_FillRect --------------------------\n");
+  //printf("color = %x \n", color);
+  uint16_t h ,w;
+  int16_t x , y;
+  if(dstrect == NULL){
+    //printf("NULL\n");
+    h = dst->h;
+    w = dst->w;
+    x = 0;
+    y = 0;
+  }
+  else {
+    h = dstrect->h;
+    w = dstrect->w;
+    x = dstrect->x;
+    y = dstrect->y;
+  }
+  assert(dst->pixels);
+  dst->pixels = (uint8_t *)malloc(w * h * 4);
+  uint32_t *ptr = (uint32_t *)dst->pixels;
+  for(int i = 0; i < w * h; i++){
+    ptr[i] = color;
+  }
+  NDL_DrawRect((uint32_t *)dst->pixels, x, y, w, h);
+  //free(dst->pixels);
 }
 
 void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) {
+  //printf("-----------------enter SDL_UpdateRect --------------------------\n");
+  //printf("x = %d y = %d w = %d h = %d \n",x,y,w,h);
+  if(w == 0 && h == 0){
+     w = s->w, h = s->h;
+  }
+  NDL_DrawRect((uint32_t*)s->pixels, x, y, w, h);
 }
 
 // APIs below are already implemented.
@@ -30,6 +99,7 @@ static inline int maskToShift(uint32_t mask) {
 
 SDL_Surface* SDL_CreateRGBSurface(uint32_t flags, int width, int height, int depth,
     uint32_t Rmask, uint32_t Gmask, uint32_t Bmask, uint32_t Amask) {
+  //printf("---------------- SDL_CreateRGBSurface ----------------\n");
   assert(depth == 8 || depth == 32);
   SDL_Surface *s = malloc(sizeof(SDL_Surface));
   assert(s);
@@ -57,9 +127,8 @@ SDL_Surface* SDL_CreateRGBSurface(uint32_t flags, int width, int height, int dep
   s->w = width;
   s->h = height;
   s->pitch = width * depth / 8;
-  assert(s->pitch == width * s->format->BytesPerPixel);
-
   if (!(flags & SDL_PREALLOC)) {
+    printf(" no prealloc , malloc s->pixels size = %d \n" ,s->pitch * height);
     s->pixels = malloc(s->pitch * height);
     assert(s->pixels);
   }
