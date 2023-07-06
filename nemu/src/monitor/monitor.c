@@ -38,7 +38,6 @@ static char *img_file = NULL;
 static int difftest_port = 1234;
 static char *elf_file = NULL;
 
-
 struct func_struct{
   char name[20];
   uint64_t address;

@@ -14,7 +14,7 @@ Context* __am_irq_handle(Context *c) {
   printf("c->epc = %lx \n", c->mepc);
   printf("c->mcause = %ld \n", c->mcause);
   printf("c->mstatus = %lx \n", c->mstatus); */
- // printf("user_handler address = %x \n",user_handler);
+
   if (user_handler) {
     Event ev = {0};
     //printf("AM: c->mcause = %d \n", c->mcause);
@@ -29,19 +29,13 @@ Context* __am_irq_handle(Context *c) {
       case  7: ev.event = EVENT_SYSCALL; break;
       case  8: ev.event = EVENT_SYSCALL; break;
       case  9: ev.event = EVENT_SYSCALL; break;
+      case 13: ev.event = EVENT_SYSCALL; break;
       case 19: ev.event = EVENT_SYSCALL; break;
       default: ev.event = EVENT_ERROR; break;
   }
   c = user_handler(ev, c);
-/*     for(int i =0;i < 32; i++)
-    printf("c->gpr[%d] = %lx \n",i,c->gpr[i]);
-    printf("c->epc = %lx \n", c->mepc);
-    printf("c->mcause = %lx \n", c->mcause);
-    printf("c->mstatus = %lx \n", c->mstatus); */
-    //printf("---------------AM : finish am_irq_handle------------\n\n");
-    assert(c != NULL);
+  assert(c != NULL);
   }
-
   return c;
 }
 

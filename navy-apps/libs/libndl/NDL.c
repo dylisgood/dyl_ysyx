@@ -11,19 +11,20 @@
 static int evtdev = -1;
 static int fbdev = -1;
 static int screen_w = 0, screen_h = 0;
-uint32_t start_time = 0;
+uint32_t NDL_start_time = 0;
 
-uint32_t NDL_GetTicks() {
+uint32_t NDL_GetTicks() { //return ms
   struct timeval now;
   gettimeofday(&now, NULL);
   uint32_t now_time = now.tv_sec * 1000000 + now.tv_usec;
-  return now_time - start_time;
+  return (now_time - NDL_start_time) / 1000;
 }
 
 int NDL_PollEvent(char *buf, int len) {
   int fp = open("/dev/events", O_RDONLY);
   assert( fp != -1 );
   int i = read(fp, buf, len);
+  //printf("fp = %d, i = %d \n" ,fp,i);
   close(fp);
   return i;
 }
@@ -86,7 +87,7 @@ void NDL_OpenCanvas(int *w, int *h) {
 void NDL_DrawRect(uint32_t *pixels, int x, int y, int w, int h) {
   //printf("----------------navy-apps: enter NDL_DrawRect----------------\n");
   int fd = open("/dev/fb", O_WRONLY);
-  //printf("fd = %d w = %d, h = %d \n" ,fd ,w ,h);
+  //printf("fd = %d x = %d. y = %d, w = %d, h = %d \n" ,fd ,x ,y ,w ,h);
   assert(fd != -1);
   int fc = 0;
   int len = 0;
@@ -94,6 +95,7 @@ void NDL_DrawRect(uint32_t *pixels, int x, int y, int w, int h) {
       fc = lseek(fd, ((y + i) * 400 + x) * 4, SEEK_SET);
       assert(fc != -1);
       len = write( fd, pixels + i * w, w * sizeof(uint32_t));
+      //printf("len = %d \n" ,len);
   }
 /*   fc = lseek(fd, 0, SEEK_SET);
   assert(fc != -1);
@@ -121,7 +123,7 @@ int NDL_Init(uint32_t flags) {
   }
   struct timeval start;
   gettimeofday(&start, NULL);
-  start_time = start.tv_sec * 1000000 + start.tv_usec;
+  NDL_start_time = start.tv_sec * 1000000 + start.tv_usec;
   return 0;
 }
 

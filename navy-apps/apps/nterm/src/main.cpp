@@ -17,12 +17,10 @@ int main(int argc, char *argv[]) {
   // setup display
   int win_w = font->w * W;
   int win_h = font->h * H;
-  printf("win_w = %d, win_h = %d \n", win_w, win_h);
   screen = SDL_SetVideoMode(win_w, win_h, 32, SDL_HWSURFACE);
 
   term = new Terminal(W, H);
 
-  printf("argc = %d \n", argc);
   if (argc < 2) { builtin_sh_run(); }
   else { extern_app_run(argv[1]); }
 
@@ -147,6 +145,7 @@ char handle_key(const char *buf) {
 char handle_key(SDL_Event *ev) {
   static int shift = 0;
   int key = ev->key.keysym.sym;
+  //printf("ev->key.keysym.sym = %d \n" ,ev->key.keysym.sym);
   if (key == SDLK_LSHIFT || key == SDLK_RSHIFT) { shift ^= 1; return '\0'; }
 
   if (ev->type == SDL_KEYDOWN) {

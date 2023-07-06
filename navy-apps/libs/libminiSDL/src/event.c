@@ -1,6 +1,7 @@
 #include <NDL.h>
 #include <SDL.h>
 #include <string.h>
+#include <assert.h>
 
 #define keyname(k) #k,
 
@@ -9,22 +10,28 @@ static const char *keyname[] = {
   _KEYS(keyname)
 };
 
+static uint8_t keyStates[83];
+
 int SDL_PushEvent(SDL_Event *ev) {
+  assert(0);
   return 0;
 }
 
 int SDL_PollEvent(SDL_Event *ev) {
-  char buf[64];
+  char buf[128];
   if (NDL_PollEvent(buf, sizeof(buf))) {
     char *key, *value;
     key = strtok(buf, " ");
     value = strtok(NULL, "\n");
+    //printf("keyyy = %s\n" ,key);
+    //printf("value = %s\n" ,value);
     if(!strcmp(key,"kd")){
       ev->type = SDL_KEYDOWN;
       for(int i = 0; i < 83; i++)
       {
         if(!strcmp(keyname[i], value)){
           ev->key.keysym.sym = i;
+          keyStates[i] = 1;
         }
       } 
     }
@@ -34,12 +41,10 @@ int SDL_PollEvent(SDL_Event *ev) {
       {
         if(!strcmp(keyname[i],value)){
           ev->key.keysym.sym = i;
+          keyStates[i] = 0;
         }
       }
     }
-/*     printf("Key: %s\n", key);
-    printf("Value: %s\n", value);
-    printf("receive event: %s\n", buf); */
     return 1;
   }
   return 0;
@@ -72,18 +77,26 @@ int SDL_WaitEvent(SDL_Event *event) {
         }
       }
     }
-/*     printf("Key: %s\n", key);
-    printf("Value: %s\n", value);
-    printf("receive event: %s\n", buf); */
     return 1;
   }
   }
 }
 
 int SDL_PeepEvents(SDL_Event *ev, int numevents, int action, uint32_t mask) {
+  assert(0);
   return 0;
 }
 
 uint8_t* SDL_GetKeyState(int *numkeys) {
-  return NULL;
+  int num = sizeof(keyname) / sizeof(keyname[0]);
+  //printf("num = %d \n" ,num);
+  if(numkeys != NULL)
+    *numkeys = num;
+/*   for(int i = 0; i < num; i++){
+    if(i != key)
+      keyStates[i] = 0;
+  } */
+  //printf("key = %d \n" ,key);
+  //assert(0);
+  return keyStates;
 }

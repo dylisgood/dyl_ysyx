@@ -152,10 +152,12 @@ static int decode_exec(Decode *s) {
   INSTPAT("??????? ????? ????? 101 ????? 11100 11", csrrci , I, R(dest) = sr(sr_num), sr(sr_num) = sr(sr_num) & ~sr_imm);
 
   INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall  , N, s->dnpc = cpu.sr[0], isa_raise_intr(gpr(17), s->snpc));
+  INSTPAT("0011000 00010 00000 000 00000 11100 11", mret   , N, s->dnpc = cpu.sr[1] );
+  
   INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak , N, NEMUTRAP(s->pc, R(10))); // R(10) is $a0
 
  // INSTPAT("0001000 00010 00000 000 00000 11100 11", sret   , N, s->dnpc = cpu.sr[1] );
-  INSTPAT("0011000 00010 00000 000 00000 11100 11", mret   , N, s->dnpc = cpu.sr[1] );
+  
   INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv    , N, INV(s->pc));
   INSTPAT_END();
 

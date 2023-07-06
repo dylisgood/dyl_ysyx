@@ -19,13 +19,53 @@
 #include <readline/history.h>
 #include "sdb.h"
 #include <memory/vaddr.h>
+#include <memory/paddr.h>
 
 static int is_batch_mode = false;
+int enter_difftest_mode = false;
 
 void init_regex();
 void init_wp_pool();
 void set_wp();
 void dele_wp();
+
+void save_nemu_status(char *file_path){
+  FILE *fp = fopen(file_path,"wb");
+  if(fp == NULL){
+    printf("cannot find file %s\n" ,file_path);
+    return;
+  }
+
+  int ret = fwrite(&cpu, sizeof(riscv64_CPU_state), 1, fp);
+  assert(ret > 0);
+
+  ret = fwrite(guest_to_host(CONFIG_MBASE), 1, CONFIG_MSIZE, fp);
+  assert(ret > 0);
+
+  uint8_t a = 0;
+  for(uint32_t i = 0; i < CONFIG_MSIZE; i++){
+    a = vaddr_read(CONFIG_MBASE +  i, 1);         //guset to host is more easy
+    fwrite(&a, sizeof(a), 1, fp);
+  }
+
+  fclose(fp);
+}
+
+void load_nemu_status(char *file_path){
+  FILE *fp = fopen(file_path, "rb");
+  if(fp == NULL){
+    printf("cannot find file %s\n" ,file_path);
+    return;
+  }
+
+  int ret = fread(&cpu, sizeof(riscv64_CPU_state), 1, fp);
+  assert(ret > 0);
+
+  ret = fread(guest_to_host(CONFIG_MBASE), 1, CONFIG_MSIZE, fp);
+  assert(ret);
+
+  fclose(fp);
+}
 
 /* We use the `readline' library to provide more flexibility to read from stdin. */
 static char* rl_gets() {
@@ -69,7 +109,7 @@ static int cmd_info(char *args){
 
 static int cmd_x(char *args) {
   char *arg = strtok(NULL , " ");
-  if( arg == NULL ) {printf("please add N and exp");  }
+  if( arg == NULL ) { printf("please add N and exp"); }
   else {
     int N = atoi(arg);
     arg = strtok(NULL , "\0");
@@ -119,8 +159,39 @@ static int cmd_b(char *args){
   if(arg == NULL) {printf("please add the address of breakpoint! \n");}
   else
   {
-    //set_bp();
+    printf("I'm sorry, I can't support breakpoint\n");
   }
+  return 0;
+}
+
+static int cmd_detach(char *args){
+  enter_difftest_mode = false;
+  return 0;
+}
+
+static int cmd_attach(char *args){
+  isa_difftest_attach();
+  enter_difftest_mode = true;
+  return 0;
+}
+
+static int cmd_save(char *args){
+  if(args==NULL){
+    printf("please choose filepath to save\n");
+    return 0;
+  }
+  //assert(args);
+  save_nemu_status(args);
+  return 0;
+}
+
+static int cmd_load(char *args){
+  if(args==NULL){
+    printf("please choose filepath to save\n");
+    return 0;
+  }
+  //assert(args);
+  load_nemu_status(args);
   return 0;
 }
 
@@ -153,6 +224,10 @@ static struct {
   { "w", "set watchpoint", cmd_w},
   { "d", "delete watchpoint", cmd_d},
   { "b", "set breakpoint", cmd_b},
+  { "detach", "quit DiffTest", cmd_detach},
+  { "attach", "tnter DiffTest", cmd_attach},
+  { "save", "save nemu status", cmd_save},
+  { "load", "load nemu status", cmd_load},
 };
 
 #define NR_CMD ARRLEN(cmd_table)
@@ -192,7 +267,6 @@ void sdb_mainloop() {
 
   for (char *str; (str = rl_gets()) != NULL; ) {
     char *str_end = str + strlen(str);
-
     /* extract the first token as the command */
     char *cmd = strtok(str, " ");
     if (cmd == NULL) { continue; }
@@ -213,7 +287,6 @@ void sdb_mainloop() {
     int i;
     for (i = 0; i < NR_CMD; i ++) {
       if (strcmp(cmd, cmd_table[i].name) == 0) {
-//           printf("cmd_table[i].name = %s",cmd_table[i].name);
         if (cmd_table[i].handler(args) < 0) { return; }
         break;
       }

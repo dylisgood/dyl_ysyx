@@ -26,6 +26,10 @@ static uintptr_t loader(PCB *pcb, const char *filename) {
   //printf("-----------------------------enter loader! filename = %s------------------------------------------\n",filename);
   int fd = 0;
   fd = fs_open(filename, 0, 0);
+  if(fd==-1){
+    Log("Cannot find file %s" ,filename);
+    assert(0);
+  }
   Elf64_Ehdr  elf_header;
   int num_read = fs_read(fd, &elf_header, sizeof(Elf64_Ehdr)); 
   if(num_read == -1){
@@ -63,22 +67,23 @@ static uintptr_t loader(PCB *pcb, const char *filename) {
 
   for(int i = 0; i < elf_header.e_phnum; i++){
     if(program_headers[i].p_type == PT_LOAD){
-
-/*       printf("ph_table[%d].poffset = %x \n",i, program_headers[i].p_offset);
+/*       printf("i = %d \n" ,i);
+      printf("ph_table[%d].poffset = %x \n",i, program_headers[i].p_offset);
       printf("ph_table[%d].pflags = %d \n",i, program_headers[i].p_flags & PF_X);
       printf("ph_table[%d].paddr = %x \n",i, program_headers[i].p_paddr);
       printf("ph_table[%d].vaddr = %x \n",i, program_headers[i].p_vaddr);
       printf("ph_table[%d].memsz = %x \n",i, program_headers[i].p_memsz);
       printf("ph_table[%d].filesz = %x \n\n",i, program_headers[i].p_filesz); */
-
+      
       if( fs_lseek(fd, program_headers[i].p_offset, SEEK_SET) == -1){
         panic("go to program_headers[i].p_offset fail ! \n");
       }
-      fs_read(fd, (void *)program_headers[i].p_vaddr, program_headers[i].p_memsz);
+      
+      fs_read(fd, (void *)program_headers[i].p_vaddr, program_headers[i].p_filesz); //2023.7.5 memsz->file_sz
       if(program_headers[i].p_memsz > program_headers[i].p_filesz){
         memset((void *)( program_headers[i].p_vaddr + program_headers[i].p_filesz ), 0, program_headers[i].p_memsz - program_headers[i].p_filesz);
       }
-    } 
+    }
   }
   //TODO();
   fs_close(fd);

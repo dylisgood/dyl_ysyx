@@ -20,7 +20,7 @@ typedef struct {
   WriteFn write;
 } Finfo;
 
-enum {FD_STDIN, FD_STDOUT, FD_STDERR, FD_FB};
+enum {FD_STDIN, FD_STDOUT, FD_STDERR, FD_FB, FD_EVENT, FD_DISINFO};
 
 size_t invalid_read(void *buf, size_t offset, size_t len) {
   panic("should not reach here");
@@ -38,8 +38,8 @@ static Finfo file_table[] __attribute__((used)) = {
   [FD_STDOUT] = {"stdout", 0, 0, invalid_read, serial_write},
   [FD_STDERR] = {"stderr", 0, 0, invalid_read, serial_write},
   [FD_FB]     = {"/dev/fb", 0, 0, invalid_read, fb_write},
-  [4]         = {"/dev/events", 0, 0, events_read, invalid_write},
-  [5]         = {"/proc/dispinfo", 0, 0, dispinfo_read, invalid_write},
+  [FD_EVENT]  = {"/dev/events", 0, 0, events_read, invalid_write},
+  [FD_DISINFO]= {"/proc/dispinfo", 0, 0, dispinfo_read, invalid_write},
 #include "files.h"
 };
 
@@ -59,6 +59,9 @@ int fs_open(const char *pathname, int flags, int mode){
 
 size_t fs_read(int fd, void *buf, size_t len){
   size_t read_len = 0;
+  if(open_offset >= file_table[fd].size ){
+    return 0;
+  }
   if(file_table[fd].read == NULL){
     read_len = ramdisk_read(buf, file_table[fd].disk_offset + open_offset, len);
   }
@@ -66,6 +69,7 @@ size_t fs_read(int fd, void *buf, size_t len){
     read_len = file_table[fd].read(buf, file_table[fd].disk_offset + open_offset, len);
   }
   if(fd != 1 && fd != 2) open_offset += read_len;
+  //printf("open_offset = %d \n",open_offset);
   return read_len;
 }
 
@@ -112,4 +116,6 @@ int fs_close(int fd){
 void init_fs() {
   // TODO: initialize the size of /dev/fb
   file_table[FD_FB].size = screen_w * screen_h * sizeof(uint32_t);
+  file_table[4].size = 64;
+  file_table[5].size = 64;
 }

@@ -4,7 +4,6 @@
 #include <assert.h>
 #include <time.h>
 #include "syscall.h"
-extern char _end;
 
 // helper macros
 #define _concat(x, y) x ## y
@@ -42,6 +41,8 @@ extern char _end;
 #error _syscall_ is not implemented
 #endif
 
+extern char _end;
+
 intptr_t _syscall_(intptr_t type, intptr_t a0, intptr_t a1, intptr_t a2) {
   register intptr_t _gpr1 asm (GPR1) = type;
   register intptr_t _gpr2 asm (GPR2) = a0;
@@ -65,13 +66,15 @@ int _write(int fd, void *buf, size_t count) {
   return _syscall_(SYS_write, fd, (intptr_t )buf, count);
 }
 
-void *program_break = (void *)&_end;
+
 void *_sbrk(intptr_t increment) {
   //char* program_break = &_end;
-  void *pos = program_break;
+  //void *pos = program_break;
+  static char* heap_end = &_end;
+  void *previous_end = heap_end;
   if( !_syscall_(SYS_brk, increment, 0, 0) ){
-    program_break = program_break + increment;
-    return pos;
+    heap_end += increment;
+    return previous_end;
   }
   else
     return (void *)-1;
@@ -95,8 +98,8 @@ int _gettimeofday(struct timeval *tv, struct timezone *tz) {
 }
 
 int _execve(const char *fname, char * const argv[], char *const envp[]) {
-  _exit(SYS_execve);
-  return 0;
+  //printf("fname = %s\n",fname);
+  return _syscall_(SYS_execve, (intptr_t)fname, (intptr_t)argv, (intptr_t)envp);
 }
 
 // Syscalls below are not used in Nanos-lite.

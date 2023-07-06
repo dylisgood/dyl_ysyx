@@ -10,7 +10,7 @@ int main() {
     size_t sec = 1;
     while(1){
         uint32_t time_now = NDL_GetTicks();
-        while( ( time_now - time_start ) / 500000 < sec ){
+        while( ( time_now - time_start ) / 500 < sec ){
             time_now = NDL_GetTicks();
         }
         printf("Hello worlds! sec = %ld \n\n" ,sec);
