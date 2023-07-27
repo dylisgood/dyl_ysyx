@@ -39,7 +39,7 @@ uint64_t pmem_read(uint32_t addr,int len){
   assert((addr >= 0x80000000) && (addr <= 0x87ffffff));
   uint64_t ret = host_read(guest_to_host(addr),len);
   #ifdef CONFIG_MTRACE  
-    printf("read memory, read_addr = %x ,read data = %lx\n",addr,ret);
+    Log("read memory, read_addr = %x ,read data = %lx\n",addr,ret);
   #endif
   return ret;
 } 

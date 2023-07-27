@@ -3,13 +3,13 @@
 //2.get operate num from resiger file
 module ysyx_22050854_IDU(
     input [31:0]instr,
-    output [4:0]rs1,
+/*     output [4:0]rs1,
     output [4:0]rs2,
-    output [4:0]rd,
+    output [4:0]rd, */
     output reg[2:0]ExtOP,
     output reg RegWr,
     output reg [2:0]Branch,
-    output No_branch,
+    output reg No_branch,
     output reg MemtoReg,
     output reg MemWr,
     output reg MemRd,
@@ -18,25 +18,19 @@ module ysyx_22050854_IDU(
     output reg [1:0]ALUsrc2,
     output reg [3:0]ALUctr,
     output reg [3:0]MULctr,
-    output reg [2:0]ALUext,
-    output ebreak
+    output reg [2:0]ALUext
 ); 
     wire [6:0]op;
     wire [2:0]func3;
     wire [6:0]func7;
-    wire [63:0]immI,immU,immS,immB,immJ;
 
     assign op = instr[6:0];
-    assign rs1 = instr[19:15];
-    assign rs2 = instr[24:20];
-    assign rd = instr[11:7];
+/*     assign rs1 = instr[19:15];
+    assign rs2 = ( instr == 32'h73 ) ? 5'd17 : instr[24:20];
+    assign rd = instr[11:7]; */
     assign func3 = instr[14:12];
     assign func7 = instr[31:25];
 
-    ysyx_22050854_MuxKey #(1,32,1) ebreak_gen (ebreak,instr,{
-        32'b0000_0000_0001_0000_0000_0000_0111_0011,1'b1
-    });
-    
     //generate ExtOP for generate imm
     ysyx_22050854_MuxKeyWithDefault #(9,5,3) ExtOP_gen (ExtOP,op[6:2],3'b111,{
         5'b00000,3'b000, //lb lh lw ld  I
@@ -51,18 +45,19 @@ module ysyx_22050854_IDU(
     });
 
     //generate RegWr 是否写回寄存器
-    ysyx_22050854_MuxKeyWithDefault #(11,5,1) RegWr_gen (RegWr,op[6:2],1'b0,{
-        5'b01101,1'b1,  //lui
-        5'b00101,1'b1,  //auipc
-        5'b00100,1'b1,  //addi
-        5'b01100,1'b1,  //add 
-        5'b11011,1'b1,  //jar
-        5'b11001,1'b1,  //jarl
-        5'b11000,1'b0,  //beq bne ....
-        5'b00000,1'b1,  //lb lh lw ld lbu lhu lwu
-        5'b01000,1'b0,  //sb sh sw sd
-        5'b00110,1'b1,  //ADDIW
-        5'b01110,1'b1   //ADDW
+    ysyx_22050854_MuxKeyWithDefault #(12,7,1) RegWr_gen (RegWr,op[6:0],1'b0,{
+        7'b0110111,1'b1,  //lui
+        7'b0010111,1'b1,  //auipc
+        7'b0010011,1'b1,  //addi
+        7'b0110011,1'b1,  //add 
+        7'b1101111,1'b1,  //jar
+        7'b1100111,1'b1,  //jarl
+        7'b1100011,1'b0,  //beq bne ....
+        7'b0000011,1'b1,  //lb lh lw ld lbu lhu lwu
+        7'b0100011,1'b0,  //sb sh sw sd
+        7'b0011011,1'b1,  //ADDIW
+        7'b0111011,1'b1,  //ADDW
+        7'b1110011,1'b1   //ecall csrw csrr
     });
 
     //generate Branch 
@@ -83,13 +78,14 @@ module ysyx_22050854_IDU(
         8'b11001101,3'b010, //jalr
         8'b11001110,3'b010, //jalr
         8'b11001111,3'b010, //jalr
-        8'b11000000,3'b100,
-        8'b11000001,3'b101,
-        8'b11000100,3'b110,
-        8'b11000101,3'b111,
-        8'b11000110,3'b110,
-        8'b11000111,3'b111
+        8'b11000000,3'b100, //beq
+        8'b11000001,3'b101, //bneq
+        8'b11000100,3'b110, //blt
+        8'b11000101,3'b111, //bge
+        8'b11000110,3'b110, //bltu
+        8'b11000111,3'b111  //bgeu
     });
+
     //generate No_branch pc + 4
     ysyx_22050854_MuxKeyWithDefault #(10,7,1) No_branch_gen (No_branch,op,1'b0,{
         7'b0110111,1'b1,  //lui
@@ -98,7 +94,7 @@ module ysyx_22050854_IDU(
         7'b0100011,1'b1,  //sd
         7'b0010011,1'b1,  //addi
         7'b0110011,1'b1,  //add
-        7'b1110011,1'b1,  //ebreak
+        7'b1110011,1'b1,  //csrrw csrr but not ecall mret
         7'b0011011,1'b1,  //slliw
         7'b0111011,1'b1,  //sllw
         7'b0111011,1'b1   //mulw

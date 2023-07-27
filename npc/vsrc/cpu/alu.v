@@ -34,7 +34,7 @@ module ysyx_22050854_alu(
     });
     
     assign zero = alu_temp == 64'd0 ? 1 : 0;
-    assign less = alu_temp < 0 ? 1 : 0;
+    assign less = ALUctr == 4'b0010 ? ( ($signed(src1)) < ($signed(src2)) ? 1 : 0) : (src1 < src2 ? 1 : 0);
 
     reg signed [127:0]mul_temp_128;
     ysyx_22050854_MuxKey #(4,4,128) gen_mul_temp_128 (mul_temp_128,MULctr,{

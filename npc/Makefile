@@ -42,15 +42,17 @@ CFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
 CXXFLAGS += $(shell llvm-config-11 --cxxflags) -fPIE
 
 
-LDFLAGS += -O2 -lSDL2 -lSDL2_image -lreadline
+LDFLAGS += -O2 -lSDL2_image -lreadline
 LD2FLAGS += $(shell llvm-config-11 --ldflags)
 LD2FLAGS += $(shell llvm-config-11 --libs)
-LD3FLAGS += -L/home/dyl/ysyx-workbench/nemu/build
-LD3FLAGS += -l:riscv64-nemu-interpreter-so
 
+#for difftest: dynamic link riscv
+#LD3FLAGS += -L/home/dyl/ysyx-workbench/nemu/build
+#LD3FLAGS += -l:riscv64-nemu-interpreter-so
+LD4FLAGS += -L/usr/include/x86_64-linux-gnu/SDL2 -lSDL2
 #aurgument  to execute npc
 IMG ?= 
-#override ARGS += -b
+override ARGS += -b
 override ARGS += $(ARGS_DIFF)
 
 NPC_ECEC = $^ $(ARGS) $(IMG)
@@ -62,7 +64,7 @@ $(BIN): $(VSRCS) $(CSRCS) #$(NVBOARD_ARCHIVE)
 		$(addprefix -CFLAGS , $(CFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
 		--Mdir $(OBJ_DIR) --exe -o $(abspath $(BIN))\
 		$(addprefix -LDFLAGS , $(LD3FLAGS))\
-		$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LD2FLAGS))
+		$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LD2FLAGS)) $(addprefix -LDFLAGS , $(LD4FLAGS))
 		
 all: default
 

@@ -24,10 +24,10 @@ static inline int check_reg_idx(int idx) {
 }
 
 static inline int change_reg_sr_idx(int idx) {
-  if(idx == 0x5) return 0;         //mtvec
-  else if( idx == 0) return 2;   //mstatus
-  else if( idx == 0x41 ) return 1; //mepc
-  else if(idx == 0x42 ) return 3;  //mcause
+  if(idx == 0x305) return 0;         //mtvec
+  else if( idx == 0x300) return 2;   //mstatus
+  else if( idx == 0x341 ) return 1; //mepc
+  else if(idx == 0x342 ) return 3;  //mcause
   else{
     panic("sorry this sr is not implement!\n");
   }

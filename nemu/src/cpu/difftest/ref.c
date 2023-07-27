@@ -44,13 +44,17 @@ void difftest_memcpy(paddr_t addr, void *buf, size_t n, bool direction) {
 }
 
 void difftest_regcpy(void *dut, bool direction) {
-  if(direction == DIFFTEST_TO_REF ){
+  if(direction == DIFFTEST_TO_REF ){   //npc -> nemu
     struct diff_context_t* ctx = (struct diff_context_t*)dut;
     for(int i = 0; i < 32; i++){
+      //printf("ctx->gpr[%d] = %lx   " ,i ,ctx->gpr[i]);
       cpu.gpr[i] = ctx->gpr[i];
     }
-  } 
-  else if(direction == DIFFTEST_TO_DUT){ //get_ref_reg(ref---nemu)
+    //printf("nemu.cpu.pc = %lx, ctx->pc = %lx \n",cpu.pc , ctx->pc);
+    cpu.pc = ctx->pc;
+  }
+
+  else if(direction == DIFFTEST_TO_DUT){ //nemu -> npc_temp for compare
     struct diff_context_t* ctx = (struct diff_context_t*)dut;
     for(int i = 0; i < 32; i++){
       ctx->gpr[i] = cpu.gpr[i];
@@ -82,11 +86,11 @@ void difftest_exec(uint64_t n) {
 }
 
 void difftest_raise_intr(word_t NO) {
+  //isa_raise_intr(gpr(17), s->snpc);
   assert(0);
 }
 
 void difftest_init(int port) {
-  //printf("I enter ");
   /* Perform ISA dependent initialization. */
  init_isa();
 }

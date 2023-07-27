@@ -24,11 +24,20 @@ const char *regs[] = {
 extern CPU_state cpu;
 extern uint64_t *cpu_gpr;
 extern uint32_t verilog_pc;
+bool dut_find_difftest = false; //for debug
 void dump_gpr();
+
 void (*ref_difftest_memcpy)(uint64_t addr, void *buf, size_t n, bool direction) = NULL;
 void (*ref_difftest_regcpy)(void *dut, bool direction) = NULL;
 void (*ref_difftest_exec)(uint64_t n) = NULL;
 void (*ref_difftest_raise_intr)(uint64_t NO) = NULL;
+
+
+static bool is_skip_ref = false;
+
+void difftest_skip_ref() {
+  is_skip_ref = true;
+}
 
 void init_difftest(char *ref_so_file, long img_size, int port) {
   assert(ref_so_file != NULL);
@@ -64,33 +73,45 @@ void init_difftest(char *ref_so_file, long img_size, int port) {
 
 bool isa_difftest_checkregs(CPU_state *ref_r, uint32_t pc) {
   int i = 0;
+  bool find_diff = false;
   for(i = 0; i < 32; i++){
     if(ref_r->gpr[i] != cpu_gpr[i]){
       Log("nemu_%s = %lx",regs[i],ref_r->gpr[i]);
       Log("npc_%s = %lx",regs[i],cpu_gpr[i]);
       pc = cpu.pc;
+      find_diff = true;
     }
   }
   if(ref_r->pc != verilog_pc) {
     Log("nemu_pc = %lx",ref_r->pc);
     Log("npc_pc =  %x",verilog_pc);
+    find_diff = true;
   }
-  if(i==32) return false;
-  return true;
+  //printf("nemu->pc = %x \n" ,ref_r->pc);
+  return find_diff;
 }
 
 static void checkregs(CPU_state *ref, uint32_t pc) {
-  if (!isa_difftest_checkregs(ref, pc)) {
-   // Log("!!!!!!!!!!!!!!!!!!!!!!   find deffferent   !!!!!!!!!!!!!!!!\n");
-  /*     dump_gpr();
-      for(int i = 0; i < 32; i++){
+  if (isa_difftest_checkregs(ref, pc)) {
+    Log("!!!!!!!!!!!!!!!!!!!!!!   find deffferent at pc = %x  !!!!!!!!!!!!!!!!\n" ,pc);
+/*     dump_gpr();
+    for(int i = 0; i < 32; i++){
       printf("nemu-ref[%d] = %lx\n" ,i,ref->gpr[i]);
     } */
+    dut_find_difftest = true;
+    //assert(0);
   }
 }
 
 void difftest_step(uint32_t pc, uint32_t npc) {
   CPU_state ref_r;
+  if( is_skip_ref ){
+    ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF);
+    //printf("difftest_step: skip this difftest\n");
+    is_skip_ref = false;
+    return ;
+  }
+
   ref_difftest_exec(1);
   ref_difftest_regcpy(&ref_r, DIFFTEST_TO_DUT);
 

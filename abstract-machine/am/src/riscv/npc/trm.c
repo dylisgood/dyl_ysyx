@@ -1,7 +1,7 @@
 #include <am.h>
 #include <klib-macros.h>
 
-#define nemu_trap(code) asm volatile("mv a0, %0; ebreak" : :"r"(code))
+#define npc_trap(code) asm volatile("mv a0, %0; ebreak" : :"r"(code))
 
 # define DEVICE_BASE 0xa0000000
 
@@ -27,7 +27,7 @@ void putch(char ch) {
 }
 
 void halt(int code) {
-  nemu_trap(code);
+  npc_trap(code);
   while (1);
 }
 

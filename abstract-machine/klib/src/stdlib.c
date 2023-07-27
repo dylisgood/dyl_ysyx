@@ -39,7 +39,7 @@ void *malloc(size_t size) {
 /* #if !(defined(__ISA_NATIVE__) && defined(__NATIVE_USE_KLIB__))
   panic("Not implemented");
 #endif */
-  printf("AM: enter malloc\n");
+  //printf("AM: enter malloc\n");
   if(first_time){
     hbrk = heap.start;
     first_time = 0;

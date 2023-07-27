@@ -2,13 +2,14 @@
 module ysyx_22050854_RegisterFile  (
   input clk,
   input [63:0] wdata,
-  input [4:0] waddr,
+  input reg[4:0] waddr,
   input wen,
   input [4:0] raddra,
   input [4:0] raddrb,
   output reg[63:0] rdata1,
   output reg[63:0] rdata2,
 
+  output reg wreg_resp,
   input [4:0]test_addr1,
   input [4:0]test_addr2,
   output reg[63:0]test_rdata1,
@@ -18,8 +19,14 @@ module ysyx_22050854_RegisterFile  (
   always @(posedge clk) begin
     if(waddr==5'd0)
       rf[waddr] <= 64'd0;
-    else 
-      if(wen) rf[waddr] <= wdata;
+    else begin
+      if(wen) begin
+        rf[waddr] <= wdata;
+        wreg_resp <= 1'b1;
+      end
+      else
+        wreg_resp <= 1'b0;
+    end
   end
 
   import "DPI-C" function void set_gpr_ptr(input logic [63:0] a []);

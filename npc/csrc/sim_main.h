@@ -20,8 +20,8 @@ struct func_struct{
 };
 
 typedef struct {
-  uint64_t gpr[31];
-  uint32_t pc;
+  uint64_t gpr[32];
+  uint64_t pc;
 } CPU_state;
 
 typedef struct {

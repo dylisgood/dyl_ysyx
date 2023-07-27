@@ -12,6 +12,7 @@ void init_regex();   //expr.c
 void init_wp_pool();  //watchpoint.c
 uint64_t pmem_read(uint32_t addr,int len);
 void dump_gpr();
+void dump_csr();
 void set_wp(char *arg);
 void print_wp();
 void dele_wp(int NO);
@@ -84,6 +85,7 @@ static int cmd_info(char *args) {
     if( arg == NULL ) { printf("please choose to print r-regs or w-watchpoints \n"); }
     else{
         if( *arg == 'r' ) { dump_gpr(); }
+        else if( *arg == 'c') { dump_csr(); }
         else if( *arg == 'w') { print_wp(); }
         else { printf("Unknown command\n"); }
     }
