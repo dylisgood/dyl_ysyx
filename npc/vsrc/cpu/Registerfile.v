@@ -9,7 +9,6 @@ module ysyx_22050854_RegisterFile  (
   output reg[63:0] rdata1,
   output reg[63:0] rdata2,
 
-  output reg wreg_resp,
   input [4:0]test_addr1,
   input [4:0]test_addr2,
   output reg[63:0]test_rdata1,
@@ -22,10 +21,7 @@ module ysyx_22050854_RegisterFile  (
     else begin
       if(wen) begin
         rf[waddr] <= wdata;
-        wreg_resp <= 1'b1;
       end
-      else
-        wreg_resp <= 1'b0;
     end
   end
 

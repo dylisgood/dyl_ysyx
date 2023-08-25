@@ -59,20 +59,50 @@ void init_mem() {
   assert(pmem);
 #ifdef CONFIG_MEM_RANDOM
   uint32_t *p = (uint32_t *)pmem;
-  int i;
+  int i;2
   for (i = 0; i < (int) (CONFIG_MSIZE / sizeof(p[0])); i ++) {
     p[i] = rand();
   }
 #else
   uint32_t *p = (uint32_t *)pmem;
-  p[0] = 0x00400293;  //addi rd,rs,imm  x5=x0+4;
-  p[1] = 0x00328313;  //addi rd,rs,imm  x6=x5+3
-  p[2] = 0x00228313;  //addi rd,rs,imm  x6=x5+2
-  p[3] = 0x00128313;  //addi rd,rs,imm  x6=x5+1
-  p[4] = 0x00228313;  //addi rd,rs,imm  x6=x5+2
-  p[5] = 0x00328313;  //addi rd,rs,imm  x6=x5+3
-  p[6] = 0x00100073;  //ebreak
-  //p[0x23fa] = 0x8000011c;
+  p[0] = 0x00600293;  //t0 = x0 + 6;
+  p[1] = 0x00000117;  //auipc   sp,0x0
+  p[2] = 0x00600993;  //s3 = x0 + 6;
+  p[3] = 0x00500b93;  //s7 = x0 + 5;
+  p[4] = 0x00600993;  //s3 = x0 + 6;
+  p[5] = 0x00600993;  //s3 = x0 + 6;
+  p[6] = 0x000b8413;  //mv    s0,s7
+  p[7] = 0x00700a13;  //s4 = x0 + 7;
+  p[8] = 0x024100e7;  //jalr (36)sp
+  p[9] = 0x00500b93;  //s7 = x0 + 5;
+  p[10] = 0x00200413;  //li      s0,2
+  p[11] = 0x00400293;  //t0 = x0 + 4
+  p[12] = 0x00400293;  //t0 = x0 + 4;
+  p[13] = 0x00500b93;  //s7 = x0 + 5;
+  p[14] = 0x00400293;  //t0 = x0 + 4;
+  p[15] = 0x00600993;  //s3 = x0 + 6;
+  p[16] = 0x00400293;  //t0 = x0 + 4;
+  p[17] = 0x00400293;  //t0 = x0 + 4
+  p[18] = 0x00400293;  //t0 = x0 + 4
+  p[19] = 0x00400293;  //t0 = x0 + 4;
+  p[20] = 0x00400293;  //t0 = x0 + 4;
+  p[21] = 0x00400293;  //t0 = x0 + 4;
+  p[22] = 0x00328313;  //addi rd,rs,imm  t1=t0+3
+  p[23] = 0x00400293;  //t0 = x0 + 4;
+  p[24] = 0x00400293;  //t0 = x0 + 4;
+  p[25] = 0x00400293;  //t0 = x0 + 4;
+  p[26] = 0x00400293;  //t0 = x0 + 4;
+  p[27] = 0x00400293;  //t0 = x0 + 4;
+  p[28] = 0x00413303;  //ld      t1,32(sp)
+  p[29] = 0x00630293;  //t0 = t1 + 6;
+  p[30] = 0x01413403;  //ld      s0,8(sp)
+  p[31] = 0x01413483;  //ld      s1,8(sp)
+  p[32] = 0x00000513;  //li      a0,0
+  p[33] = 0x00100073;  //ebreak
 #endif
-  //Log("physical memory area [" FMT_PADDR ", " FMT_PADDR "]", PMEM_LEFT, PMEM_RIGHT);    
+  //Log("physical memory area [" FMT_PADDR ", " FMT_PADDR "]", PMEM_LEFT, PMEM_RIGHT);
+  /*   p[19] = 0x03313423;  //sd      s3,40(sp)
+  p[20] = 0x01713423;  //sd      s7,8(sp)
+  0x005b8263;  //beq s7 t0 pc + 8
+  p[21] = 0x03413023;  //sd      s4,32(sp) */
 }

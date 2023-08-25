@@ -23,7 +23,7 @@ const char *regs[] = {
 
 extern CPU_state cpu;
 extern uint64_t *cpu_gpr;
-extern uint32_t verilog_pc;
+extern uint32_t inst_finishpc;
 bool dut_find_difftest = false; //for debug
 void dump_gpr();
 
@@ -78,15 +78,19 @@ bool isa_difftest_checkregs(CPU_state *ref_r, uint32_t pc) {
     if(ref_r->gpr[i] != cpu_gpr[i]){
       Log("nemu_%s = %lx",regs[i],ref_r->gpr[i]);
       Log("npc_%s = %lx",regs[i],cpu_gpr[i]);
+    if(ref_r->pc != inst_finishpc) {
+      Log("nemu_pc = %lx",ref_r->pc);
+      Log("npc_pc =  %x",inst_finishpc);
+    }
       pc = cpu.pc;
       find_diff = true;
     }
   }
-  if(ref_r->pc != verilog_pc) {
+/*   if(ref_r->pc != WBreg_pc) {
     Log("nemu_pc = %lx",ref_r->pc);
-    Log("npc_pc =  %x",verilog_pc);
+    Log("npc_pc =  %x",WBreg_pc);
     find_diff = true;
-  }
+  } */
   //printf("nemu->pc = %x \n" ,ref_r->pc);
   return find_diff;
 }

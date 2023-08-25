@@ -47,9 +47,15 @@ void difftest_regcpy(void *dut, bool direction) {
   if(direction == DIFFTEST_TO_REF ){   //npc -> nemu
     struct diff_context_t* ctx = (struct diff_context_t*)dut;
     for(int i = 0; i < 32; i++){
-      //printf("ctx->gpr[%d] = %lx   " ,i ,ctx->gpr[i]);
+/*       printf("ctx->gpr[%d] = %lx   " ,i ,ctx->gpr[i]);
+      if(cpu.gpr[i] != ctx->gpr[i] ){
+        printf(" i = %d \n" ,i);
+      } */
       cpu.gpr[i] = ctx->gpr[i];
     }
+/*     for(int j = 0; j < 32; j++){
+      printf("after : cpu.gpr[%d] = 0x%lx \n",j ,cpu.gpr[j]);
+    } */
     //printf("nemu.cpu.pc = %lx, ctx->pc = %lx \n",cpu.pc , ctx->pc);
     cpu.pc = ctx->pc;
   }

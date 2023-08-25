@@ -3,9 +3,9 @@
 //2.get operate num from resiger file
 module ysyx_22050854_IDU(
     input [31:0]instr,
-/*     output [4:0]rs1,
+    output [4:0]rs1,
     output [4:0]rs2,
-    output [4:0]rd, */
+    output [4:0]rd,
     output reg[2:0]ExtOP,
     output reg RegWr,
     output reg [2:0]Branch,
@@ -25,9 +25,9 @@ module ysyx_22050854_IDU(
     wire [6:0]func7;
 
     assign op = instr[6:0];
-/*     assign rs1 = instr[19:15];
-    assign rs2 = ( instr == 32'h73 ) ? 5'd17 : instr[24:20];
-    assign rd = instr[11:7]; */
+    assign rs1 = instr[19:15];
+    assign rs2 = ( instr == 32'h73 ) ? 5'd17 : instr[24:20]; //对于ecall指令，虽然指令上rs2的位置是全零，但按照指令的行为看，是要将x17的值写进CSR的mcause中
+    assign rd = instr[11:7];
     assign func3 = instr[14:12];
     assign func7 = instr[31:25];
 
@@ -45,7 +45,8 @@ module ysyx_22050854_IDU(
     });
 
     //generate RegWr 是否写回寄存器
-    ysyx_22050854_MuxKeyWithDefault #(12,7,1) RegWr_gen (RegWr,op[6:0],1'b0,{
+    wire RegWr_t;
+    ysyx_22050854_MuxKeyWithDefault #(12,7,1) RegWr_gen (RegWr_t,op[6:0],1'b0,{
         7'b0110111,1'b1,  //lui
         7'b0010111,1'b1,  //auipc
         7'b0010011,1'b1,  //addi
@@ -57,8 +58,9 @@ module ysyx_22050854_IDU(
         7'b0100011,1'b0,  //sb sh sw sd
         7'b0011011,1'b1,  //ADDIW
         7'b0111011,1'b1,  //ADDW
-        7'b1110011,1'b1   //ecall csrw csrr
+        7'b1110011,1'b1   //ecall csrw csrr, but mret ebreak should not write register
     });
+    assign RegWr = (instr == 32'h30200073) ? 0 : ( (instr == 32'h100073) ? 0 : RegWr_t);  //mret and ebreak not write
 
     //generate Branch 
     ysyx_22050854_MuxKey #(22,8,3) Branch_gen (Branch,{op[6:2],func3},{
@@ -100,50 +102,15 @@ module ysyx_22050854_IDU(
         7'b0111011,1'b1   //mulw
     });
 
+    
     //generate MemtoReg 写回寄存器的内容来自哪里 0-alu_out 1-mem_data
-    ysyx_22050854_MuxKeyWithDefault #(11,5,1) MemtoReg_gen (MemtoReg,op[6:2],1'b0,{
-        5'b01101,1'b0, //lui
-        5'b00101,1'b0, //auipc
-        5'b00100,1'b0, //addi
-        5'b01100,1'b0, //add
-        5'b11011,1'b0, //jal
-        5'b11001,1'b0, //jalr
-        5'b11000,1'b0, //beq 
-        5'b00000,1'b1, //load
-        5'b01000,1'b0, //store
-        5'b00110,1'b0, //ADDIW
-        5'b01110,1'b0  //ADDW       
-    });
+    assign MemtoReg = op == 7'b0000011 ? 1'b1 : 1'b0;
 
     //generate MemWr 是否写存储器
-    ysyx_22050854_MuxKeyWithDefault #(11,5,1) MemWr_gen (MemWr,op[6:2],1'b0,{
-        5'b01101,1'b0, //lui
-        5'b00101,1'b0, //auipc
-        5'b00100,1'b0, //addi
-        5'b01100,1'b0, //add mul
-        5'b11011,1'b0, //jal
-        5'b11001,1'b0, //jalr
-        5'b11000,1'b0,  //beq
-        5'b00000,1'b0, //load
-        5'b01000,1'b1, //store
-        5'b00110,1'b0, //ADDIW
-        5'b01110,1'b0  //ADDW       
-    });
+    assign MemWr = op == 7'b0100011 ? 1'b1 : 1'b0;
 
     //generate MemRd 是否读存储器
-    ysyx_22050854_MuxKeyWithDefault #(11,5,1) MemRd_gen (MemRd,op[6:2],1'b0,{
-        5'b01101,1'b0, //lui
-        5'b00101,1'b0, //auipc
-        5'b00100,1'b0, //addi
-        5'b01100,1'b0, //add mul
-        5'b11011,1'b0, //jal
-        5'b11001,1'b0, //jalr
-        5'b11000,1'b0, //beq
-        5'b00000,1'b1, //load
-        5'b01000,1'b0, //store
-        5'b00110,1'b0, //ADDIW
-        5'b01110,1'b0  //ADDW       
-    });
+    assign MemRd = op == 7'b0000011 ? 1'b1 : 1'b0;
 
     //generate MemOP 如何写存储器
     ysyx_22050854_MuxKeyWithDefault #(11,8,3) MemOP_gen (MemOP,{op[6:2],func3},3'b111,{

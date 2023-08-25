@@ -28,6 +28,187 @@ extern "C" void get_inst_value(int data)
   verilog_inst = data;
 }
 
+uint32_t verilog_IDinst = 0;
+extern "C" void get_IDreginst_value(int data)
+{
+  verilog_IDinst = data;
+}
+
+uint32_t verilog_IDpc = 0;
+extern "C" void get_IDregpc_value(int data)
+{
+  verilog_IDpc = data;
+}
+
+uint32_t jump = 0;
+extern "C" void get_jump_value(int data)
+{
+  jump = data;
+}
+
+uint32_t EXEreg_pc = 0;
+extern "C" void get_EXEreg_pc_value(int data)
+{
+  EXEreg_pc = data;
+}
+
+uint32_t MEMreg_pc = 0;
+extern "C" void get_MEMreg_pc_value(int data)
+{
+  MEMreg_pc = data;
+}
+
+uint32_t WBreg_pc = 0;
+extern "C" void get_WBreg_pc_value(int data)
+{
+  WBreg_pc = data;
+}
+
+uint32_t verilog_EXEinst = 0;
+extern "C" void get_EXEreginst_value(int data)
+{
+  verilog_EXEinst = data;
+}
+
+uint32_t verilog_WBinst = 0;
+extern "C" void get_WBreginst_value(int data)
+{
+  verilog_WBinst = data;
+}
+
+uint32_t verilog_MEMinst = 0;
+extern "C" void get_MEMreginst_value(int data)
+{
+  verilog_MEMinst = data;
+}
+
+uint32_t MEMreg_aluout = 0;
+extern "C" void get_MEMreg_aluout_value(uint32_t data)
+{
+  MEMreg_aluout = data;
+}
+
+uint32_t WBreg_aluout = 0;
+extern "C" void get_WBreg_aluout_value(uint32_t data)
+{
+  WBreg_aluout = data;
+}
+
+uint32_t WBreg_rd = 0;
+extern "C" void get_WBreg_rd_value(uint32_t data)
+{
+  WBreg_rd = data;
+}
+
+uint32_t EXEreg_alusrc1 = 0;
+extern "C" void get_EXEreg_alusrc1_value(uint32_t data)
+{
+  EXEreg_alusrc1 = data;
+}
+
+uint32_t EXEreg_alusrc2 = 0;
+extern "C" void get_EXEreg_alusrc2_value(uint32_t data)
+{
+  EXEreg_alusrc2 = data;
+}
+
+uint32_t MEMreg_memwr = 0;
+extern "C" void get_MEMreg_memwr_value(uint32_t data)
+{
+  MEMreg_memwr = data;
+}
+
+uint32_t MEMreg_writememdata = 0;
+extern "C" void get_MEMreg_writememdata_value(uint32_t data)
+{
+  MEMreg_writememdata = data;
+}
+
+uint32_t EXEreg_writememdata = 0;
+extern "C" void get_EXEreg_writememdata_value(uint32_t data)
+{
+  EXEreg_writememdata = data;
+}
+
+uint32_t real_readmemdata_right = 0;
+extern "C" void get_real_readmemdata_right_value(uint32_t data)
+{
+  real_readmemdata_right = data;
+}
+
+uint32_t dsram_rresp = 0;
+extern "C" void get_dsram_rresp_value(uint32_t data)
+{
+  dsram_rresp = data;
+}
+
+uint32_t wr_reg_data = 0;
+extern "C" void get_wr_reg_data_value(uint32_t data)
+{
+  wr_reg_data = data;
+}
+
+uint32_t rdata = 0;
+extern "C" void get_rdata_value(uint32_t data)
+{
+  rdata = data;
+}
+
+
+uint32_t  next_pc= 0;
+extern "C" void get_next_pc_value(uint32_t data)
+{
+  next_pc = data;
+}
+
+uint32_t Data_Conflict = 0;
+extern "C" void get_Data_Conflict_value(uint32_t data)
+{
+  Data_Conflict = data;
+}
+
+uint32_t WBreg_valid = 0;
+extern "C" void get_WBreg_valid_value(uint32_t data)
+{
+  WBreg_valid = data;
+}
+
+uint32_t IDreg_valid = 0;
+extern "C" void get_ID_reg_valid_value(uint32_t data)
+{
+  IDreg_valid = data;
+}
+
+uint32_t EXEreg_valid = 0;
+extern "C" void get_EXEreg_valid_value(uint32_t data)
+{
+  EXEreg_valid = data;
+}
+
+uint32_t MEMreg_valid = 0;
+extern "C" void get_MEMreg_valid_value(uint32_t data)
+{
+  MEMreg_valid = data;
+}
+
+uint32_t inst_finish = 0;
+extern "C" void get_inst_finish_value(uint32_t data)
+{
+  inst_finish = data;
+}
+
+uint32_t is_device = 0;
+extern "C" void get_is_device_value(uint32_t data)
+{
+  is_device = data;
+}
+
+uint32_t inst_finishpc = 0;
+extern "C" void get_inst_finishpc_value(uint32_t data)
+{
+  inst_finishpc = data;
+}
+
 extern "C" void v_printf(int data)
 {
   printf("data = %x \n" ,data);
@@ -83,7 +264,7 @@ extern "C" void v_pmem_read(long long raddr, long long *rdata) {
   else
   {
     //printf("The read address %lx  is invalid! \n",raddr);
-    *rdata = 0x44;
+    *rdata = 0x4444444466666666;
   }
 }
 
@@ -142,7 +323,8 @@ int instr_num = 21;
 bool Execute = false;
 extern struct func_struct func_trace[10];
 extern int func_num;
-static uint32_t total_inst_num = 0;
+static uint64_t total_inst_num = 0;
+static uint64_t total_cycle = 0;
 extern bool dut_find_difftest;
 CPU_state cpu = {};
 bool npc_stop = false;
@@ -159,7 +341,6 @@ void init_keymap();
 VerilatedContext* contextp = new VerilatedContext; //构造一个结构体以保持仿真时间
 Vtop* top = new Vtop{contextp};  //构造一个verialted模型 来自于Vtop.h(产生于verialting top.v)
 VerilatedVcdC* tfp = new VerilatedVcdC;
-
 
 void sim_exit(){
   top->eval();
@@ -178,11 +359,8 @@ static void reset(int n){
   top->rst = 0;
 }
 
-static uint32_t inst_start_time;
-static uint32_t inst_over_time;
-uint64_t last_top_pc = 0x80000000;
-//int dyl_a = 200;
-bool first_inst = true;
+static uint64_t inst_start_time;
+static uint64_t inst_over_time;
 
 void cpu_exec(int n){
   int this_cycle_inst = n;
@@ -193,24 +371,25 @@ void cpu_exec(int n){
     //如果执行到了ebreak 或指令条数 或发现差异 就停
     if( top->ebreak || (n-- == 0 && !Execute) || dut_find_difftest ) { break; }
 
-    //if(total_inst_num % 2 == 1) top->suspend = 1;
-    //else top->suspend = 0;
     top->clk = 0; sim_exit();
     uint64_t top_pc = verilog_pc;
-    uint32_t top_inst = verilog_inst; //
-    //printf("clk = 0: inst = %x, pc = %lx, top->rd = %d \n" ,top_inst ,top_pc, top->rd );
+    uint32_t top_inst = verilog_inst;
     top->clk = 1; sim_exit();
-    top_pc = verilog_pc;
-    top_inst = verilog_inst; 
-    //if(top->ecall_or_mret) printf("inst = %x, pc = %lx, csr_wdata1 = %lx\n" ,top_inst ,top_pc ,top->csr_wdata1);
-    //printf("clk = 1: inst = %x, pc = %lx\n" ,top_inst ,top_pc );
+    top_pc = WBreg_pc;
+    top_inst = verilog_WBinst;
+    total_cycle = total_cycle + 1; 
+    if(inst_finish) total_inst_num += 1;
 
-    //if(last_top_pc == top_pc){
-  //printf("the pc is not change current inst = %x, pc = %lx\n" ,top_inst ,top_pc);
-/*     }
-    last_top_pc = top_pc; */
-   
-    
+/*     printf("inst = %x, pc = %lx\n,\
+IDreg_inst = %x ,IDreg_pc = %x ,next_pc = %x,jump = %d,Data_Conflict = %d,real_readmemdata_right=%lx,IDreg_valid = %d\n,\
+EXEreg_inst = %x ,EXEreg_pc = %x, EXEreg_alusrc1 = 0x%lx ,EXEreg_alusrc2 = 0x%lx,EXEreg_writememdata = %lx,EXEreg_valid = %d\n,\
+MEMreg_inst = %x,MEMreg_pc = %x, MEMreg_aluout = 0x%lx, MEMreg_memwr = %d,MEMreg_writememdata = 0x%lx,dsram_rresp = %d,rdata=0x%lx,MEMreg_valid=%d\n,\
+WBreg_inst = %x,WBreg_pc = %x, WBreg_aluout = 0x%lx ,WBreg_rd = %d ,wr_reg_data = 0x%lx,WBreg_valid = %d\n\n" \
+     ,top_inst ,top_pc ,verilog_IDinst,verilog_IDpc,next_pc,jump,Data_Conflict,real_readmemdata_right,IDreg_valid\
+     ,verilog_EXEinst,EXEreg_pc,EXEreg_alusrc1 ,EXEreg_alusrc2,EXEreg_writememdata,EXEreg_valid\ 
+     ,verilog_MEMinst,MEMreg_pc,MEMreg_aluout ,MEMreg_memwr,MEMreg_writememdata,dsram_rresp,rdata,MEMreg_valid\
+     ,verilog_WBinst,WBreg_pc,WBreg_aluout ,WBreg_rd,wr_reg_data,WBreg_valid); */
+  
     #ifdef CONFIG_HAS_VGA
       device_update();
     #endif
@@ -270,52 +449,49 @@ void cpu_exec(int n){
     #endif
     
     #ifdef CONFIG_DIFFTEST
+    if(inst_finish)
+    {
+    //printf("begin difftest\n");
     //copy rtl gpr status to cpu  for difftest
-    if(top->isram_rresp ){   //只有在取到一条新指令后，才会运行上一条指令，并进行检测，而且第一次取到不检测
-    if(first_inst)
-      first_inst = false;
-    else {
-      printf("begin difftest\n");
     for (int i = 0; i < 32; i++) {
       cpu.gpr[i] = cpu_gpr[i];
     }
-    cpu.pc = verilog_pc;
-    if( (top_inst & 0x707f) == 0x1073 || (top_inst & 0x707f) == 0x73 || \
+    cpu.pc = inst_finishpc; //用于比较，如果跳过比较，则需要让nemu 的 pc + 4
+    //异常指令跳过
+/*     if( (top_inst & 0x707f) == 0x1073 || (top_inst & 0x707f) == 0x73 || \
         (top_inst & 0x707f) == 0x2073 || (top_inst & 0x707f) == 0x3073 ){
         difftest_skip_ref();
-    }
-    
-    if(access_device)  { difftest_skip_ref(); }
-    difftest_step(verilog_pc,verilog_pc);
-    printf("difftest over\n");
-    }
+    } */
+    //访问设备指令跳过
+    if(is_device)  { cpu.pc = inst_finishpc+4; difftest_skip_ref(); }
+    //检测
+    difftest_step(inst_finishpc,inst_finishpc);
+    //printf("difftest over\n");
     }
     #endif
-    
-    total_inst_num = total_inst_num + 1;
-
   }
 
   //printf("cpu_exec while over!\n");
   gettimeofday(&currentTime,NULL);
   inst_over_time = currentTime.tv_sec *1000000 + currentTime.tv_usec - inst_start_time;
   inst_over_time = inst_over_time / 1000000;
-  uint32_t inst_frequency = total_inst_num / inst_over_time;
+  double inst_frequency = (double)total_inst_num / (double)inst_over_time;
+  double IPC = (double)total_inst_num / (double)total_cycle;
 
   if( (!top->x10 && top->ebreak) || (npc_stop)){
     Log("npc = %s at pc = 0x%x" ,ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN),verilog_pc);
-    Log("total guest instructions = %d" , total_inst_num);
-    //Log("simulation frequency = %d inst/s, total time: %d s" ,inst_frequency ,inst_over_time);
+    Log("total guest instructions = %d, total cycle = %ld, IPC = %.2f " ,total_inst_num ,total_cycle,IPC);
+    //Log("simulation frequency = %d inst/s, total time: %ld s \n" ,inst_frequency ,inst_over_time );
   }
   else if ( top->ebreak && top->x10 != 0 ){
     Log("npc = %s at pc = 0x%x" ,ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED),verilog_pc);
-    Log("total guest instructions = %d" , total_inst_num); 
+    Log("total guest instructions = %ld, total cycle = %ld" , total_inst_num,total_cycle); 
     #ifdef CONFIG_ITRACE 
       printIringbuf(iringbuf);
     #endif
   }
   else if( dut_find_difftest ){
-    printf("verilog_pc = %x \n" ,verilog_pc);
+    printf("verilog_pc = %x , total_cycle = %x\n" ,verilog_pc ,total_cycle);
     #ifdef CONFIG_ITRACE 
       printIringbuf(iringbuf);
     #endif

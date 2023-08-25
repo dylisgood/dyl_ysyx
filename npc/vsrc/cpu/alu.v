@@ -6,9 +6,7 @@ module ysyx_22050854_alu(
     input [2:0]ALUext,
     input [63:0]src1,
     input [63:0]src2,
-    output signed [63:0]alu_out,
-    output less,
-    output zero 
+    output signed [63:0]alu_out 
 );
 
     reg signed [31:0]alu_temp_32;
@@ -32,8 +30,8 @@ module ysyx_22050854_alu(
         4'b1101,($signed(src1)) >>> src2[5:0], //srai
         4'b1010,src1 - src2  //sltu bltu bgeu sltiu
     });
-    
-    assign zero = alu_temp == 64'd0 ? 1 : 0;
+
+    wire less;
     assign less = ALUctr == 4'b0010 ? ( ($signed(src1)) < ($signed(src2)) ? 1 : 0) : (src1 < src2 ? 1 : 0);
 
     reg signed [127:0]mul_temp_128;
