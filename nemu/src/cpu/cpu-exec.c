@@ -28,9 +28,9 @@
 #define MAX_INST_TO_PRINT 21
 
 char iringbuf[10][128] = {};
-
+///0xa0001800
 CPU_state cpu = {
-  .sr = { [2]= 0xa0001800 } //initialize mstatus
+  .sr = { [2]=  8 } //initialize mstatus
 };
 uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us

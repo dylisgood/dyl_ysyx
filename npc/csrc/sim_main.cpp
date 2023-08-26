@@ -197,6 +197,12 @@ extern "C" void get_inst_finish_value(uint32_t data)
   inst_finish = data;
 }
 
+uint32_t instruction_finsh = 0;
+extern "C" void get_instruction_finsh_value(uint32_t data)
+{
+  instruction_finsh = data;
+}
+
 uint32_t is_device = 0;
 extern "C" void get_is_device_value(uint32_t data)
 {
@@ -361,7 +367,7 @@ static void reset(int n){
 
 static uint64_t inst_start_time;
 static uint64_t inst_over_time;
-
+int last_inst_ex = 0;
 void cpu_exec(int n){
   int this_cycle_inst = n;
   gettimeofday(&currentTime,NULL);
@@ -458,10 +464,12 @@ WBreg_inst = %x,WBreg_pc = %x, WBreg_aluout = 0x%lx ,WBreg_rd = %d ,wr_reg_data 
     }
     cpu.pc = inst_finishpc; //用于比较，如果跳过比较，则需要让nemu 的 pc + 4
     //异常指令跳过
-/*     if( (top_inst & 0x707f) == 0x1073 || (top_inst & 0x707f) == 0x73 || \
-        (top_inst & 0x707f) == 0x2073 || (top_inst & 0x707f) == 0x3073 ){
+/*     if( (instruction_finsh & 0x707f) == 0x1073 || (instruction_finsh & 0x707f) == 0x73 || \
+        (instruction_finsh & 0x707f) == 0x2073 || (instruction_finsh & 0x707f) == 0x3073 ){
         difftest_skip_ref();
+        cpu.pc = inst_finishpc + 4;
     } */
+
     //访问设备指令跳过
     if(is_device)  { cpu.pc = inst_finishpc+4; difftest_skip_ref(); }
     //检测

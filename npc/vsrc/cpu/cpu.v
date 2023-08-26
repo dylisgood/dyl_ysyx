@@ -30,11 +30,12 @@ module ysyx_22050854_cpu(
 
     import "DPI-C" function void get_next_pc_value(int next_pc);
     always@(*) get_next_pc_value(next_pc);
-    wire [31:0]pc_real;
+    
     //如果译码阶段发现是jump 但不阻塞 则可根据next_pc取指
     //如果译码阶段发现阻塞 但不是jump 则可根据next_pc取指
     //如果译码阶段发现既是jump又是阻塞，则不能取指，因为阻塞产生的jump并不准确
     //如果上周期既是jump又是阻塞，则可以取指，因为本周期能计算出是否真正jump
+    wire [31:0]pc_real;
     assign pc_real = (jump | Data_Conflict_block | arvalid_n_t) ? next_pc : pc_test;
     import "DPI-C" function void get_pc_value(int pc_real);
     always@(*) get_pc_value(pc_real);
@@ -46,8 +47,9 @@ module ysyx_22050854_cpu(
     always@(posedge clk)begin
         pc_record_2 <= pc_record_1;
     end
-    wire arvalid_n;
+
     //如果当前周期下是jalr 或者 beq指令 且发生了阻塞，则无法产生正确的next_pc,本周期不取指
+    wire arvalid_n;
     assign arvalid_n = ( ( ID_reg_inst[6:0] == 7'b1100011) | (ID_reg_inst[6:0]) == 7'b1100111) & Data_Conflict_block ;
     reg arvalid_n_t;
     ysyx_22050854_Reg #(1,1'b0) jumpandblock (clk, rst, arvalid_n, arvalid_n_t, 1'b1);
@@ -65,7 +67,6 @@ module ysyx_22050854_cpu(
         .rready(1'b1)
     );
 
-    //
     reg [31:0]inst;
     wire [63:0]inst_64;
     assign inst_64 = (isram_rresp == 1'b1) ? isram_rdata : 64'h6666666666666666;
@@ -82,14 +83,6 @@ module ysyx_22050854_cpu(
         else
             inst = 32'd0;
     end
-/*     reg [31:0]block_inst1;
-    always@(posedge clk)begin //发现阻塞后的上升沿
-        if(rst)
-            block_inst1 <= 32'h0;
-        else if(Data_Conflict_block)
-            block_inst1 <= inst;
-    end */
-
 
     import "DPI-C" function void get_inst_value(int inst);
     always@(*) get_inst_value(inst);
@@ -195,8 +188,8 @@ module ysyx_22050854_cpu(
         .ALUsrc2(ALUsrc2),
         .pc(ID_reg_pc),
         .imm(imm),
-        .src1(src1),
-        .src2(src2),
+        .src1(New_src1),
+        .src2(New_src2),
         .alu_src1(alu_src1),
         .alu_src2(alu_src2)
     );
@@ -231,15 +224,15 @@ module ysyx_22050854_cpu(
     wire [63:0]csr_wdata1,csr_wdata2;
     wire [63:0]csrwdata_t;
     ysyx_22050854_MuxKey #(6,10,64) csrwdata_gen (csrwdata_t, {ID_reg_inst[14:12],ID_reg_inst[6:0]}, {
-        10'b0011110011, real_CSRsrc1,
-        10'b0101110011, csr_rdata | real_CSRsrc1,
-        10'b0111110011, csr_rdata & ~real_CSRsrc1,
+        10'b0011110011, New_src1,
+        10'b0101110011, csr_rdata | New_src1,
+        10'b0111110011, csr_rdata & ~New_src1,
         10'b1011110011, {59'd0,ID_reg_inst[19:15]},
         10'b1101110011, csr_rdata | {59'd0,ID_reg_inst[19:15]},
         10'b1111110011, csr_rdata & ~{59'd0,ID_reg_inst[19:15]}
     });
     assign csr_wdata1 = ( ID_reg_inst == 32'h73 ) ? ( { 32'd0, ID_reg_pc } + 64'd4 ) : csrwdata_t; //ecall->mepc
-    assign csr_wdata2 = ( ID_reg_inst == 32'h73 ) ? real_CSRsrc2 : 64'h0;  //ecall->mcause
+    assign csr_wdata2 = ( ID_reg_inst == 32'h73 ) ? New_src2 : 64'h0;  //ecall->mcause
 
     wire [63:0]csr_rdata;
     ysyx_22050854_CSRegister CSRfile_inst (
@@ -334,7 +327,7 @@ module ysyx_22050854_cpu(
     import "DPI-C" function void get_Data_Conflict_value(int Data_Conflict_32);
     always@(*) get_Data_Conflict_value(Data_Conflict_32);
 
-/*
+
     wire src1_conflict_EXE;
     wire src1_conflict_MEM;
     wire src1_conflict_WB;
@@ -349,7 +342,7 @@ module ysyx_22050854_cpu(
     assign src2_conflict_MEM = ( reg_Conflict_MEM & rs2_conflict_MEM ) | store_conflict_MEM | CSRsrc2_conflict_MEM;
     assign src2_conflict_WB = ( reg_Conflict_WB & rs2_conflict_WB ) | store_conflict_WB | CSRsrc2_conflict_WB;
 
-
+    // --------------                   流水线前递          ----------------//
     reg [63:0]New_src1;
     reg [63:0]New_src2;
     always @(*)begin
@@ -393,99 +386,16 @@ module ysyx_22050854_cpu(
         else                                                                        //不冲突
             New_src2 = src2;
     end   
-*/
 
-    // --------------                   流水线前递          ----------------//
-
-    reg [63:0]real_alusrc1;
-    reg [63:0]real_alusrc2;
-    //寄存器 ALU源操作数 前递
-    //其实按理说 我要改的只是从寄存器读出来的src的前递之后的值，但是我这里直接改了alu的操作说
-    //我判断冲突的条件是rs1 rs2 是alu操作数为前提的 比如ALU操作数如果是立即数是没有冲突的
-    //最终也会回到alu_src1
-    always @(*)begin
-        if( reg_Conflict_EXE & rs1_conflict_EXE & (~EXEreg_memRd) & (~EXEreg_CSRrd) )  //与前一条冲突，且不是load,且不是CSRW
-            real_alusrc1 = alu_out;
-        else if( reg_Conflict_EXE & rs1_conflict_EXE & (~EXEreg_memRd) & EXEreg_CSRrd )  //与前一条冲突，且不是load,但是CSRW
-            real_alusrc1 = csr_rdata;
-        else if(reg_Conflict_MEM & rs1_conflict_MEM & (~MEMreg_memrd) & (~MEMreg_CSRrd) ) //与前二条冲突，且不是load,也不是CSRW
-            real_alusrc1 = MEMreg_aluout;
-        else if(reg_Conflict_MEM & rs1_conflict_MEM & (~MEMreg_memrd) & MEMreg_CSRrd ) //与前二条冲突，且不是load,但是CSRW
-            real_alusrc1 = MEMreg_CSRrdata;
-        else if(reg_Conflict_MEM & rs1_conflict_MEM & MEMreg_memrd & (~MEMreg_CSRrd) )  //与前二条冲突，且是load ,如果是load 还得判断这个ld指令是不是有内存数据冲突,---现在就算有也是放到读出数据一块得到了
-            real_alusrc1 = read_mem_data;
-        else if( reg_Conflict_WB & rs1_conflict_WB & (~WBreg_memRd) & (~WBreg_CSRrd) ) //与前三条冲突，且不是load,也不是CSR
-            real_alusrc1 = WBreg_aluout;
-        else if( reg_Conflict_WB & rs1_conflict_WB & (~WBreg_memRd) & WBreg_CSRrd ) //与前三条冲突，且不是load,也不是CSR
-            real_alusrc1 = WBreg_CSRrdata;
-        else if( reg_Conflict_WB & rs1_conflict_WB & WBreg_memRd & (~WBreg_CSRrd) ) //与前三条冲突，且是Load
-            real_alusrc1 = WBreg_readmemdata; //keng
-        else                                                                        //不冲突
-            real_alusrc1 = alu_src1;
-    end
-    always @(*)begin
-        if( reg_Conflict_EXE & rs2_conflict_EXE & (~EXEreg_memRd) & (~EXEreg_CSRrd) )  //与前一条冲突，且不是load,且不是CSRW
-            real_alusrc2 = alu_out;
-        else if( reg_Conflict_EXE & rs2_conflict_EXE & (~EXEreg_memRd) & EXEreg_CSRrd )  //与前一条冲突，且不是load,但是CSRW
-            real_alusrc2 = csr_rdata;
-        else if(reg_Conflict_MEM & rs2_conflict_MEM & (~MEMreg_memrd) & (~MEMreg_CSRrd) ) //与前二条冲突，且不是load,也不是CSRW
-            real_alusrc2 = MEMreg_aluout;
-        else if(reg_Conflict_MEM & rs2_conflict_MEM & (~MEMreg_memrd) & MEMreg_CSRrd ) //与前二条冲突，且不是load,但是CSRW
-            real_alusrc2 = MEMreg_CSRrdata;
-        else if(reg_Conflict_MEM & rs2_conflict_MEM & MEMreg_memrd & (~MEMreg_CSRrd) )  //与前二条冲突，且是load ,如果是load 还得判断这个ld指令是不是有内存数据冲突,---现在就算有也是放到读出数据一块得到了
-            real_alusrc2 = read_mem_data;
-        else if( reg_Conflict_WB & rs2_conflict_WB & (~WBreg_memRd) & (~WBreg_CSRrd) ) //与前三条冲突，且不是load,也不是CSR
-            real_alusrc2 = WBreg_aluout;
-        else if( reg_Conflict_WB & rs2_conflict_WB & (~WBreg_memRd) & WBreg_CSRrd ) //与前三条冲突，且不是load,也不是CSR
-            real_alusrc2 = WBreg_CSRrdata;
-        else if( reg_Conflict_WB & rs2_conflict_WB & WBreg_memRd & (~WBreg_CSRrd) ) //与前三条冲突，且是Load
-            real_alusrc2 = WBreg_readmemdata; //keng
-        else                                                                        //不冲突
-            real_alusrc2 = alu_src2;
-    end
-    //CSR指令 源操作数前递
-    reg [63:0]real_CSRsrc1;
-    reg [63:0]real_CSRsrc2;
-    always @(*)begin
-        if( CSRsrc1_conflict_EXE & (~EXEreg_memRd) & (~EXEreg_CSRrd) )  //与前一条冲突，且不是load,且不是CSRW
-            real_CSRsrc1 = alu_out;
-        else if( CSRsrc1_conflict_EXE & (~EXEreg_memRd) & EXEreg_CSRrd )  //与前一条冲突，且不是load,但是CSRW
-            real_CSRsrc1 = csr_rdata;
-        else if(CSRsrc1_conflict_MEM & (~MEMreg_memrd) & (~MEMreg_CSRrd) ) //与前二条冲突，且不是load,也不是CSRW
-            real_CSRsrc1 = MEMreg_aluout;
-        else if(CSRsrc1_conflict_MEM & (~MEMreg_memrd) & MEMreg_CSRrd ) //与前二条冲突，且不是load,但是CSRW
-            real_CSRsrc1 = MEMreg_CSRrdata;
-        else if(CSRsrc1_conflict_MEM & MEMreg_memrd & (~MEMreg_CSRrd) )  //与前二条冲突，且是load ,如果是load 还得判断这个ld指令是不是有内存数据冲突,---现在就算有也是放到读出数据一块得到了
-            real_CSRsrc1 = read_mem_data;
-        else if( CSRsrc1_conflict_WB & (~WBreg_memRd) & (~WBreg_CSRrd) ) //与前三条冲突，且不是load,也不是CSR
-            real_CSRsrc1 = WBreg_aluout;
-        else if( CSRsrc1_conflict_WB & (~WBreg_memRd) & WBreg_CSRrd ) //与前三条冲突，且不是load,也不是CSR
-            real_CSRsrc1 = WBreg_CSRrdata;
-        else if( CSRsrc1_conflict_WB & WBreg_memRd & (~WBreg_CSRrd) ) //与前三条冲突，且是Load
-            real_CSRsrc1 = WBreg_readmemdata; //keng
-        else                                                                        //不冲突
-            real_CSRsrc1 = src1;
-    end
-    always @(*)begin
-        if( CSRsrc2_conflict_EXE & (~EXEreg_memRd) & (~EXEreg_CSRrd) )  //与前一条冲突，且不是load,且不是CSRW
-            real_CSRsrc2 = alu_out;
-        else if( CSRsrc2_conflict_EXE & (~EXEreg_memRd) & EXEreg_CSRrd )  //与前一条冲突，且不是load,但是CSRW
-            real_CSRsrc2 = csr_rdata;
-        else if(CSRsrc2_conflict_MEM & (~MEMreg_memrd) & (~MEMreg_CSRrd) ) //与前二条冲突，且不是load,也不是CSRW
-            real_CSRsrc2 = MEMreg_aluout;
-        else if(CSRsrc2_conflict_MEM & (~MEMreg_memrd) & MEMreg_CSRrd ) //与前二条冲突，且不是load,但是CSRW
-            real_CSRsrc2 = MEMreg_CSRrdata;
-        else if(CSRsrc2_conflict_MEM & MEMreg_memrd & (~MEMreg_CSRrd) )  //与前二条冲突，且是load ,如果是load 还得判断这个ld指令是不是有内存数据冲突,---现在就算有也是放到读出数据一块得到了
-            real_CSRsrc2 = read_mem_data;
-        else if( CSRsrc2_conflict_WB & (~WBreg_memRd) & (~WBreg_CSRrd) ) //与前三条冲突，且不是load,也不是CSR
-            real_CSRsrc2 = WBreg_aluout;
-        else if( CSRsrc2_conflict_WB & (~WBreg_memRd) & WBreg_CSRrd ) //与前三条冲突，且不是load,也不是CSR
-            real_CSRsrc2 = WBreg_CSRrdata;
-        else if( CSRsrc2_conflict_WB & WBreg_memRd & (~WBreg_CSRrd) ) //与前三条冲突，且是Load
-            real_CSRsrc2 = WBreg_readmemdata; //keng
-        else                                                                        //不冲突
-            real_CSRsrc2 = src2;
-    end
+    //根据store命令的格式 获得正确的存入内存的数据
+    //即使没有冲突，从src2读取出来的数据 我提前给他格式化一下应该是没问题的，因为在C语言的写内存函数中还是要将wdata按照掩码格式化
+    wire [63:0]real_storememdata_right;
+    ysyx_22050854_MuxKey #(4,3,64) gen_real_storememdata_right (real_storememdata_right,MemOP,{
+        3'b000,{56'b0,New_src2[7:0]},  // sb   000
+        3'b001,{48'b0,New_src2[15:0]},  // sh
+        3'b010,{32'b0,New_src2[31:0]},  // sw
+        3'b011,{New_src2}   // sd
+    });
 
     //内存数据前递 (store 之后 load )
     //再修改内存冲突的判断之后，与前一条以及前二条的冲突是可以同时存在的
@@ -636,65 +546,10 @@ module ysyx_22050854_cpu(
     wire [63:0]real_readmemdata_right;
     assign real_readmemdata_right = real_readmemdata_EXE_64 | real_readmemdata_MEM_64;
 
-    //针对store指令，写入内存数据的前递 src2
-    reg [63:0]real_storememdata; //(realsrc2)
-    always @(*)begin
-        if( store_conflict_EXE & (~EXEreg_memRd) & (~EXEreg_CSRrd) )  //与前一条冲突，且不是load,且不是CSRW
-            real_storememdata = alu_out;
-        else if( store_conflict_EXE & (~EXEreg_memRd) & EXEreg_CSRrd )  //与前一条冲突，且不是load,但是CSRW
-            real_storememdata = csr_rdata;
-        else if(store_conflict_MEM & (~MEMreg_memrd) & (~MEMreg_CSRrd) ) //与前二条冲突，且不是load,也不是CSRW
-            real_storememdata = MEMreg_aluout;
-        else if(store_conflict_MEM & (~MEMreg_memrd) & MEMreg_CSRrd ) //与前二条冲突，且不是load,但是CSRW
-            real_storememdata = MEMreg_CSRrdata;
-        else if(store_conflict_MEM & MEMreg_memrd & (~MEMreg_CSRrd) )  //与前二条冲突，且是load ,如果是load 还得判断这个ld指令是不是有内存数据冲突,---现在就算有也是放到读出数据一块得到了
-            real_storememdata = read_mem_data;
-        else if( store_conflict_WB & (~WBreg_memRd) & (~WBreg_CSRrd) ) //与前三条冲突，且不是load,也不是CSR
-            real_storememdata = WBreg_aluout;
-        else if( store_conflict_WB & (~WBreg_memRd) & WBreg_CSRrd ) //与前三条冲突，且不是load,也不是CSR
-            real_storememdata = WBreg_CSRrdata;
-        else if( store_conflict_WB & WBreg_memRd & (~WBreg_CSRrd) ) //与前三条冲突，且是Load
-            real_storememdata = WBreg_readmemdata; //keng
-        else                                                                        //不冲突
-            real_storememdata = src2;
-    end
-
-    //根据store命令的格式 获得正确的存入内存的数据
-    //即使没有冲突，从src2读取出来的数据 我提前给他格式化一下应该是没问题的，因为在C语言的写内存函数中还是要将wdata按照掩码格式化
-    wire [63:0]real_storememdata_right;
-    ysyx_22050854_MuxKey #(4,3,64) gen_real_storememdata_right (real_storememdata_right,MemOP,{
-        3'b000,{56'b0,real_storememdata[7:0]},  // sb   000
-        3'b001,{48'b0,real_storememdata[15:0]},  // sh
-        3'b010,{32'b0,real_storememdata[31:0]},  // sw
-        3'b011,{real_storememdata}   // sd
-    });
-
-    //针对jalr(ret)指令 获取正确的src1
-    reg [63:0]real_src1;
-    always @(*)begin
-        if( ret_conflict_EXE & (~EXEreg_memRd) & (~EXEreg_CSRrd) )  //与前一条冲突，且不是load,且不是CSRW
-            real_src1 = alu_out;
-        else if( ret_conflict_EXE & (~EXEreg_memRd) & EXEreg_CSRrd )  //与前一条冲突，且不是load,但是CSRW
-            real_src1 = csr_rdata;
-        else if(ret_conflict_MEM & (~MEMreg_memrd) & (~MEMreg_CSRrd) ) //与前二条冲突，且不是load,也不是CSRW
-            real_src1 = MEMreg_aluout;
-        else if(ret_conflict_MEM & (~MEMreg_memrd) & MEMreg_CSRrd ) //与前二条冲突，且不是load,但是CSRW
-            real_src1 = MEMreg_CSRrdata;
-        else if(ret_conflict_MEM & MEMreg_memrd & (~MEMreg_CSRrd) )  //与前二条冲突，且是load ,如果是load 还得判断这个ld指令是不是有内存数据冲突,---现在就算有也是放到读出数据一块得到了
-            real_src1 = read_mem_data;
-        else if( ret_conflict_WB & (~WBreg_memRd) & (~WBreg_CSRrd) ) //与前三条冲突，且不是load,也不是CSR
-            real_src1 = WBreg_aluout;
-        else if( ret_conflict_WB & (~WBreg_memRd) & WBreg_CSRrd ) //与前三条冲突，且不是load,也不是CSR
-            real_src1 = WBreg_CSRrdata;
-        else if( ret_conflict_WB & WBreg_memRd & (~WBreg_CSRrd) ) //与前三条冲突，且是Load
-            real_src1 = WBreg_readmemdata; //keng
-        else                                                                        //不冲突
-            real_src1 = src1;
-    end
 
     //-------------- GEN readmemaddr -----------//在译码级就计算出load的地址
     wire [63:0]readmemaddr;
-    assign readmemaddr = MemRd ? (real_alusrc1 + real_alusrc2) : 64'd0;
+    assign readmemaddr = MemRd ? (alu_src1 + alu_src2) : 64'd0;
   
     //----------------- GEN PC -----------------//
     wire [31:0]pc;
@@ -712,9 +567,9 @@ module ysyx_22050854_cpu(
     .is_csr_pc(ecall_or_mret),
     .csr_pc(csr_rdata[31:0]),
     .unsigned_compare(ALUctr[3]),
-    .alu_src1(real_alusrc1),
-    .alu_src2(real_alusrc2),
-    .src1(real_src1),
+    .alu_src1(alu_src1),
+    .alu_src2(alu_src2),
+    .src1(New_src1),
     .imm(imm),
     .jump(jump),
     .pc(pc),
@@ -727,7 +582,7 @@ module ysyx_22050854_cpu(
 
     //----------------------------------------------- EXE_reg ------------------------------------------------//
     reg EXEreg_valid;
-    ysyx_22050854_Reg #(1,1'b0) EXEreg_gen0 (clk, rst,( ID_reg_valid & (~Data_Conflict_block) ), EXEreg_valid, 1'b1);
+    
     reg EXEreg_inst_enable;
     reg [31:0]EXEreg_inst;
     reg EXEreg_pc_enable;
@@ -796,10 +651,11 @@ module ysyx_22050854_cpu(
         EXEreg_CSRrd_enable = 1'b1;
         EXEreg_CSRrdata_enable = 1'b1;
     end
+    ysyx_22050854_Reg #(1,1'b0) EXEreg_gen0 (clk, rst,( ID_reg_valid & (~Data_Conflict_block) ), EXEreg_valid, 1'b1);
     ysyx_22050854_Reg #(32,32'b0) EXEreg_geninst (clk, rst, ID_reg_inst, EXEreg_inst, EXEreg_inst_enable);
     ysyx_22050854_Reg #(32,32'h0) EXEreg_genPC (clk, rst, ID_reg_pc, EXEreg_pc, EXEreg_pc_enable);
-    ysyx_22050854_Reg #(64,64'b0) EXEreg_gen1 (clk, rst, real_alusrc1, EXEreg_alusrc1, EXEreg_alusrc1_enable);
-    ysyx_22050854_Reg #(64,64'b0) EXEreg_gen2 (clk, rst, real_alusrc2, EXEreg_alusrc2, EXEreg_alusrc2_enable);
+    ysyx_22050854_Reg #(64,64'b0) EXEreg_gen1 (clk, rst, alu_src1, EXEreg_alusrc1, EXEreg_alusrc1_enable);
+    ysyx_22050854_Reg #(64,64'b0) EXEreg_gen2 (clk, rst, alu_src2, EXEreg_alusrc2, EXEreg_alusrc2_enable);
     ysyx_22050854_Reg #(4,4'b1111) EXEreg_gen3 (clk, rst, ALUctr, EXEreg_ALUctr, EXEreg_ALUctr_enable);
     ysyx_22050854_Reg #(4,4'b0) EXEreg_gen4 (clk, rst, MULctr, EXEreg_MULctr, EXEreg_MULctr_enable);
     ysyx_22050854_Reg #(3,3'b0) EXEreg_gen5 (clk, rst, ALUext, EXEreg_ALUext, EXEreg_ALUext_enable);
@@ -919,7 +775,7 @@ module ysyx_22050854_cpu(
     ysyx_22050854_Reg #(3,3'b0) MEMreg_gen6 (clk, rst, EXEreg_memop, MEMreg_memop, MEMreg_memop_enable);
     ysyx_22050854_Reg #(1,1'b0) MEMreg_gen7 (clk, rst, EXEreg_memtoreg, MEMreg_memtoreg, MEMreg_memtoreg_enable);
     ysyx_22050854_Reg #(64,64'b0) MEMreg_gen8 (clk, rst, EXEreg_writememdata, MEMreg_writememdata, MEMreg_writememdata_enable);
-    ysyx_22050854_Reg #(64,64'b0) MEMreg_gen9 (clk, rst, EXEreg_readmemaddr, MEMreg_readmemaddr, MEMreg_readmemaddr_enable);
+    ysyx_22050854_Reg #(64,64'b0) MEMreg_gen9 (clk, rst, EXEreg_readmemaddr, MEMreg_readmemaddr, MEMreg_readmemaddr_enable); //
     ysyx_22050854_Reg #(1,1'b0) MEMreg_gen10 (clk, rst, EXEreg_memconflict, MEMreg_memconflict, MEMreg_memconflict_enable);
     ysyx_22050854_Reg #(64,64'b0) MEMreg_ge11 (clk, rst, EXEreg_memconflict_data, MEMreg_memconflict_data, MEMreg_memconflict_data_enable);
     ysyx_22050854_Reg #(64,64'b0) MEMreg_ge12 (clk, rst, EXEreg_real_readmemdata_EXE_64_mask, MEMreg_real_readmemdata_EXE_64_mask, 1'b1);
@@ -1011,7 +867,7 @@ module ysyx_22050854_cpu(
 
     //因为从存储器读出的数据总是8字节的,所以要根据地址以及位数获得不同的数据
     wire [63:0]read_mem_data;
-    assign rdata = MEMreg_memconflict ? ( (rdata_t & (~MEMreg_real_readmemdata_EXE_64_mask) & ( ~MEMreg_real_readmemdata_MEM_64_mask)) | MEMreg_memconflict_data) : rdata_t;
+    assign rdata = MEMreg_memconflict ? ( (rdata_t & (~MEMreg_real_readmemdata_EXE_64_mask) & ( ~MEMreg_real_readmemdata_MEM_64_mask)) | MEMreg_memconflict_data ) : rdata_t;
     ysyx_22050854_MuxKey #(41,6,64) gen_read_mem_data (read_mem_data,{ MEMreg_aluout[2:0],MEMreg_memop },{
         6'b000000, {{56{rdata[7]}},rdata[7:0]},  //1 bytes signed extend  lb 000
         6'b000001, {{48{rdata[15]}},rdata[15:0]}, //2 bytes signed extend  lh
@@ -1090,17 +946,10 @@ module ysyx_22050854_cpu(
     reg [4:0]WBreg_rd;
     reg WBreg_aluout_enable;
     reg [63:0]WBreg_aluout;
-    reg WBreg_memop_enable;
-    reg [2:0]WBreg_memop;
     reg WBreg_memRd_enable;
     reg WBreg_memRd;
-    reg WBreg_memwr;  //for debug, 判断是否是访问外设的命令，若是，跳过difftest
     reg WBreg_memtoreg_enable;
     reg WBreg_memtoreg;
-    reg WBreg_memconflict_enable;
-    reg WBreg_memconflict;
-    reg WBreg_memconflict_data_enable;
-    reg [63:0]WBreg_memconflict_data;
     reg WBreg_CSRrd_enable;
     reg WBreg_CSRrd;
     reg WBreg_CSRrdata_enable;
@@ -1113,10 +962,7 @@ module ysyx_22050854_cpu(
         WBreg_rd_enable = 1'b1;
         WBreg_memtoreg_enable = 1'b1;
         WBreg_aluout_enable = 1'b1;
-        WBreg_memop_enable = 1'b1;
         WBreg_memRd_enable = 1'b1;
-        WBreg_memconflict_enable = 1'b1;
-        WBreg_memconflict_data_enable = 1'b1;
         WBreg_CSRrd_enable = 1'b1;
         WBreg_CSRrdata_enable = 1'b1;
     end
@@ -1128,17 +974,12 @@ module ysyx_22050854_cpu(
     ysyx_22050854_Reg #(5,5'b0) WBreg_gen3 (clk, rst, MEMreg_rd, WBreg_rd, WBreg_rd_enable);
     ysyx_22050854_Reg #(64,64'b0) WBreg_gen4 (clk, rst, MEMreg_aluout, WBreg_aluout, WBreg_aluout_enable);
     ysyx_22050854_Reg #(1,1'b0) WBreg_gen5 (clk, rst, MEMreg_memtoreg, WBreg_memtoreg, WBreg_memtoreg_enable);
-    ysyx_22050854_Reg #(3,3'b0) WBreg_gen6 (clk, rst, MEMreg_memop, WBreg_memop, WBreg_memop_enable);
-    ysyx_22050854_Reg #(1,1'b0) WBreg_gen7 (clk, rst, MEMreg_memrd, WBreg_memRd, WBreg_memRd_enable);
-    ysyx_22050854_Reg #(1,1'b0) WBreg_gen8 (clk, rst, MEMreg_memconflict, WBreg_memconflict, WBreg_memconflict_enable);
-    ysyx_22050854_Reg #(64,64'b0) WBreg_gen9 (clk, rst, MEMreg_memconflict_data, WBreg_memconflict_data, WBreg_memconflict_data_enable);
-    ysyx_22050854_Reg #(1,1'b0) WBreg_gen10 (clk, rst, MEMreg_memrd, WBreg_memwr, 1'b1);
-    ysyx_22050854_Reg #(1,1'b0) WBreg_ge11 (clk, rst, MEMreg_CSRrd, WBreg_CSRrd, WBreg_CSRrd_enable);
-    ysyx_22050854_Reg #(64,64'b0) WBreg_ge12 (clk, rst, MEMreg_CSRrdata, WBreg_CSRrdata, WBreg_CSRrdata_enable);
+    ysyx_22050854_Reg #(1,1'b0) WBreg_gen6 (clk, rst, MEMreg_memrd, WBreg_memRd, WBreg_memRd_enable);
+    ysyx_22050854_Reg #(1,1'b0) WBreg_gen7 (clk, rst, MEMreg_CSRrd, WBreg_CSRrd, WBreg_CSRrd_enable);
+    ysyx_22050854_Reg #(64,64'b0) WBreg_gen8 (clk, rst, MEMreg_CSRrdata, WBreg_CSRrdata, WBreg_CSRrdata_enable);
 
     //写回寄存器的数据，总共有三种可能 1.alu计算值  2.从内存读出的数据 3.从CSR读出的数据
     wire [63:0]wr_reg_data;
-    //assign wr_reg_data = WBreg_memtoreg ? ( WBreg_memconflict ? WBreg_memconflict_data : WBreg_readmemdata ): (CSRrd ? csr_rdata : WBreg_aluout);
     assign wr_reg_data = WBreg_memtoreg ? ( WBreg_readmemdata ): (WBreg_CSRrd ? WBreg_CSRrdata : WBreg_aluout);
 
     import "DPI-C" function void get_WBreginst_value(int WBreg_inst);
@@ -1167,12 +1008,10 @@ module ysyx_22050854_cpu(
     ysyx_22050854_Reg #(32,32'h0) instruction_finsh_gen (clk, rst, WBreg_inst, instruction_finsh, 1'b1);
     reg [31:0]access_mem_addr;
     ysyx_22050854_Reg #(32,32'h0) access_mem_addr_gen (clk, rst, WBreg_aluout[31:0], access_mem_addr, 1'b1);
-    reg DIFFreg_memwr;
-    ysyx_22050854_Reg #(1,1'b0) DIFFreg_memwr_gen (clk, rst, WBreg_memwr, DIFFreg_memwr, 1'b1);
     reg DIFFreg_memrd;
     ysyx_22050854_Reg #(1,1'b0) DIFFreg_memrd_gen (clk, rst, WBreg_memRd, DIFFreg_memrd, 1'b1);
     wire is_accessdevice;
-    assign is_accessdevice = ( DIFFreg_memrd ) ? ( (access_mem_addr > 32'h8fffffff) ? 1'b1 : 1'b0 ) : 1'b0;
+    assign is_accessdevice = ( DIFFreg_memrd ) ? ( ( access_mem_addr > 32'h8fffffff ) ? 1'b1 : 1'b0 ) : 1'b0;
 
     wire [31:0]inst_finish_32;
     assign inst_finish_32 = {31'b0,inst_finish};
@@ -1184,6 +1023,8 @@ module ysyx_22050854_cpu(
     assign is_device_32 = {31'b0,is_accessdevice};
     import "DPI-C" function void get_is_device_value(int is_device_32);
     always@(*) get_is_device_value(is_device_32);
+    import "DPI-C" function void get_instruction_finsh_value(int instruction_finsh);
+    always@(*) get_instruction_finsh_value(instruction_finsh);
 
 
 endmodule 
