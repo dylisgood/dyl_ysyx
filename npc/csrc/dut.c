@@ -78,8 +78,8 @@ bool isa_difftest_checkregs(CPU_state *ref_r, uint32_t pc) {
     if(ref_r->gpr[i] != cpu_gpr[i]){
       Log("nemu_%s = %lx",regs[i],ref_r->gpr[i]);
       Log("npc_%s = %lx",regs[i],cpu_gpr[i]);
-    if(ref_r->pc != inst_finishpc) {
-      Log("nemu_pc = %lx",ref_r->pc);
+    if( (ref_r->pc) - 4 != inst_finishpc) {
+      Log("nemu_pc = %lx",(ref_r->pc - 4) );
       Log("npc_pc =  %x",inst_finishpc);
     }
       pc = cpu.pc;

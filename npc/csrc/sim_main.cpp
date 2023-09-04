@@ -215,6 +215,30 @@ extern "C" void get_inst_finishpc_value(uint32_t data)
   inst_finishpc = data;
 }
 
+uint32_t Suspend_alu = 0;
+extern "C" void get_Suspend_alu_value(uint32_t data)
+{
+  Suspend_alu = data;
+}
+
+uint32_t div_doing = 0;
+extern "C" void get_div_doing_value(uint32_t data)
+{
+  div_doing = data;
+}
+
+uint32_t dividend = 0;
+extern "C" void get_dividend_value(uint32_t data)
+{
+  dividend = data;
+}
+
+uint32_t divisor = 0;
+extern "C" void get_divisor_value(uint32_t data)
+{
+  divisor = data;
+}
+
 extern "C" void v_printf(int data)
 {
   printf("data = %x \n" ,data);
@@ -388,11 +412,11 @@ void cpu_exec(int n){
 
 /*     printf("inst = %x, pc = %lx\n,\
 IDreg_inst = %x ,IDreg_pc = %x ,next_pc = %x,jump = %d,Data_Conflict = %d,real_readmemdata_right=%lx,IDreg_valid = %d\n,\
-EXEreg_inst = %x ,EXEreg_pc = %x, EXEreg_alusrc1 = 0x%lx ,EXEreg_alusrc2 = 0x%lx,EXEreg_writememdata = %lx,EXEreg_valid = %d\n,\
+EXEreg_inst = %x ,EXEreg_pc = %x, EXEreg_alusrc1 = 0x%lx ,EXEreg_alusrc2 = 0x%lx,EXEreg_writememdata = %lx,Suspend_alu = %d,,div_doing = %d,dividend = %x,divisor = %x,EXEreg_valid = %d\n,\
 MEMreg_inst = %x,MEMreg_pc = %x, MEMreg_aluout = 0x%lx, MEMreg_memwr = %d,MEMreg_writememdata = 0x%lx,dsram_rresp = %d,rdata=0x%lx,MEMreg_valid=%d\n,\
 WBreg_inst = %x,WBreg_pc = %x, WBreg_aluout = 0x%lx ,WBreg_rd = %d ,wr_reg_data = 0x%lx,WBreg_valid = %d\n\n" \
      ,top_inst ,top_pc ,verilog_IDinst,verilog_IDpc,next_pc,jump,Data_Conflict,real_readmemdata_right,IDreg_valid\
-     ,verilog_EXEinst,EXEreg_pc,EXEreg_alusrc1 ,EXEreg_alusrc2,EXEreg_writememdata,EXEreg_valid\ 
+     ,verilog_EXEinst,EXEreg_pc,EXEreg_alusrc1 ,EXEreg_alusrc2,EXEreg_writememdata,Suspend_alu,div_doing,dividend,divisor,EXEreg_valid\ 
      ,verilog_MEMinst,MEMreg_pc,MEMreg_aluout ,MEMreg_memwr,MEMreg_writememdata,dsram_rresp,rdata,MEMreg_valid\
      ,verilog_WBinst,WBreg_pc,WBreg_aluout ,WBreg_rd,wr_reg_data,WBreg_valid); */
   

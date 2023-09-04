@@ -6,8 +6,8 @@ module ysyx_22050854_src_gen(
     input [63:0]imm,
     input [63:0]src1,
     input [63:0]src2,
-    output reg [63:0]alu_src1,
-    output reg [63:0]alu_src2
+    output [63:0]alu_src1,
+    output [63:0]alu_src2
 );
     ysyx_22050854_MuxKeyWithDefault #(2,1,64) src1_gen(alu_src1,ALUsrc1,64'd0,{
         1'd0,src1,

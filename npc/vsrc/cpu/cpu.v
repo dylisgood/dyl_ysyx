@@ -22,8 +22,10 @@ module ysyx_22050854_cpu(
     always @(posedge clk)begin
         if(rst)
             pc_test <= 32'h80000000;
-        else if(jump | Data_Conflict_block | arvalid_n_t) //如果是跳转指令或遇到了数据冲突
+        else if( jump | Data_Conflict_block | arvalid_n_t ) //如果是跳转指令或遇到了数据冲突 或同时遇到 或收到暂停信号
             pc_test <= next_pc + 32'd4;
+        else if( (last_Suspend & !Suspend_alu) )
+            pc_test <= current_pc + 32'd4;
         else
             pc_test <= pc_test + 32'd4;
     end
@@ -31,12 +33,23 @@ module ysyx_22050854_cpu(
     import "DPI-C" function void get_next_pc_value(int next_pc);
     always@(*) get_next_pc_value(next_pc);
     
-    //如果译码阶段发现是jump 但不阻塞 则可根据next_pc取指
-    //如果译码阶段发现阻塞 但不是jump 则可根据next_pc取指
-    //如果译码阶段发现既是jump又是阻塞，则不能取指，因为阻塞产生的jump并不准确
-    //如果上周期既是jump又是阻塞，则可以取指，因为本周期能计算出是否真正jump
-    wire [31:0]pc_real;
-    assign pc_real = (jump | Data_Conflict_block | arvalid_n_t) ? next_pc : pc_test;
+    //如果译码阶段发现是jump 但不阻塞 则可根据next_pc取指 
+    //如果译码阶段发现阻塞 但不是jump 则可根据next_pc取指 因为pc_test早两拍 
+    //如果译码阶段发现既是jump又是阻塞，则不能取指，因为阻塞产生的jump并不准确 (取指的有效信号为0)
+    //如果上周期既是jump又是阻塞，则可以取指，因为本周期能计算出是否真正jump (arvalid_n_t)
+    //如果ALU发起了暂停，则下周期不取指，直到暂停取消 (暂停时取指有效信号为0，如果上周期暂停，而这周期不暂停，则用next_pc取指)
+    reg [31:0]pc_real;
+    always @(*)begin
+        if(rst)
+            pc_real = 32'h80000000;
+        else if(jump | Data_Conflict_block | arvalid_n_t)
+            pc_real = next_pc;
+        else if(last_Suspend & !Suspend_alu)
+            pc_real = current_pc;
+        else
+            pc_real = pc_test; 
+    end 
+    //assign pc_real = (jump | Data_Conflict_block | arvalid_n_t | ( last_Suspend & !Suspend_alu & !ID_MUL) ) ? next_pc : pc_test;
     import "DPI-C" function void get_pc_value(int pc_real);
     always@(*) get_pc_value(pc_real);
     reg [31:0]pc_record_1;
@@ -53,12 +66,17 @@ module ysyx_22050854_cpu(
     assign arvalid_n = ( ( ID_reg_inst[6:0] == 7'b1100011) | (ID_reg_inst[6:0]) == 7'b1100111) & Data_Conflict_block ;
     reg arvalid_n_t;
     ysyx_22050854_Reg #(1,1'b0) jumpandblock (clk, rst, arvalid_n, arvalid_n_t, 1'b1);
+    reg last_Suspend;
+    ysyx_22050854_Reg #(1,1'b0) record_lastSuspend (clk, rst, Suspend_alu, last_Suspend, 1'b1);
+    wire arvalid;
+    wire arvalid = ~arvalid_n & ~Suspend_alu; //如果暂停，也不取指
+
     ysyx_22050854_SRAM_IFU cpu_ifu(
         .clk(clk),
         .rst_n(rst_n),
 
         .araddr(pc_real),
-        .arvalid(~arvalid_n),
+        .arvalid(arvalid),
         .arready(isram_arready),
 
         .rdata(isram_rdata),
@@ -96,15 +114,15 @@ module ysyx_22050854_cpu(
     reg ID_reg_pc_enable;
     reg [31:0]ID_reg_pc;
     always@(*)begin
-        ID_reg_inst_enable = isram_rresp & (~Data_Conflict_block); //如果更新前发现需要阻塞，就不更新了
-        ID_reg_pc_enable = isram_rresp & (~Data_Conflict_block);
+        ID_reg_inst_enable = isram_rresp & (~Data_Conflict_block) & ~Suspend_alu; //如果更新前发现需要阻塞，就不更新了 如果ALU发起了暂停，IDreg也应该保持不变
+        ID_reg_pc_enable = isram_rresp & (~Data_Conflict_block) & ~Suspend_alu;
     end
     always@(posedge clk)begin
         if(rst)
             ID_reg_valid <= 1'b0;
         else
-            ID_reg_valid <= isram_rresp & (~jump) & (~EXEreg_jump) & (~EXEreg_Datablock); //EXEjump/block,表明上一周期发起了新的pc请求，按理说这一周期是取不到的，所以无效
-    end
+            ID_reg_valid <=  ( isram_rresp & (~jump) & (~EXEreg_jump) & (~EXEreg_Datablock) ); //EXEjump/block,表明上一周期发起了新的pc请求，按理说这一周期是取不到的，所以无效
+    end                                                                                               //如果ALU发起了暂停，那么译码模块继续有效，但不更新
     //当取到跳转的跳转指令时，下个上升沿以及下下个上升沿都不能将指令送到IDreg中，而是将指令置为0，空走两个始终周期
     wire [31:0]pc_record;
     assign pc_record = jump ? next_pc : pc_record_2;
@@ -156,6 +174,25 @@ module ysyx_22050854_cpu(
         .ALUext(ALUext),
         .MULctr(MULctr)     
     );   
+
+    wire ID_MUL_t;
+    wire ID_MUL;
+    ysyx_22050854_MuxKey #(13,4,1) gem_MUL_T (ID_MUL_t,MULctr,{
+        4'b1001,1'b1,  //mul
+        4'b0001,1'b1,  //mulh
+        4'b0010,1'b1,  //mulhsu
+        4'b0011,1'b1,  //mulhu
+        4'b0100,1'b1,  //div
+        4'b0101,1'b1,  //divu
+        4'b0110,1'b1,  //rem
+        4'b0111,1'b1,  //remu
+        4'b1000,1'b1,  //mulw
+        4'b1100,1'b1,  //divw
+        4'b1101,1'b1,  //divuw
+        4'b1110,1'b1,  //remw
+        4'b1111,1'b1  //remuw       
+    });
+    assign ID_MUL = ID_MUL_t & ID_reg_valid;
 
     wire [63:0]imm;
     ysyx_22050854_imm_gen gen_imm(
@@ -552,7 +589,7 @@ module ysyx_22050854_cpu(
     assign readmemaddr = MemRd ? (alu_src1 + alu_src2) : 64'd0;
   
     //----------------- GEN PC -----------------//
-    wire [31:0]pc;
+    wire [31:0]current_pc;
     wire [31:0]next_pc;
     wire jump;
     wire ecall_or_mret;
@@ -560,8 +597,9 @@ module ysyx_22050854_cpu(
     ysyx_22050854_pc gen_pc(
     .rst(rst),
     .clk(clk),
+    .IDreg_valid(ID_reg_valid),
     .Data_Conflict(Data_Conflict_block),
-    .suspend(suspend),
+    .suspend(Suspend_alu),
     .Branch(Branch),
     .No_branch(No_branch),
     .is_csr_pc(ecall_or_mret),
@@ -572,7 +610,7 @@ module ysyx_22050854_cpu(
     .src1(New_src1),
     .imm(imm),
     .jump(jump),
-    .pc(pc),
+    .pc(current_pc),
     .next_pc(next_pc)
     );
     wire [31:0]jump_32;
@@ -628,30 +666,30 @@ module ysyx_22050854_cpu(
     reg EXEreg_CSRrdata_enable;
     reg [63:0]EXEreg_CSRrdata;
 
-    always@(*)begin
-        EXEreg_inst_enable = 1'b1;
-        EXEreg_pc_enable = 1'b1;
-        EXEreg_alusrc1_enable = 1'b1;
-        EXEreg_alusrc2_enable = 1'b1;
-        EXEreg_ALUctr_enable = 1'b1;
-        EXEreg_MULctr_enable = 1'b1;
-        EXEreg_ALUext_enable = 1'b1;
-        EXEreg_regWr_enable = 1'b1;
-        EXEreg_Rd_enable = 1'b1;
-        EXEreg_memWr_enable = 1'b1;
-        EXEreg_memRd_enable = 1'b1;
-        EXEreg_memop_enable = 1'b1;
-        EXEreg_memtoreg_enable = 1'b1;
-        EXEreg_writememdata_enable = 1'b1;
-        EXEreg_jump_enable = 1'b1;
-        EXEreg_Datablock_enable = 1'b1;
-        EXEreg_readmemaddr_enable = 1'b1;
-        EXEreg_memconflict_enable = 1'b1;
-        EXEreg_memconflict_data_enable = 1'b1;
-        EXEreg_CSRrd_enable = 1'b1;
-        EXEreg_CSRrdata_enable = 1'b1;
+    always@(*)begin               //如果当前的ALU出现阻塞，则EXEreg不变，直到它计算完成
+        EXEreg_inst_enable             =  ~Suspend_alu;  
+        EXEreg_pc_enable               =  ~Suspend_alu;
+        EXEreg_alusrc1_enable          =  ~Suspend_alu;
+        EXEreg_alusrc2_enable          =  ~Suspend_alu;
+        EXEreg_ALUctr_enable           =  ~Suspend_alu;
+        EXEreg_MULctr_enable           =  ~Suspend_alu;
+        EXEreg_ALUext_enable           =  ~Suspend_alu;
+        EXEreg_regWr_enable            =  ~Suspend_alu;
+        EXEreg_Rd_enable               =  ~Suspend_alu;
+        EXEreg_memWr_enable            =  ~Suspend_alu;
+        EXEreg_memRd_enable            =  ~Suspend_alu;
+        EXEreg_memop_enable            =  ~Suspend_alu;
+        EXEreg_memtoreg_enable         =  ~Suspend_alu;
+        EXEreg_writememdata_enable     =  ~Suspend_alu;
+        EXEreg_jump_enable             =  ~Suspend_alu;
+        EXEreg_Datablock_enable        =  ~Suspend_alu;
+        EXEreg_readmemaddr_enable      =  ~Suspend_alu;
+        EXEreg_memconflict_enable      =  ~Suspend_alu;
+        EXEreg_memconflict_data_enable =  ~Suspend_alu;
+        EXEreg_CSRrd_enable            =  ~Suspend_alu;
+        EXEreg_CSRrdata_enable         =  ~Suspend_alu;
     end
-    ysyx_22050854_Reg #(1,1'b0) EXEreg_gen0 (clk, rst,( ID_reg_valid & (~Data_Conflict_block) ), EXEreg_valid, 1'b1);
+    ysyx_22050854_Reg #(1,1'b0) EXEreg_gen0 (clk, rst,( (ID_reg_valid & (~Data_Conflict_block)) | Suspend_alu ), EXEreg_valid, 1'b1);
     ysyx_22050854_Reg #(32,32'b0) EXEreg_geninst (clk, rst, ID_reg_inst, EXEreg_inst, EXEreg_inst_enable);
     ysyx_22050854_Reg #(32,32'h0) EXEreg_genPC (clk, rst, ID_reg_pc, EXEreg_pc, EXEreg_pc_enable);
     ysyx_22050854_Reg #(64,64'b0) EXEreg_gen1 (clk, rst, alu_src1, EXEreg_alusrc1, EXEreg_alusrc1_enable);
@@ -701,20 +739,31 @@ module ysyx_22050854_cpu(
     import "DPI-C" function void get_real_readmemdata_right_value(int EXEreg_writememdata_32);
     always@(*) get_real_readmemdata_right_value(real_readmemdata_right_32);
 
+
     //------------ALU------------//
+    wire Suspend_alu;
     wire [63:0]alu_out;
     ysyx_22050854_alu alu1(
+    .clk(clk),
+    .rst(rst),
+    .EXEreg_valid(EXEreg_valid),   
     .ALUctr(EXEreg_ALUctr),
     .MULctr(EXEreg_MULctr),
     .ALUext(EXEreg_ALUext),
     .src1(EXEreg_alusrc1),
     .src2(EXEreg_alusrc2),
+    .alu_busy(Suspend_alu),
     .alu_out(alu_out)
     );
 
+    wire [31:0]Suspend_alu_32;
+    assign Suspend_alu_32 = {31'b0,Suspend_alu};
+    import "DPI-C" function void get_Suspend_alu_value(int Suspend_alu_32);
+    always@(*) get_Suspend_alu_value(Suspend_alu_32);
+
     //--------------------------------------------- MEM_reg ---------------------------------------------//
     reg MEMreg_valid;
-    ysyx_22050854_Reg #(1,1'b0) MEMreg_gen0 (clk, rst, EXEreg_valid, MEMreg_valid, 1'b1);
+    ysyx_22050854_Reg #(1,1'b0) MEMreg_gen0 (clk, rst, ( EXEreg_valid & ~Suspend_alu ), MEMreg_valid, 1'b1); //如果ALU出现暂停信号，那么下周期MEMreg无效
     reg MEMreg_inst_enable;
     reg [31:0]MEMreg_inst;
     reg MEMreg_pc_enable;
@@ -812,12 +861,12 @@ module ysyx_22050854_cpu(
     import "DPI-C" function void get_rdata_value(int rdata_32);
     always@(*) get_rdata_value(rdata_32);    */ 
     wire dsram_arvalid;
-    assign dsram_arvalid = MemRd & ID_reg_valid;
+    assign dsram_arvalid = MemRd & ID_reg_valid & ~Suspend_alu;
     wire dsram_arready;
     wire dsram_rresp;
     wire dsram_rvalid;
     wire dsram_rready;
-    assign dsram_rready = MemRd & ID_reg_valid;
+    assign dsram_rready = MemRd & ID_reg_valid & ~Suspend_alu;
     wire dsram_awvalid;
     assign dsram_awvalid = MEMreg_memwr & MEMreg_valid;
     wire dsram_awready;

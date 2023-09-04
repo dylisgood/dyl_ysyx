@@ -2,6 +2,7 @@
 module ysyx_22050854_pc(
     input rst,
     input clk,
+    input IDreg_valid,
     input Data_Conflict,
     input suspend,
     input [2:0]Branch,
@@ -67,8 +68,6 @@ module ysyx_22050854_pc(
     always@(*)begin
         if(rst)                         //复位
             next_pc = 32'h80000000;
-        else if( (suspend == 1'b1) )
-            next_pc = pc;
         else if( (is_csr_pc == 1'b1) )     //ecall mret
             next_pc = csr_pc;
         else if( (Branch != 3'b000) )       //跳转指令
@@ -82,7 +81,7 @@ module ysyx_22050854_pc(
     always@(posedge clk)begin
         if(rst)
             pc <= 32'h80000000;
-        else if(~Data_Conflict)
+        else if(~Data_Conflict & ~suspend & IDreg_valid) //如果遇到了数据阻塞或者暂停，PC保持不变
             pc <= next_pc;
     end
 

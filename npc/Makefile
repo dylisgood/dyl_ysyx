@@ -52,7 +52,7 @@ LD2FLAGS += $(shell llvm-config-11 --libs)
 LD4FLAGS += -L/usr/include/x86_64-linux-gnu/SDL2 -lSDL2
 #aurgument  to execute npc
 IMG ?= 
-#override ARGS += -b
+override ARGS += -b
 override ARGS += $(ARGS_DIFF)
 
 NPC_ECEC = $^ $(ARGS) $(IMG)

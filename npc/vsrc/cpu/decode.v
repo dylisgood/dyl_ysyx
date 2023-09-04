@@ -6,19 +6,19 @@ module ysyx_22050854_IDU(
     output [4:0]rs1,
     output [4:0]rs2,
     output [4:0]rd,
-    output reg[2:0]ExtOP,
-    output reg RegWr,
-    output reg [2:0]Branch,
-    output reg No_branch,
-    output reg MemtoReg,
-    output reg MemWr,
-    output reg MemRd,
-    output reg [2:0]MemOP,
-    output reg ALUsrc1,
-    output reg [1:0]ALUsrc2,
-    output reg [3:0]ALUctr,
-    output reg [3:0]MULctr,
-    output reg [2:0]ALUext
+    output [2:0]ExtOP,
+    output  RegWr,
+    output  [2:0]Branch,
+    output  No_branch,
+    output  MemtoReg,
+    output  MemWr,
+    output  MemRd,
+    output  [2:0]MemOP,
+    output  ALUsrc1,
+    output  [1:0]ALUsrc2,
+    output  [3:0]ALUctr,
+    output  [3:0]MULctr,
+    output  [2:0]ALUext
 ); 
     wire [6:0]op;
     wire [2:0]func3;
@@ -158,20 +158,6 @@ module ysyx_22050854_IDU(
         5'b01110,2'b00 //ADDW MULW    
     });
 
-/*     //generate ALUpre for rv64I
-    ysyx_22050854_MuxKey #(10,9,1) ALUpre_gen (ALUpre,{op[6:2],func3,func7[5]},{
-        9'b001100000,1'b0,  // + addiw
-        9'b001100001,1'b0,  // + addiw
-        9'b011100000,1'b0,  // + addw
-        9'b011100001,1'b0,  // - subw
-        9'b001100010,1'b1,  // <<  slliw
-        9'b001101010,1'b1,  // >>  srliw
-        9'b001101011,1'b1,  // >>> sraiw
-        9'b011100010,1'b1,  // <<  sllw
-        9'b011101010,1'b1,  // >>  srlw
-        9'b011101011,1'b1   // >>> sraw
-    }); */
-
     //generate ALUext for rv64I
     ysyx_22050854_MuxKey #(35,10,3) ALUext_gen (ALUext,{op[6:2],func3,func7[5],func7[0]},{
         10'b0011000000,3'b010,  // + addiw
@@ -202,11 +188,11 @@ module ysyx_22050854_IDU(
         10'b0110001101,3'b101,  //mulhu
         10'b0110010001,3'b110,  //div
         10'b0110010101,3'b110,  //divu
-        10'b0110011001,3'b110,  //rem
-        10'b0110011101,3'b110,  //remu
-        10'b0111000001,3'b111,  //mulw
-        10'b0111010001,3'b111,  //divw
-        10'b0111010101,3'b111,  //divuw
+        10'b0110011001,3'b111,  //rem
+        10'b0110011101,3'b111,  //remu
+        10'b0111000001,3'b100,  //mulw
+        10'b0111010001,3'b110,  //divw
+        10'b0111010101,3'b110,  //divuw
         10'b0111011001,3'b111,  //remw
         10'b0111011101,3'b111   //remuw
     });
@@ -334,8 +320,8 @@ module ysyx_22050854_IDU(
         9'b010000111,4'b0000  // + sd
     });
 
-    ysyx_22050854_MuxKeyWithDefault #(13,9,4)  gen_64M_ctr (MULctr,{op[6:2],func3,func7[0]},4'b1001,{
-        9'b011000001,4'b0000,  //mul
+    ysyx_22050854_MuxKeyWithDefault #(13,9,4)  gen_64M_ctr (MULctr,{op[6:2],func3,func7[0]},4'b0000,{
+        9'b011000001,4'b1001,  //mul
         9'b011000011,4'b0001,  //mulh
         9'b011000101,4'b0010,  //mulhsu
         9'b011000111,4'b0011,  //mulhu
