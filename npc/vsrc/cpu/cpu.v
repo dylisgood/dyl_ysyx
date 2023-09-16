@@ -121,7 +121,7 @@ module ysyx_22050854_cpu(
         if(rst)
             ID_reg_valid <= 1'b0;
         else
-            ID_reg_valid <=  ( isram_rresp & (~jump) & (~EXEreg_jump) & (~EXEreg_Datablock) ); //EXEjump/block,表明上一周期发起了新的pc请求，按理说这一周期是取不到的，所以无效
+            ID_reg_valid <=  ( isram_rresp & (~jump) & (~EXEreg_jump) & (~EXEreg_Datablock) & (~Suspend_alu) ); //EXEjump/block,表明上一周期发起了新的pc请求，按理说这一周期是取不到的，所以无效
     end                                                                                               //如果ALU发起了暂停，那么译码模块继续有效，但不更新
     //当取到跳转的跳转指令时，下个上升沿以及下下个上升沿都不能将指令送到IDreg中，而是将指令置为0，空走两个始终周期
     wire [31:0]pc_record;

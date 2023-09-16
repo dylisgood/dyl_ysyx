@@ -4,9 +4,11 @@
     需要实现32 x 32 的有符号乘法   以及64 x 64 的signed x signed / signed x unsigned / unsigned x unsigned
     实现 32x32 / 64x64 位信号的有符号或无符号的相乘
     采用移位加的方法实现
+    9.13优化 结束运算的另一个标志是乘数为0
 */
 
-module ysyx_22050854_multiplier_1(
+
+module ysyx_22050854_multiplier_v1(
     input clk,
     input rst,
     input mul_valid, //1:input data valid
@@ -40,7 +42,7 @@ always @(posedge clk)begin
         mul32ss_go <= 1'b1;
         mul_ready_t <= 1'b0;
     end
-    else if( (mul_count >= 7'd31) & mul32ss_go)begin  //32 x 32运算结束
+    else if ( ((mul_count >= 7'd31) | ( multiplier_temp == 64'b0)) & mul32ss_go )begin  //当乘数为0或计数32次后 32 x 32运算结束 
         multiplicand_temp <= 64'b0;
         multiplier_temp <= 64'b0;
         mul32ss_go <= 1'b0;
@@ -53,9 +55,9 @@ always @(posedge clk)begin
     if(rst)begin
         mul_count <= 7'd0;
     end
-    else if( mul32ss_go & ( mul_count >= 7'd31 ) )
+    else if( mul32ss_go & ((mul_count >= 7'd31) | ( multiplier_temp == 64'b0)) )
         mul_count <= 7'd0;
-    else if( mul64_go & ( mul_count >= 7'd63 ) )
+    else if( mul64_go & ( (mul_count >= 7'd63) |  multiplier_temp == 64'b0) )
         mul_count <= 7'd0;
     else if( mul32ss_go | mul64_go )begin //计数的条件是乘法控制字有效
         mul_count <= mul_count + 7'b1;
@@ -89,7 +91,7 @@ reg mul32_over;
 always @(posedge clk)begin
     if(rst)
         mul32_over <= 1'b0;
-    else if( mul32ss_go & ( mul_count >= 7'd31 ) )
+    else if( mul32ss_go & ((mul_count >= 7'd31) | ( multiplier_temp == 64'b0)) )
         mul32_over <= 1'b1;
     else
         mul32_over <= 1'b0;
@@ -115,7 +117,7 @@ always @(posedge clk)begin
         else
             multiplicand_temp_128 <= { 64'b0,multiplicand };
     end
-    else if( (mul_count >= 7'd63) & mul64_go) begin  // 64 x 64 运算完成
+    else if( ( (mul_count >= 7'd63) |  multiplier_temp == 64'b0) & mul64_go) begin  // 64 x 64 运算完成
         mul64_go <= 1'b0;
         mul_ready_t <= 1'b1;
         mul64_multiplier_sign <= 1'b0;
@@ -146,7 +148,7 @@ reg mul64_over;
 always @(posedge clk)begin
     if(rst)
         mul64_over <= 1'b0;
-    else if(mul64_go & (mul_count >= 7'd63) )
+    else if(mul64_go & ( (mul_count >= 7'd63) |  multiplier_temp == 64'b0) )
         mul64_over <= 1'b1;
     else 
         mul64_over <= 1'b0;
@@ -154,7 +156,7 @@ end
 
 assign mul_ready = mul_ready_t;
 assign out_valid = mul32_over | mul64_over;  //只持续一周期
-assign result_lo = out_valid ? ( mul32_over ? { { 32{mul32_result_temp[31]} } , mul32_result_temp[31:0] } : mul64_result_temp[63:0] ): 64'd0; //只持续一周期 用低64位表示输出
+assign result_lo = out_valid ? ( mul32_over ? { {32{mul32_result_temp[31]}},mul32_result_temp[31:0] } : mul64_result_temp[63:0] ): 64'd0; //只持续一周期 用低64位表示输出
 assign result_hi = mul64_over ? mul64_result_temp[127:64] : 64'b0;
 assign mul_doing = mul32ss_go | mul64_go;
 

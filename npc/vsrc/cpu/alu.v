@@ -1,5 +1,7 @@
 //operation
 `timescale 1ns/1ps
+`define ysyx_22050854_USE_MULTIPLIER_1
+
 module ysyx_22050854_alu(
     input clk,
     input rst,
@@ -64,7 +66,9 @@ module ysyx_22050854_alu(
         4'b0011,2'b00,
         4'b1000,2'b11
     });
-    ysyx_22050854_multiplier_1 shiftadd_nultiplier (
+
+    `ifdef ysyx_22050854_USE_MULTIPLIER_1
+    ysyx_22050854_multiplier_v1 shiftadd_multiplier (
         .clk(clk),
         .rst(rst),
         .mul_valid(mul_valid), //1:input data valid
@@ -79,6 +83,23 @@ module ysyx_22050854_alu(
         .result_hi(mul_result_hi),
         .result_lo(mul_result_lo)
     );
+    `else
+    ysyx_22050854_multiplier_v2 use_multiplier_2 (
+        .clk(clk),
+        .rst(rst),
+        .mul_valid(mul_valid), //1:input data valid
+        .flush(1'b0),     //1:cancel multi
+        .mulw(mulw),      //1:32 bit multi
+        .mul_signed(mul_signed),  //2’b11（signed x signed）；2’b10（signed x unsigned）；2’b00（unsigned x unsigned）；
+        .multiplicand(src1), //被乘数
+        .multiplier(src2),   //乘数
+        .mul_doing(mul_doing),
+        .mul_ready(mul_ready),             //为高表示乘法器准备好，表示可以输入数据
+        .out_valid(mul_out_valid),         //为高表示乘法器输出的结果有效
+        .result_hi(mul_result_hi),
+        .result_lo(mul_result_lo)
+    );
+    `endif
 
     wire op_div;
     wire div_valid;
@@ -102,11 +123,8 @@ module ysyx_22050854_alu(
     });
     assign op_div = div_t & EXEreg_valid;
     assign div_valid = op_div & !div_doing & !div_out_valid; //只持续两个周期
-    //assign div_valid = op_div;
     assign divw = MULctr[3]; //由MULctr第4位决定
-    //assign divw= 1'b1;
     assign div_signed = ~MULctr[0];
-    //assign div_signed = 1'b1;
     ysyx_22050854_divider_1 shift_divider_1 (
         .clk(clk),
         .rst(rst),
@@ -123,7 +141,7 @@ module ysyx_22050854_alu(
         .remainder(div_out_remainder) //余数
     );
 
-    assign alu_busy = ( op_mul && !mul_out_valid ) | ( op_div && !div_out_valid);
+    assign alu_busy = ( op_mul && !mul_out_valid ) | ( op_div && !div_out_valid );
 
     wire [31:0]div_doing_32;
     assign div_doing_32 = {31'b0,div_doing};

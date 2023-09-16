@@ -10,8 +10,8 @@
 /* #define CONFIG_FTRACE  */
 
 
-#define CONFIG_HAS_KEYBOARD 1
-#define CONFIG_HAS_VGA 1
+//#define CONFIG_HAS_KEYBOARD 1
+//#define CONFIG_HAS_VGA 1
 
 #define ANSI_FG_BLACK   "\33[1;30m"
 #define ANSI_FG_RED     "\33[1;31m"
