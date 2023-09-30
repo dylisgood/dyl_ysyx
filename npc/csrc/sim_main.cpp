@@ -22,6 +22,66 @@ extern "C" void get_pc_value(int data)
   verilog_pc = data;
 }
 
+uint32_t PC_JUMP_Suspend = 0;
+extern "C" void get_PC_JUMP_Suspend_value(int data)
+{
+  PC_JUMP_Suspend = data;
+}
+
+uint32_t ret_valid_32 = 0;
+extern "C" void get_ret_valid_32_value(int data)
+{
+  ret_valid_32 = data;
+}
+
+uint32_t ret_last_32 = 0;
+extern "C" void get_ret_last_32_value(int data)
+{
+  ret_last_32 = data;
+}
+
+uint32_t ret_data_32 = 0;
+extern "C" void get_ret_data_32_value(int data)
+{
+  ret_data_32 = data;
+}
+
+uint32_t cache_rdata_32 = 0;
+extern "C" void get_cache_rdata_32_value(int data)
+{
+  cache_rdata_32 = data;
+}
+
+uint32_t rd_req_32 = 0;
+extern "C" void get_rd_req_32_value(int data)
+{
+  rd_req_32 = data;
+}
+
+uint32_t Data_OK_32 = 0;
+extern "C" void get_Data_OK_32_value(int data)
+{
+  Data_OK_32 = data;
+}
+
+uint32_t Suspend_IFU_32 = 0;
+extern "C" void get_Suspend_IFU_value(int data)
+{
+  Suspend_IFU_32 = data;
+}
+
+uint32_t hit_32 = 0;
+extern "C" void get_hit_32_value(int data)
+{
+  hit_32 = data;
+}
+
+uint32_t IFU_valid_32 = 0;
+extern "C" void get_IFU_valid_value(int data)
+{
+  IFU_valid_32 = data;
+}
+
 uint32_t verilog_inst = 0;
 extern "C" void get_inst_value(int data)
 {
@@ -244,6 +304,24 @@ extern "C" void v_printf(int data)
   printf("data = %x \n" ,data);
 }
 
+uint32_t cache_state_32 = 0;
+extern "C" void get_cache_state_32_value(uint32_t data)
+{
+  cache_state_32 = data;
+}
+
+uint32_t araddr_pc = 0;
+extern "C" void get_araddr_pc(uint32_t data)
+{
+  araddr_pc = data;
+}
+
+uint32_t rd_addr = 0;
+extern "C" void get_rd_addr_value(uint32_t data)
+{
+  rd_addr = data;
+}
+
 static bool access_device = false;
 uint32_t key_dequeue();
 void init_screen();
@@ -410,12 +488,15 @@ void cpu_exec(int n){
     total_cycle = total_cycle + 1; 
     if(inst_finish) total_inst_num += 1;
 
-/*     printf("inst = %x, pc = %lx\n,\
+/*     printf("inst = %x, pc_real = %lx,hit_cache = %d, IFU_valid = %d,PC_JUMP_Suspend = %x\n,\
+cache_state = %x , rd_req = %d, rd_addr = %x, araddr_pc = %x,ret_valid = %d,ret_last = %x, ret_data_32= %x,Data_OK = %d,cache_rdata_32 = %x,Suspend_IFU = %d\n,\
 IDreg_inst = %x ,IDreg_pc = %x ,next_pc = %x,jump = %d,Data_Conflict = %d,real_readmemdata_right=%lx,IDreg_valid = %d\n,\
 EXEreg_inst = %x ,EXEreg_pc = %x, EXEreg_alusrc1 = 0x%lx ,EXEreg_alusrc2 = 0x%lx,EXEreg_writememdata = %lx,Suspend_alu = %d,,div_doing = %d,dividend = %x,divisor = %x,EXEreg_valid = %d\n,\
 MEMreg_inst = %x,MEMreg_pc = %x, MEMreg_aluout = 0x%lx, MEMreg_memwr = %d,MEMreg_writememdata = 0x%lx,dsram_rresp = %d,rdata=0x%lx,MEMreg_valid=%d\n,\
 WBreg_inst = %x,WBreg_pc = %x, WBreg_aluout = 0x%lx ,WBreg_rd = %d ,wr_reg_data = 0x%lx,WBreg_valid = %d\n\n" \
-     ,top_inst ,top_pc ,verilog_IDinst,verilog_IDpc,next_pc,jump,Data_Conflict,real_readmemdata_right,IDreg_valid\
+     ,top_inst, verilog_pc, hit_32 ,IFU_valid_32,PC_JUMP_Suspend\
+     ,cache_state_32, rd_req_32, rd_addr, araddr_pc, ret_valid_32,ret_last_32,ret_data_32,Data_OK_32,cache_rdata_32,Suspend_IFU_32\
+     ,verilog_IDinst,verilog_IDpc,next_pc,jump,Data_Conflict,real_readmemdata_right,IDreg_valid\
      ,verilog_EXEinst,EXEreg_pc,EXEreg_alusrc1 ,EXEreg_alusrc2,EXEreg_writememdata,Suspend_alu,div_doing,dividend,divisor,EXEreg_valid\ 
      ,verilog_MEMinst,MEMreg_pc,MEMreg_aluout ,MEMreg_memwr,MEMreg_writememdata,dsram_rresp,rdata,MEMreg_valid\
      ,verilog_WBinst,WBreg_pc,WBreg_aluout ,WBreg_rd,wr_reg_data,WBreg_valid); */
