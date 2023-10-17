@@ -2,6 +2,7 @@
 #define NR_WP 32
 
 uint64_t expr(char *arg);
+uint64_t pmem_read(uint32_t addr,int len);
 
 typedef struct watchpoint {
   int NO;
@@ -55,7 +56,7 @@ void print_wp(){
   bool *su=false;
   while(PB != free_)
   {
-    printf("wp_pool.NO = %d  expr = (%s)  value = %ld\n",PB->NO,PB->expr,expr(PB->expr));
+    printf("wp_pool.NO = %d  expr = (%s)  value = %lx\n",PB->NO,PB->expr,pmem_read(expr(PB->expr), 4));
     PB = PB->next;
   }
   }
@@ -101,11 +102,12 @@ void wp_detect(){
     pb = head;
     while(pb != free_)
     {
-      pb->cur_value = expr(pb->expr); 
+      //pb->cur_value = expr(pb->expr); 
+      pb->cur_value =  pmem_read(expr(pb->expr), 4);
       if(pb->cur_value != pb->last_value && count !=0)
       {
         printf("The NO.%d Watchpoint %s change! \n",pb->NO,pb->expr);
-        printf("Old value = %ld \nNew value = %ld \n",pb->last_value, pb->cur_value);
+        printf("Old value = %lx \nNew value = %lx \n",pb->last_value, pb->cur_value);
       }
       pb->last_value = pb->cur_value;
       pb = pb->next;

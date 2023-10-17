@@ -8,13 +8,16 @@
 
 module ysyx_22050854_Icache (clk,rst,
     valid,op,index,tag,offset,addr_ok,data_ok,rdata,unshoot,
-    rd_req,rd_type,rd_addr,rd_rdy,ret_valid,ret_last,ret_data
+    rd_req,rd_type,rd_addr,rd_rdy,ret_valid,ret_last,ret_data,
+    sram0_addr,sram0_cen,sram0_wen,sram0_wmask,sram0_wdata,sram0_rdata,
+    sram1_addr,sram1_cen,sram1_wen,sram1_wmask,sram1_wdata,sram1_rdata,
+    sram2_addr,sram2_cen,sram2_wen,sram2_wmask,sram2_wdata,sram2_rdata,
+    sram3_addr,sram3_cen,sram3_wen,sram3_wmask,sram3_wdata,sram3_rdata
 );
 
 parameter Offset_Bits = 4; //每一个cache块的大小是16B
 parameter Index_Bits = 7;  //
 parameter Tag_Bits = 21;
-
 
 input clk;
 input rst;
@@ -37,6 +40,32 @@ input ret_valid;      //返回数据有效
 input ret_last;     //返回数据是一次读请求对应最后一个返回的数据
 input [63:0]ret_data;     //读返回数据
 
+//cache 与 ram的交互信号
+output [5:0]sram0_addr;
+output sram0_cen;
+output sram0_wen;
+output [127:0]sram0_wmask;
+output [127:0]sram0_wdata;
+input [127:0]sram0_rdata;
+output [5:0]sram1_addr;
+output sram1_cen;
+output sram1_wen;
+output [127:0]sram1_wmask;
+output [127:0]sram1_wdata;
+input [127:0]sram1_rdata;
+output [5:0]sram2_addr;
+output sram2_cen;
+output sram2_wen;
+output [127:0]sram2_wmask;
+output [127:0]sram2_wdata;
+input [127:0]sram2_rdata;
+output [5:0]sram3_addr;
+output sram3_cen;
+output sram3_wen;
+output [127:0]sram3_wmask;
+output [127:0]sram3_wdata;
+input [127:0]sram3_rdata;
+
 parameter IDLE = 4'b0001,LOOKUP = 4'b0010, MISS = 4'b0100, REPLACE = 4'b1000;
 reg [3:0]state;
 
@@ -47,6 +76,44 @@ reg [Index_Bits - 1 : 0]HIT_index;
 reg [Tag_Bits - 1 : 0]HIT_tag;
 reg [Offset_Bits - 1 : 0]HIT_offset;
 reg [127:0] Bus_retdata;
+
+reg [21:0] Way0_TagV [127:0];
+reg [21:0] Way1_TagV [127:0];
+initial 
+begin
+    for (int i = 0; i < 128; i = i + 1)begin
+        Way0_TagV[i] = 0;
+        Way1_TagV[i] = 0;
+    end
+end
+
+wire [127:0]ram1_data;
+reg ram1_CEN;
+reg ram1_WEN;
+reg [127:0]ram1_bwen;
+reg [5:0]ram1_addr;
+reg [127:0]ram1_wdata;
+
+wire [127:0]ram2_data;
+reg ram2_CEN;
+reg ram2_WEN;
+reg [127:0]ram2_bwen;
+reg [5:0]ram2_addr;
+reg [127:0]ram2_wdata;
+
+wire [127:0]ram3_data;
+reg ram3_CEN;
+reg ram3_WEN;
+reg [127:0]ram3_bwen;
+reg [5:0]ram3_addr;
+reg [127:0]ram3_wdata;
+
+wire [127:0]ram4_data;
+reg ram4_CEN;
+reg ram4_WEN;
+reg [127:0]ram4_bwen;
+reg [5:0]ram4_addr;
+reg [127:0]ram4_wdata;
 
 reg Data_OK;
 reg ADDR_OK;
@@ -97,26 +164,25 @@ always @(posedge clk)begin
     case(state)
         IDLE: 
             begin 
-                ram1_CEN <= 1'b1;                //last state maybe replace, so need stop write ram
                 ram1_WEN <= 1'b1;
                 ram1_bwen <= 128'hffffffffffffffffffffffffffffffff;
                 ram1_addr <= 6'b0;
                 ram1_wdata <= 128'b0;
-                ram2_CEN <= 1'b1;
                 ram2_WEN <= 1'b1;
                 ram2_bwen <= 128'hffffffffffffffffffffffffffffffff;
                 ram2_addr <= 6'b0;
                 ram2_wdata <= 128'b0;
-                ram3_CEN <= 1'b1;
                 ram3_WEN <= 1'b1;
                 ram3_bwen <= 128'hffffffffffffffffffffffffffffffff;
                 ram3_addr <= 6'b0;
                 ram3_wdata <= 128'b0;
-                ram4_CEN <= 1'b1;
                 ram4_WEN <= 1'b1;
                 ram4_bwen <= 128'hffffffffffffffffffffffffffffffff;
                 ram4_addr <= 6'b0;
-                ram4_wdata <= 128'b0; 
+                ram4_wdata <= 128'b0;
+                
+                Data_OK <= 1'b0;
+
                 if(valid & !op ) begin
                     RB_index <= index;  
                     RB_tag <= tag;
@@ -130,6 +196,8 @@ always @(posedge clk)begin
                         ram2_addr <= index[5:0];
                         hit_way0 <= 1'b1;
                         hit_way1 <= 1'b0;
+                        ram3_CEN <= 1'b1;
+                        ram4_CEN <= 1'b1;
                     end
                     else if( Way1_TagV[index] == {1'b1,tag} ) begin //hit way1
                         state <= LOOKUP;
@@ -139,6 +207,8 @@ always @(posedge clk)begin
                         ram4_addr <= index[5:0];
                         hit_way1 <= 1'b1;
                         hit_way0 <= 1'b0;
+                        ram1_CEN <= 1'b1;
+                        ram2_CEN <= 1'b1;
                     end
                     else begin                      //unshoot
                         if(rd_rdy)begin             // only AXI(SRAM) ready cloud generate request
@@ -150,11 +220,20 @@ always @(posedge clk)begin
                         unshoot <= 1'b1;
                         hit_way0 <= 1'b0;
                         hit_way1 <= 1'b0;
+                        ram1_CEN <= 1'b1;
+                        ram2_CEN <= 1'b1;
+                        ram3_CEN <= 1'b1;
+                        ram4_CEN <= 1'b1;
                     end
                 end
                 else begin
                     state <= IDLE;
                     ADDR_OK <= 1'b0;
+
+                    ram1_CEN <= 1'b1;
+                    ram2_CEN <= 1'b1;
+                    ram3_CEN <= 1'b1;
+                    ram4_CEN <= 1'b1;
                 end
             end
         LOOKUP:                      //only hit could enter state:LOOKUP
@@ -177,7 +256,7 @@ always @(posedge clk)begin
                 if( !valid ) begin             //finish and no new request
                     state <= IDLE;
                     ADDR_OK <= 1'b0;
-                    Data_OK <= 1'b0;
+                    
                 end
                 else if( valid & !op) begin   //get valid again
                     RB_index <= index;  
@@ -298,89 +377,35 @@ always @(posedge clk)begin
     end
 end
 
-assign read_ramdata = Data_OK ? ( HIT_way0 ? ( HIT_index[6] ? ram2_data : ram1_data ) : ( HIT_way1 ? (HIT_index[6] ? ram4_data : ram3_data) : 128'b0 ) ) : 128'b0;
+assign read_ramdata = Data_OK ? ( HIT_way0 ? ( HIT_index[6] ? sram1_rdata : sram0_rdata ) : ( HIT_way1 ? ( HIT_index[6] ? sram3_rdata : sram2_rdata) : 128'b0 ) ) : 128'b0;
 assign rdata = Data_OK ? ( ( state == REPLACE ) ? (  RB_offset[3] ?  Bus_retdata[127:64] : Bus_retdata[63:0] ) : ( HIT_offset[3] ?  read_ramdata[127:64] : read_ramdata[63:0] ) ) : 64'b0;
 
 assign data_ok = Data_OK;
 assign addr_ok = ADDR_OK;
 
-reg [21:0] Way0_TagV [127:0];
-reg [21:0] Way1_TagV [127:0];
-initial 
-begin
-    for (int i = 0; i < 128; i = i + 1)begin
-        Way0_TagV[i] = 0;
-        Way1_TagV[i] = 0;
-    end
-end
+assign sram0_addr = ram1_addr;
+assign sram0_cen = ram1_CEN;
+assign sram0_wen = ram1_WEN;
+assign sram0_wmask = ram1_bwen;
+assign sram0_wdata = ram1_wdata;
 
-wire [127:0]ram1_data;
-reg ram1_CEN;
-reg ram1_WEN;
-reg [127:0]ram1_bwen;
-reg [5:0]ram1_addr;
-reg [127:0]ram1_wdata;
-//一个ram的大小是64 * 16B = 1kB
-ysyx_22050854_S011HD1P_X32Y2D128_BW ram_inst1(
-    .Q(ram1_data),  //读到的数据
-    .CLK(clk),      //时钟
-    .CEN(ram1_CEN),         //使能信号，低电平有效
-    .WEN(ram1_WEN),         //写使能信号，低电平有效
-    .BWEN(ram1_bwen),        //写掩码信号，掩码粒度为1bit,低电平有效
-    .A(ram1_addr),           //读写地址
-    .D(ram1_wdata)            //写数据
-);
+assign sram1_addr = ram2_addr;
+assign sram1_cen = ram2_CEN;
+assign sram1_wen = ram2_WEN;
+assign sram1_wmask = ram2_bwen;
+assign sram1_wdata = ram2_wdata;
 
-wire [127:0]ram2_data;
-reg ram2_CEN;
-reg ram2_WEN;
-reg [127:0]ram2_bwen;
-reg [5:0]ram2_addr;
-reg [127:0]ram2_wdata;
-//一个ram的大小是64 * 16B = 1kB
-ysyx_22050854_S011HD1P_X32Y2D128_BW ram_inst2(
-    .Q(ram2_data),  //读到的数据
-    .CLK(clk),      //时钟
-    .CEN(ram2_CEN),         //使能信号，低电平有效
-    .WEN(ram2_WEN),         //写使能信号，低电平有效
-    .BWEN(ram2_bwen),        //写掩码信号，掩码粒度为1bit,低电平有效
-    .A(ram2_addr),           //读写地址
-    .D(ram2_wdata)            //写数据
-);
+assign sram2_addr = ram3_addr;
+assign sram2_cen = ram3_CEN;
+assign sram2_wen = ram3_WEN;
+assign sram2_wmask = ram3_bwen;
+assign sram2_wdata = ram3_wdata;
 
-wire [127:0]ram3_data;
-reg ram3_CEN;
-reg ram3_WEN;
-reg [127:0]ram3_bwen;
-reg [5:0]ram3_addr;
-reg [127:0]ram3_wdata;
-//一个ram的大小是64 * 16B = 1kB
-ysyx_22050854_S011HD1P_X32Y2D128_BW ram_inst3(
-    .Q(ram3_data),  //读到的数据
-    .CLK(clk),      //时钟
-    .CEN(ram3_CEN),         //使能信号，低电平有效
-    .WEN(ram3_WEN),         //写使能信号，低电平有效
-    .BWEN(ram3_bwen),        //写掩码信号，掩码粒度为1bit,低电平有效
-    .A(ram3_addr),           //读写地址
-    .D(ram3_wdata)            //写数据
-);
-
-wire [127:0]ram4_data;
-reg ram4_CEN;
-reg ram4_WEN;
-reg [127:0]ram4_bwen;
-reg [5:0]ram4_addr;
-reg [127:0]ram4_wdata;
-//一个ram的大小是64 * 16B = 1kB
-ysyx_22050854_S011HD1P_X32Y2D128_BW ram_inst4(
-    .Q(ram4_data),  //读到的数据
-    .CLK(clk),      //时钟
-    .CEN(ram4_CEN),         //使能信号，低电平有效
-    .WEN(ram4_WEN),         //写使能信号，低电平有效
-    .BWEN(ram4_bwen),        //写掩码信号，掩码粒度为1bit,低电平有效
-    .A(ram4_addr),           //读写地址
-    .D(ram4_wdata)            //写数据
-);
+assign sram3_addr = ram4_addr;
+assign sram3_cen = ram4_CEN;
+assign sram3_wen = ram4_WEN;
+assign sram3_wmask = ram4_bwen;
+assign sram3_wdata = ram4_wdata;
 
 wire [31:0]cache_state_32;
 assign cache_state_32 = {28'b0,state};

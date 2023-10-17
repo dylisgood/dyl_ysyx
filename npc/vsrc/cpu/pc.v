@@ -52,7 +52,7 @@ module ysyx_22050854_pc(
     });
     //如果存在数据冲突且需要阻塞，那这个确定跳转的计算并不准确
     //ecall/mret的next_pc是从CSR中取出的，我的逻辑是译码过后就写CSR，CSR寄存器按理说不会出现阻塞的情况
-    assign jump = ( ( PCsrc[2] & (~Data_Conflict) ) | is_csr_pc ) & IDreg_valid;
+    assign jump = ( ( PCsrc[2] & (~Data_Conflict) & ~suspend ) | is_csr_pc ) & IDreg_valid;
 
     //00---pc + 4  10---pc + imm   
     ysyx_22050854_MuxKey #(2,1,32) gen_PCsrc1 (PCsrc1,PCsrc[1],{
@@ -85,7 +85,10 @@ module ysyx_22050854_pc(
             pc <= next_pc;
     end
 
-/*     import "DPI-C" function void get_pc_value(int pc);
-    always@(*) get_pc_value(pc); */
+    import "DPI-C" function void get_PCsrc1_value(int PCsrc1);
+    always@(*) get_PCsrc1_value(PCsrc1);
+
+    import "DPI-C" function void get_PCsrc2_value(int PCsrc2);
+    always@(*) get_PCsrc2_value(PCsrc2);
 
 endmodule

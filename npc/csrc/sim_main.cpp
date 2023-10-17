@@ -22,6 +22,109 @@ extern "C" void get_pc_value(int data)
   verilog_pc = data;
 }
 
+uint32_t Suspend_LSU = 0;
+extern "C" void get_Suspend_LSU_value(int data)
+{
+  Suspend_LSU = data;
+}
+
+uint32_t Data_cache_Data_ok = 0;
+extern "C" void get_Data_cache_Data_ok_value(int data)
+{
+  Data_cache_Data_ok = data;
+}
+
+uint32_t Dcache_ret_Data = 0;
+extern "C" void get_Dcache_ret_data_value(int data)
+{
+  Dcache_ret_Data = data;
+}
+
+uint32_t Dcache_state = 0;
+extern "C" void get_Dcache_state_32_value(int data)
+{
+  Dcache_state = data;
+}
+
+uint32_t Dcache_AXI_ret_data = 0;
+extern "C" void get_Dcache_AXI_ret_data_value(int data)
+{
+  Dcache_AXI_ret_data = data;
+}
+
+uint32_t Dcache_Hitway = 0;
+extern "C" void get_Dcache_Hitway_value(int data)
+{
+  Dcache_Hitway = data;
+}
+
+
+uint32_t Dcache_valid = 0;
+extern "C" void get_Data_cache_valid_value(int data)
+{
+  Dcache_valid = data;
+}
+
+uint32_t writeDcache_data = 0;
+extern "C" void get_RB_wdata_value(int data)
+{
+  writeDcache_data = data;
+}
+
+uint32_t Dcache_addr = 0;
+extern "C" void get_Dcache_addr_value(int data)
+{
+  Dcache_addr = data;
+}
+
+uint32_t PCsrc1 = 0;
+extern "C" void get_PCsrc1_value(int data)
+{
+  PCsrc1 = data;
+}
+
+uint32_t PCsrc2 = 0;
+extern "C" void get_PCsrc2_value(int data)
+{
+  PCsrc2 = data;
+}
+
+uint32_t Replace_cache_data_32;
+extern "C" void get_Replace_cache_data_value(int data)
+{
+  Replace_cache_data_32 = data;
+}
+
+uint32_t AXI_Dcache_addr;
+extern "C" void get_AXI_Dcache_wr_addr_value(int data)
+{
+  AXI_Dcache_addr = data;
+}
+
+uint32_t AXI_Dcache_data;
+extern "C" void get_AXI_Dcache_data_64_value(int data)
+{
+  AXI_Dcache_data = data;
+}
+
+uint32_t awvalid;
+extern "C" void get_awvalid_32_value(int data)
+{
+  awvalid = data;
+}
+
+uint32_t dsram_write_addr;
+extern "C" void get_dsram_write_addr_value(int data)
+{
+  dsram_write_addr = data;
+}
+
+uint32_t dsram_wdata;
+extern "C" void get_dsram_wdata_32_value(int data)
+{
+  dsram_wdata = data;
+}
+
 uint32_t PC_JUMP_Suspend = 0;
 extern "C" void get_PC_JUMP_Suspend_value(int data)
 {
@@ -190,10 +293,10 @@ extern "C" void get_EXEreg_writememdata_value(uint32_t data)
   EXEreg_writememdata = data;
 }
 
-uint32_t real_readmemdata_right = 0;
-extern "C" void get_real_readmemdata_right_value(uint32_t data)
+uint32_t Dcache_wdata = 0;
+extern "C" void get_real_storememdata_right_value(uint32_t data)
 {
-  real_readmemdata_right = data;
+  Dcache_wdata = data;
 }
 
 uint32_t dsram_rresp = 0;
@@ -208,12 +311,17 @@ extern "C" void get_wr_reg_data_value(uint32_t data)
   wr_reg_data = data;
 }
 
-uint32_t rdata = 0;
+uint32_t read_mem_data = 0;
 extern "C" void get_rdata_value(uint32_t data)
 {
-  rdata = data;
+  read_mem_data = data;
 }
 
+uint32_t ramA = 0;
+extern "C" void get_ramA_value(uint32_t data)
+{
+  ramA = data;
+}
 
 uint32_t  next_pc= 0;
 extern "C" void get_next_pc_value(uint32_t data)
@@ -322,6 +430,24 @@ extern "C" void get_rd_addr_value(uint32_t data)
   rd_addr = data;
 }
 
+uint32_t ebreak_cpu = 0;
+extern "C" void get_ebreak_value(uint32_t data)
+{
+  ebreak_cpu = data;
+}
+
+uint32_t current_pc = 0;
+extern "C" void get_current_pc_value(uint32_t data)
+{
+  current_pc = data;
+}
+
+uint32_t x10_cpu = 0;
+extern "C" void get_x10_value(uint32_t data)
+{
+  x10_cpu = data;
+}
+
 static bool access_device = false;
 uint32_t key_dequeue();
 void init_screen();
@@ -329,13 +455,19 @@ extern uint8_t vmem[400 * 300 * 4];
 extern "C" void v_pmem_read(long long raddr, long long *rdata) {
   //printf("the orign raddr is %lx \n ",raddr);
   //总是读取地址为`raddr & ~0x7ull`的8字节返回给`rdata`
-  if(raddr == 0xa0000048)  //时钟
+  if(raddr == 0xa0000048 || raddr == 0xa0000040)  //时钟  40 for Dcache
   {
     access_device = true;
     
     gettimeofday(&currentTime,NULL);
     uint64_t time_pass = currentTime.tv_sec *1000000 + currentTime.tv_usec - system_start_us;
+    if(raddr == 0xa0000040) *rdata = 0;
     *rdata = time_pass; 
+  }
+  else if( raddr == 0xa00003f8 || raddr == 0xa00003f0 )  //串口  for dcache, first read to Dcache, then wirte
+  {
+    access_device = true;
+    *rdata = 0;
   }
   //内存
   else if(raddr >= 0x80000000 && raddr <= 0x87ffffff)
@@ -371,7 +503,7 @@ extern "C" void v_pmem_read(long long raddr, long long *rdata) {
   //无效地址
   else
   {
-    //printf("The read address %lx  is invalid! \n",raddr);
+    Log("The read address %lx  is invalid! \n",raddr);
     *rdata = 0x4444444466666666;
   }
 }
@@ -385,9 +517,10 @@ extern "C" void v_pmem_write(long long waddr, long long wdata, long long wmask) 
   uint64_t vmem_data = wdata;
   wdata = wdata & wmask;//取出要读的数，其他的置0
   wmask = wmask << (n << 3);
-  if( waddr == 0xa00003f8 )  //串口
+  if( waddr == 0xa00003f8 ||  waddr == 0xa00003f0)  //串口
   {
     access_device = true;
+    //printf("get chuankou\n");
     putchar(wdata);
   }
   else if(waddr >= 0x80000000 && waddr <= 0x8fffffff) //内存
@@ -407,7 +540,7 @@ extern "C" void v_pmem_write(long long waddr, long long wdata, long long wmask) 
     //printf("find sync\n");
     sync_vmem = 1;
   }
-  else printf("the write addr:%llx is invalid \n",waddr);
+  else Log("the write addr:%llx is invalid \n",waddr);
 
 }
 
@@ -427,7 +560,7 @@ void dump_csr() {
   }
 }
 
-int instr_num = 21;
+int instr_num = 51;
 bool Execute = false;
 extern struct func_struct func_trace[10];
 extern int func_num;
@@ -477,7 +610,7 @@ void cpu_exec(int n){
 
   while((n || Execute) && !npc_stop){  //!contextp->gotFinish()
     //如果执行到了ebreak 或指令条数 或发现差异 就停
-    if( top->ebreak || (n-- == 0 && !Execute) || dut_find_difftest ) { break; }
+    if( ebreak_cpu || (n-- == 0 && !Execute) || dut_find_difftest ) { break; }
 
     top->clk = 0; sim_exit();
     uint64_t top_pc = verilog_pc;
@@ -488,19 +621,28 @@ void cpu_exec(int n){
     total_cycle = total_cycle + 1; 
     if(inst_finish) total_inst_num += 1;
 
-/*     printf("inst = %x, pc_real = %lx,hit_cache = %d, IFU_valid = %d,PC_JUMP_Suspend = %x\n,\
-cache_state = %x , rd_req = %d, rd_addr = %x, araddr_pc = %x,ret_valid = %d,ret_last = %x, ret_data_32= %x,Data_OK = %d,cache_rdata_32 = %x,Suspend_IFU = %d\n,\
-IDreg_inst = %x ,IDreg_pc = %x ,next_pc = %x,jump = %d,Data_Conflict = %d,real_readmemdata_right=%lx,IDreg_valid = %d\n,\
-EXEreg_inst = %x ,EXEreg_pc = %x, EXEreg_alusrc1 = 0x%lx ,EXEreg_alusrc2 = 0x%lx,EXEreg_writememdata = %lx,Suspend_alu = %d,,div_doing = %d,dividend = %x,divisor = %x,EXEreg_valid = %d\n,\
-MEMreg_inst = %x,MEMreg_pc = %x, MEMreg_aluout = 0x%lx, MEMreg_memwr = %d,MEMreg_writememdata = 0x%lx,dsram_rresp = %d,rdata=0x%lx,MEMreg_valid=%d\n,\
-WBreg_inst = %x,WBreg_pc = %x, WBreg_aluout = 0x%lx ,WBreg_rd = %d ,wr_reg_data = 0x%lx,WBreg_valid = %d\n\n" \
+    if(total_inst_num % 10000000 == 0){printf("total_inst_num = %d, total_cycle = %d\n",total_inst_num++,total_cycle);}
+
+    if(this_cycle_inst < 51 && !Execute){
+    printf("total_cycle = %d ,valid inst num = %d\n" ,total_cycle ,total_inst_num);
+    printf("inst = %x, pc_real = %lx,hit_cache = %d, IFU_valid = %d,PC_JUMP_Suspend = %x\n,\
+  Icache_state = %x , rd_req = %d, rd_addr = %x, araddr_pc = %x,ret_valid = %d,ret_last = %x, ret_data_32= %x,Data_OK = %d,cache_rdata_32 = %x,Suspend_IFU = %d\n,\
+IDreg_pc = %x, IDreg_inst = %x, next_pc = %x, current_pc = %x ,jump = %d, Data_Conflict = %x, Dcache_request = %d, dsram_write_addr = %x, awvalid = %d, dsram_wdata = %x, IDreg_valid = %d\n,\
+  Dcache_state = %d, HitWay = %d, address = %x, retData = %x, read_mem_data = %x, Dataok = %d, wmask = %x, wdata = %x, Dcache_AXIretData = %x,Replace_data = %x,AXI_Dcache_addr = %x,AXI_Dcache_data = %x\n,\
+EXEreg_pc = %x, EXEreg_inst = %x, Suspend_LSU = %d, Suspend_ALU = %d, EXEreg_valid = %d\n,\
+MEMreg_pc = %x, MEMreg_inst = %x, MEMreg_aluout = 0x%lx, MEMreg_memwr = %d, MEMreg_valid=%d\n,\
+WBreg_pc = %x,  WBreg_inst = %x, WBreg_aluout = 0x%lx ,WBreg_rd = %d ,wr_reg_data = 0x%lx,WBreg_valid = %d\n\n" \
      ,top_inst, verilog_pc, hit_32 ,IFU_valid_32,PC_JUMP_Suspend\
      ,cache_state_32, rd_req_32, rd_addr, araddr_pc, ret_valid_32,ret_last_32,ret_data_32,Data_OK_32,cache_rdata_32,Suspend_IFU_32\
-     ,verilog_IDinst,verilog_IDpc,next_pc,jump,Data_Conflict,real_readmemdata_right,IDreg_valid\
-     ,verilog_EXEinst,EXEreg_pc,EXEreg_alusrc1 ,EXEreg_alusrc2,EXEreg_writememdata,Suspend_alu,div_doing,dividend,divisor,EXEreg_valid\ 
-     ,verilog_MEMinst,MEMreg_pc,MEMreg_aluout ,MEMreg_memwr,MEMreg_writememdata,dsram_rresp,rdata,MEMreg_valid\
-     ,verilog_WBinst,WBreg_pc,WBreg_aluout ,WBreg_rd,wr_reg_data,WBreg_valid); */
-  
+     ,verilog_IDpc,verilog_IDinst,next_pc,current_pc,jump,Data_Conflict,Dcache_valid,dsram_write_addr,awvalid,dsram_wdata,IDreg_valid\
+     ,Dcache_state,Dcache_Hitway,Dcache_addr,Dcache_ret_Data,read_mem_data,Data_cache_Data_ok,writeDcache_data,Dcache_wdata,Dcache_AXI_ret_data,Replace_cache_data_32,AXI_Dcache_addr,AXI_Dcache_data\
+     ,EXEreg_pc,verilog_EXEinst,Suspend_LSU,Suspend_alu,EXEreg_valid\ 
+     ,MEMreg_pc,verilog_MEMinst,MEMreg_aluout,MEMreg_memwr,MEMreg_valid\
+     ,WBreg_pc,verilog_WBinst,WBreg_aluout ,WBreg_rd,wr_reg_data,WBreg_valid);
+    }
+
+//EXEreg_alusrc1 = 0x%lx ,EXEreg_alusrc2 = 0x%lx,EXEreg_writememdata = %lx,,div_doing = %d,dividend = %x,divisor = %x
+//,EXEreg_alusrc1 ,EXEreg_alusrc2,EXEreg_writememdata   ,div_doing,dividend,divisor,
     #ifdef CONFIG_HAS_VGA
       device_update();
     #endif
@@ -591,12 +733,12 @@ WBreg_inst = %x,WBreg_pc = %x, WBreg_aluout = 0x%lx ,WBreg_rd = %d ,wr_reg_data 
   double inst_frequency = (double)total_inst_num / (double)inst_over_time;
   double IPC = (double)total_inst_num / (double)total_cycle;
 
-  if( (!top->x10 && top->ebreak) || (npc_stop)){
+  if( (!x10_cpu && ebreak_cpu) || (npc_stop)){
     Log("npc = %s at pc = 0x%x" ,ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN),verilog_pc);
     Log("total guest instructions = %d, total cycle = %ld, IPC = %.2f " ,total_inst_num ,total_cycle,IPC);
     //Log("simulation frequency = %d inst/s, total time: %ld s \n" ,inst_frequency ,inst_over_time );
   }
-  else if ( top->ebreak && top->x10 != 0 ){
+  else if ( ebreak_cpu && x10_cpu != 0 ){
     Log("npc = %s at pc = 0x%x" ,ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED),verilog_pc);
     Log("total guest instructions = %ld, total cycle = %ld" , total_inst_num,total_cycle); 
     #ifdef CONFIG_ITRACE 
@@ -604,7 +746,7 @@ WBreg_inst = %x,WBreg_pc = %x, WBreg_aluout = 0x%lx ,WBreg_rd = %d ,wr_reg_data 
     #endif
   }
   else if( dut_find_difftest ){
-    printf("verilog_pc = %x , total_cycle = %x\n" ,verilog_pc ,total_cycle);
+    printf("verilog_pc = %x , total_cycle = %d\n" ,verilog_pc ,total_cycle);
     #ifdef CONFIG_ITRACE 
       printIringbuf(iringbuf);
     #endif

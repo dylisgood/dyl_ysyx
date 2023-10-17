@@ -3,10 +3,124 @@ module ysyx_22050854_cpu(
     input rst,
     input clk,
     output timer_interrupt,
-    output ebreak,
-    output [63:0]x10
+
+    input io_master_awready,
+    output  io_master_awvalid, 
+    output [3:0] io_master_awid, 
+    output [31:0] io_master_awaddr, 
+    output [7:0] io_master_awlen,
+    output [2:0] io_master_awsize,
+    output [1:0] io_master_awburst,
+
+    input io_master_wready,
+    output  io_master_wvalid,
+    output [63:0] io_master_wdata,
+    output [7:0] io_master_wstrb,
+    output  io_master_wlast,
+
+    output  io_master_bready,
+    input  io_master_bvalid,
+    input [3:0] io_master_bid,
+    input [1:0] io_master_bresp,
+
+    input  io_master_arready,
+    output  io_master_arvalid,
+    output [3:0] io_master_arid,
+    output [31:0] io_master_araddr,
+    output [7:0] io_master_arlen,
+    output [2:0] io_master_arsize,
+    output [1:0] io_master_arburst,
+
+    output  io_master_rready,
+    input  io_master_rvalid,
+    input [3:0] io_master_rid,
+    input [63:0] io_master_rdata,
+    input [1:0] io_master_rresp,
+    input  io_master_rlast,
+
+    output io_slave_awready,
+    input  io_slave_awvalid, 
+    input [3:0] io_slave_awid, 
+    input [31:0] io_slave_awaddr, 
+    input [7:0] io_slave_awlen,
+    input [2:0] io_slave_awsize,
+    input [1:0] io_slave_awburst,
+
+    output io_slave_wready,
+    input  io_slave_wvalid,
+    input [63:0] io_slave_wdata,
+    input [7:0] io_slave_wstrb,
+    input  io_slave_wlast,
+
+    input  io_slave_bready,
+    output  io_slave_bvalid,
+    output [3:0] io_slave_bid,
+    output [1:0] io_slave_bresp,
+
+    output  io_slave_arready,
+    input  io_slave_arvalid,
+    input [3:0] io_slave_arid,
+    input [31:0] io_slave_araddr,
+    input [7:0] io_slave_arlen,
+    input [2:0] io_slave_arsize,
+    input [1:0] io_slave_arburst,
+
+    input  io_slave_rready,
+    output  io_slave_rvalid,
+    output [3:0] io_slave_rid,
+    output [63:0] io_slave_rdata,
+    output [1:0] io_slave_rresp,
+    output  io_slave_rlast,
+
+    output [5:0] cpu_io_sram0_addr,
+    output  cpu_io_sram0_cen,
+    output  cpu_io_sram0_wen,
+    output [127:0] cpu_io_sram0_wmask,
+    output [127:0] cpu_io_sram0_wdata,
+    input [127:0] cpu_io_sram0_rdata,
+    output [5:0] cpu_io_sram1_addr,
+    output  cpu_io_sram1_cen,
+    output  cpu_io_sram1_wen,
+    output [127:0] cpu_io_sram1_wmask,
+    output [127:0] cpu_io_sram1_wdata,
+    input [127:0] cpu_io_sram1_rdata,
+    output [5:0] cpu_io_sram2_addr,
+    output  cpu_io_sram2_cen,
+    output  cpu_io_sram2_wen,
+    output [127:0] cpu_io_sram2_wmask,
+    output [127:0] cpu_io_sram2_wdata,
+    input [127:0] cpu_io_sram2_rdata,
+    output [5:0] cpu_io_sram3_addr,
+    output  cpu_io_sram3_cen,
+    output  cpu_io_sram3_wen,
+    output [127:0] cpu_io_sram3_wmask,
+    output [127:0] cpu_io_sram3_wdata,
+    input [127:0] cpu_io_sram3_rdata,
+    output [5:0] cpu_io_sram4_addr,
+    output  cpu_io_sram4_cen,
+    output  cpu_io_sram4_wen,
+    output [127:0] cpu_io_sram4_wmask,
+    output [127:0] cpu_io_sram4_wdata,
+    input [127:0] cpu_io_sram4_rdata,
+    output [5:0] cpu_io_sram5_addr,
+    output  cpu_io_sram5_cen,
+    output  cpu_io_sram5_wen,
+    output [127:0] cpu_io_sram5_wmask,
+    output [127:0] cpu_io_sram5_wdata,
+    input [127:0] cpu_io_sram5_rdata,
+    output [5:0] cpu_io_sram6_addr,
+    output  cpu_io_sram6_cen,
+    output  cpu_io_sram6_wen,
+    output [127:0] cpu_io_sram6_wmask,
+    output [127:0] cpu_io_sram6_wdata,
+    input [127:0] cpu_io_sram6_rdata,
+    output [5:0] cpu_io_sram7_addr,
+    output  cpu_io_sram7_cen,
+    output  cpu_io_sram7_wen,
+    output [127:0] cpu_io_sram7_wmask,
+    output [127:0] cpu_io_sram7_wdata,
+    input [127:0] cpu_io_sram7_rdata
 );   
-    reg suspend;
     wire rst_n;
     assign rst_n = ~rst;
 
@@ -16,8 +130,14 @@ module ysyx_22050854_cpu(
     always @(posedge clk)begin
         if(rst)
             pc_test <= 32'h80000000;
-        else if( jump | Data_Conflict_block | last_JumpAndDataBlock | ( last_Suspend_IFU & !Suspend_IFU & ~Last_Jump_Suspend & ~Last_ALUsuspend_IFUsuspend & ~Last_DataBlock_Suspend & ~Last_JumpAndBlock_Suspend ) ) //如果是跳转指令或遇到了数据冲突 或同时遇到
+        else if( jump | Data_Conflict_block | last_JumpAndDataBlock ) //如果是跳转指令或遇到了数据冲突 或同时遇到
             pc_test <= next_pc + 32'd4;
+        else if( last_Suspend_LSU & ~Suspend_LSU )begin
+            pc_test <= EXEreg_pc + 32'd8;
+        end
+        else if ( last_Suspend_IFU & !Suspend_IFU & ~Last_Jump_Suspend & ~Last_ALUsuspend_IFUsuspend & ~Last_DataBlock_Suspend & ~Last_JumpAndBlock_Suspend )begin
+            pc_test <= next_pc + 32'd4;
+        end
         else if( ~jump & Last_Jump_Suspend & ~Suspend_IFU)begin
             pc_test <= PC_Jump_Suspend + 32'd4;
             Last_Jump_Suspend <= 1'b0;
@@ -56,7 +176,11 @@ module ysyx_22050854_cpu(
     always @(*)begin
         if(rst)
             pc_real = 32'h80000000;
-        else if( jump | Data_Conflict_block | last_JumpAndDataBlock | ( last_Suspend_IFU & !Suspend_IFU & ~Last_Jump_Suspend & ~Last_ALUsuspend_IFUsuspend & ~Last_DataBlock_Suspend & ~Last_JumpAndBlock_Suspend ) )
+        else if( jump | Data_Conflict_block | last_JumpAndDataBlock )
+            pc_real = next_pc;
+        else if( last_Suspend_LSU & ~Suspend_LSU )
+            pc_real = EXEreg_pc + 32'd4;
+        else if( last_Suspend_IFU & !Suspend_IFU & ~Last_Jump_Suspend & ~Last_ALUsuspend_IFUsuspend & ~Last_DataBlock_Suspend & ~Last_JumpAndBlock_Suspend ) //当SuspendLSU为0时，指令刚好进入IDreg
             pc_real = next_pc;
         else if( ~jump & Last_Jump_Suspend & ~Suspend_IFU)
             pc_real = PC_Jump_Suspend;
@@ -137,7 +261,7 @@ assign test_one = { 28'b0,Last_ALUsuspend_IFUsuspend    ,Last_Jump_Suspend   ,La
             Last_ALUsuspend_IFUsuspend <= 1'b1;
             PC_ALUsuspend_IFUsuspend  <= EXEreg_pc + 32'd4;
             if(Last_DataBlock_Suspend)
-                Last_DataBlock_Suspend <= 1'b0;
+                Last_DataBlock_Suspend <= 1'b0;     //***
         end
     end
 
@@ -152,22 +276,25 @@ assign test_one = { 28'b0,Last_ALUsuspend_IFUsuspend    ,Last_Jump_Suspend   ,La
     always@(posedge clk)begin
         if(rst)
             pc_record_2 <= 32'b0;
-        else if(Icache_addr_ok)
+        else if( Icache_addr_ok )
             pc_record_2 <= pc_record_1;
     end
 
     //如果当前周期下是jalr 或者 beq指令 且发生了阻塞，则无法产生正确的next_pc,本周期不取指
     wire JumpAndDataBlock;
     assign JumpAndDataBlock = ( ( ID_reg_inst[6:0] == 7'b1100011) | (ID_reg_inst[6:0]) == 7'b1100111) & Data_Conflict_block;
+
     reg last_JumpAndDataBlock;
     ysyx_22050854_Reg #(1,1'b0) jumpandblock (clk, rst, JumpAndDataBlock, last_JumpAndDataBlock, 1'b1);
     reg last_Suspend_ALU;
     ysyx_22050854_Reg #(1,1'b0) record_lastSuspend (clk, rst, Suspend_ALU, last_Suspend_ALU, 1'b1);
     reg last_Suspend_IFU;
     ysyx_22050854_Reg #(1,1'b0) record_last_Suspend_IFU (clk, rst, Suspend_IFU, last_Suspend_IFU, 1'b1);
-    wire IFU_valid;
-    wire IFU_valid = ~JumpAndDataBlock & ~Suspend_ALU & ~Suspend_IFU;         // 如果遇到阻塞且有条件跳转指令，或遇到ALU/IFU暂停，不取指
+    reg last_Suspend_LSU;
+    ysyx_22050854_Reg #(1,1'b0) record_last_Suspend_LSU (clk, rst, Suspend_LSU, last_Suspend_LSU, 1'b1);
 
+    wire Icache_valid;
+    assign Icache_valid = ~JumpAndDataBlock & ~Suspend_ALU & ~Suspend_IFU & ~Suspend_LSU;         // 如果遇到阻塞且有条件跳转指令，或遇到ALU/IFU暂停，不取指
     wire [6:0]Icache_index;
     wire [20:0]Icache_tag;
     wire [3:0]Icache_offset;
@@ -182,13 +309,16 @@ assign test_one = { 28'b0,Last_ALUsuspend_IFUsuspend    ,Last_Jump_Suspend   ,La
     wire AXI_Icache_rd_req;
     wire [2:0]AXI_Icache_rd_type;
     wire [31:0]AXI_Icache_rd_addr;
-    wire AXI_Icache_rd_valid;
+    wire AXI_Icache_ret_valid;
     wire AXI_Icache_ret_last;
     wire [63:0]AXI_Icache_ret_data;
+    assign AXI_Icache_ret_valid = ( io_master_rresp  == 2'b10 ) && ( io_master_rid == 4'b0001 );
+    assign AXI_Icache_ret_last = io_master_rlast;
+    assign AXI_Icache_ret_data = io_master_rdata;
     ysyx_22050854_Icache icache_inst(
         .clk(clk),
         .rst(rst),
-        .valid(IFU_valid),
+        .valid(Icache_valid),
         .op(1'b0), 
         .index(Icache_index),
         .tag(Icache_tag), 
@@ -197,17 +327,45 @@ assign test_one = { 28'b0,Last_ALUsuspend_IFUsuspend    ,Last_Jump_Suspend   ,La
         .data_ok(Icache_data_ok),
         .rdata(Icache_ret_data),
         .unshoot(Suspend_IFU),
-
+        //with AXI4
         .rd_req(AXI_Icache_rd_req), 
         .rd_type(AXI_Icache_rd_type),
         .rd_addr(AXI_Icache_rd_addr),
         .rd_rdy(1'b1),
-        .ret_valid(AXI_Icache_rd_valid),
+        .ret_valid(AXI_Icache_ret_valid),
         .ret_last(AXI_Icache_ret_last),
-        .ret_data(AXI_Icache_ret_data)
+        .ret_data(AXI_Icache_ret_data),
+
+        .sram0_addr(cpu_io_sram0_addr),
+        .sram0_cen(cpu_io_sram0_cen),
+        .sram0_wen(cpu_io_sram0_wen),
+        .sram0_wmask(cpu_io_sram0_wmask),
+        .sram0_wdata(cpu_io_sram0_wdata),
+        .sram0_rdata(cpu_io_sram0_rdata),
+
+        .sram1_addr(cpu_io_sram1_addr),
+        .sram1_cen(cpu_io_sram1_cen),
+        .sram1_wen(cpu_io_sram1_wen),
+        .sram1_wmask(cpu_io_sram1_wmask),
+        .sram1_wdata(cpu_io_sram1_wdata),
+        .sram1_rdata(cpu_io_sram1_rdata),
+
+        .sram2_addr(cpu_io_sram2_addr),
+        .sram2_cen(cpu_io_sram2_cen),
+        .sram2_wen(cpu_io_sram2_wen),
+        .sram2_wmask(cpu_io_sram2_wmask),
+        .sram2_wdata(cpu_io_sram2_wdata),
+        .sram2_rdata(cpu_io_sram2_rdata),
+
+        .sram3_addr(cpu_io_sram3_addr),
+        .sram3_cen(cpu_io_sram3_cen),
+        .sram3_wen(cpu_io_sram3_wen),
+        .sram3_wmask(cpu_io_sram3_wmask),
+        .sram3_wdata(cpu_io_sram3_wdata),
+        .sram3_rdata(cpu_io_sram3_rdata)
     );
 
-    wire AXI_arready;
+/*     wire AXI_arready;
     wire AXI_rvalid;
     ysyx_22050854_AXI_ISRAM cache_sram (
         .clk(clk),
@@ -225,23 +383,7 @@ assign test_one = { 28'b0,Last_ALUsuspend_IFUsuspend    ,Last_Jump_Suspend   ,La
         .rvalid(AXI_rvalid),
         .rlast(AXI_Icache_ret_last),
         .rready(1'b1)
-    );
-
-/*
-     ysyx_22050854_SRAM_IFU cpu_ifu(
-        .clk(clk),
-        .rst_n(rst_n),
-
-        .araddr(pc_real),
-        .arvalid(arvalid),
-        .arready(isram_arready),
-
-        .rdata(isram_rdata),
-        .rresp(isram_rresp),
-        .rvalid(isram_rvalid),
-        .rready(1'b1)
-    );
-    */
+    ); */
 
     reg [31:0]inst;
     wire [63:0]inst_64;
@@ -262,7 +404,9 @@ assign test_one = { 28'b0,Last_ALUsuspend_IFUsuspend    ,Last_Jump_Suspend   ,La
     always@(*) get_inst_value(inst);
     import "DPI-C" function void get_PC_JUMP_Suspend_value(int test_one);
     always@(*) get_PC_JUMP_Suspend_value(test_one);
-    //---------------------------------------------ID_reg-----------------------------------------//
+
+
+    //---------------------------------------------                      ID_reg                             -----------------------------------------//
     reg ID_reg_valid;
     reg ID_reg_inst_enable;
     reg [31:0]ID_reg_inst;
@@ -276,7 +420,7 @@ assign test_one = { 28'b0,Last_ALUsuspend_IFUsuspend    ,Last_Jump_Suspend   ,La
         if(rst)
             ID_reg_valid <= 1'b0;
         else
-            ID_reg_valid <=  ( Icache_data_ok & (~jump) & (~EXEreg_jump) & (~EXEreg_Datablock) & (~Suspend_ALU) & (~Last_Jump_Suspend) & (~Last_DataBlock_Suspend) & (~Last_ALUsuspend_IFUsuspend) & (~Last_JumpAndBlock_Suspend) ) | Data_Conflict_block;
+            ID_reg_valid <=  ( Icache_data_ok & (~jump) & (~EXEreg_jump) & (~EXEreg_Datablock) & (~Suspend_ALU) & (~Last_Jump_Suspend) & (~Last_DataBlock_Suspend) & (~Last_ALUsuspend_IFUsuspend) & (~Last_JumpAndBlock_Suspend) & ~Suspend_LSU ) | Data_Conflict_block;
     end                                                                                                          
     //当取到跳转的跳转指令时，下个上升沿以及下下个上升沿都不能将指令送到IDreg中，而是将指令置为0，空走两个始终周期
     wire [31:0]pc_record;
@@ -298,7 +442,7 @@ assign test_one = { 28'b0,Last_ALUsuspend_IFUsuspend    ,Last_Jump_Suspend   ,La
     always@(*) get_Suspend_IFU_value( Suspend_IFU_32 );
 
     wire [31:0]IFU_valid_32;
-    assign IFU_valid_32 = { 31'b0 , IFU_valid };
+    assign IFU_valid_32 = { 31'b0 , Icache_valid };
     import "DPI-C" function void get_IFU_valid_value(int IFU_valid_32);
     always@(*) get_IFU_valid_value( IFU_valid_32 );
 
@@ -369,6 +513,7 @@ assign test_one = { 28'b0,Last_ALUsuspend_IFUsuspend    ,Last_Jump_Suspend   ,La
 
     wire [63:0]src1;
     wire [63:0]src2;
+    wire [63:0]x10;
     ysyx_22050854_RegisterFile regfile_inst(
     .clk(clk),
     .wdata(wr_reg_data),
@@ -464,26 +609,22 @@ assign test_one = { 28'b0,Last_ALUsuspend_IFUsuspend    ,Last_Jump_Suspend   ,La
     wire rs1_conflict_EXE;
     wire rs2_conflict_EXE;
     wire reg_Conflict_EXE;
-    wire mem_conflict_EXE;   //sd 之后紧跟 ld ,且内存地址冲突，导致还没写入内存就要取走，这个不会形成阻塞
     wire store_conflict_EXE; //还有一种冲突是当store指令的源操作数(要写入内存的数据)与之前指令的目的寄存器重合时（如ld 之后 sd / add 之后 sd）
     wire ret_conflict_EXE;
     assign rs1_conflict_EXE = (( ALUsrc1 == 1'b0 ) & ( rs1 == EXEreg_Rd ) & ( EXEreg_Rd != 0)); //当且仅当alu操作数是寄存器，且前一条指令要写回， 且写回地址不是x0时 ,rd = rs 才冲突
     assign rs2_conflict_EXE = (( ALUsrc2 == 2'b00 ) & ( rs2 == EXEreg_Rd) & ( EXEreg_Rd != 0));
     assign reg_Conflict_EXE = ID_reg_valid & EXEreg_valid & EXEreg_regWr  & ( rs1_conflict_EXE | rs2_conflict_EXE ); //与前一条指令冲突
-    assign mem_conflict_EXE = ID_reg_valid & EXEreg_valid & EXEreg_memWr & MemRd & ( ( readmemaddr & 64'hfffffff8 ) ==  ( alu_out & 64'hfffffff8 ) ); //当前周期的 ld地址 与 上一周期的 sd 地址重合
     assign store_conflict_EXE = ID_reg_valid & MemWr & (rs2 == EXEreg_Rd) & (EXEreg_Rd != 0) & (EXEreg_valid) & (EXEreg_regWr);
     assign ret_conflict_EXE = ID_reg_valid & (ID_reg_inst[6:0] == 7'b1100111) & (rs1 == EXEreg_Rd) & EXEreg_regWr & EXEreg_valid & (EXEreg_Rd != 0);
 
     wire rs1_conflict_MEM;
     wire rs2_conflict_MEM;
     wire reg_Conflict_MEM;
-    wire mem_conflict_MEM;
     wire store_conflict_MEM;
     wire ret_conflict_MEM;
     assign rs1_conflict_MEM = (( ALUsrc1 == 1'b0 ) & ( rs1 == MEMreg_rd) & (MEMreg_rd != 0));
     assign rs2_conflict_MEM = (( ALUsrc2 == 2'b00) & ( rs2 == MEMreg_rd) & (MEMreg_rd != 0));
     assign reg_Conflict_MEM = ID_reg_valid & MEMreg_valid & MEMreg_regwr & (rs1_conflict_MEM | rs2_conflict_MEM); //与前两条指令冲突
-    assign mem_conflict_MEM = ID_reg_valid & MEMreg_valid & ( MEMreg_memwr ) & ( MemRd ) & ( ( readmemaddr & 64'hfffffff8 ) ==  ( MEMreg_aluout & 64'hfffffff8 ) ); //当前周期的 ld 与 上两个周期的 sd 地址重合
     assign store_conflict_MEM = ID_reg_valid & MemWr & (rs2 == MEMreg_rd) & (MEMreg_rd != 0) & (MEMreg_valid) & (MEMreg_regwr);
     assign ret_conflict_MEM = ID_reg_valid & (ID_reg_inst[6:0] == 7'b1100111) & (rs1 == MEMreg_rd) & MEMreg_regwr & MEMreg_valid & (MEMreg_rd != 0);
 
@@ -518,15 +659,15 @@ assign test_one = { 28'b0,Last_ALUsuspend_IFUsuspend    ,Last_Jump_Suspend   ,La
 
     wire reg_Conflict;
     assign reg_Conflict = reg_Conflict_EXE | reg_Conflict_MEM | reg_Conflict_WB;
-    wire mem_Conflict;
-    assign mem_Conflict = mem_conflict_EXE | mem_conflict_MEM;
 
     //需要阻塞的情况
     wire Data_Conflict_block;
-    assign Data_Conflict_block = ( reg_Conflict_EXE | store_conflict_EXE | ret_conflict_EXE | CSRsrc_confilct_EXE ) & EXEreg_memRd; //目前是只有上一条指令是load的情况才需要阻塞
+    assign Data_Conflict_block = ( reg_Conflict_EXE | store_conflict_EXE | ret_conflict_EXE | CSRsrc_confilct_EXE ) & EXEreg_memRd & ~Suspend_LSU; //目前是只有上一条指令是load的情况才需要阻塞
+/*     wire PC_nojump;
+    assign PC_nojump = ( reg_Conflict_EXE | store_conflict_EXE | ret_conflict_EXE | CSRsrc_confilct_EXE ) & EXEreg_memRd; */
 
     wire [31:0]Data_Conflict_32;
-    assign Data_Conflict_32 = {21'b0,ret_conflict_EXE,ret_conflict_MEM,ret_conflict_WB,store_conflict_EXE,store_conflict_MEM,store_conflict_WB,mem_conflict_MEM,mem_conflict_EXE,reg_Conflict_WB,reg_Conflict_MEM,reg_Conflict_EXE};
+    assign Data_Conflict_32 = {22'b0,ret_conflict_EXE,ret_conflict_MEM,ret_conflict_WB,store_conflict_EXE,store_conflict_MEM,store_conflict_WB,reg_Conflict_WB,reg_Conflict_MEM,reg_Conflict_EXE,Data_Conflict_block};
     import "DPI-C" function void get_Data_Conflict_value(int Data_Conflict_32);
     always@(*) get_Data_Conflict_value(Data_Conflict_32);
 
@@ -600,159 +741,9 @@ assign test_one = { 28'b0,Last_ALUsuspend_IFUsuspend    ,Last_Jump_Suspend   ,La
         3'b011,{New_src2}   // sd
     });
 
-    //内存数据前递 (store 之后 load )
-    //再修改内存冲突的判断之后，与前一条以及前二条的冲突是可以同时存在的
-    reg [63:0]real_readmemdata_EXE;
-    reg [63:0]real_readnendata_MEM;
-    always @(*)begin
-        if( mem_conflict_EXE )
-            real_readmemdata_EXE = EXEreg_writememdata;
-        else
-            real_readmemdata_EXE = 64'd0;
-    end
-    always @(*)begin
-        if( mem_conflict_MEM )
-            real_readnendata_MEM = MEMreg_writememdata;
-        else
-            real_readnendata_MEM = 64'd0;
-    end
-
-    //这是在load 指令前 有store 且发生内存冲突时使用的
-    //不管地址了，假设编译出来的指令 sd ld的目标内存地址一致
-    //本段 就算出经过当前store指令之后，内存8字节对其处 的数据 根据store地址以及存储器操作数决定
-    wire [63:0]real_readmemdata_EXE_64;
-    ysyx_22050854_MuxKey #(21,6,64) gen_real_readmemdata_EXE_64_00 (real_readmemdata_EXE_64,{ alu_out[2:0],EXEreg_memop },{
-        6'b000000, {56'b0,real_readmemdata_EXE[7:0]},    // sb
-        6'b000001, {48'b0,real_readmemdata_EXE[15:0]},   // sh
-        6'b000010, {32'b0,real_readmemdata_EXE[31:0]},   // sw
-        6'b000011, real_readmemdata_EXE,                 // sd
-
-        6'b001000, {48'b0,real_readmemdata_EXE[7:0],8'b0},    // sb
-        6'b001001, {40'b0,real_readmemdata_EXE[15:0],8'b0},   // sh
-        6'b001010, {24'b0,real_readmemdata_EXE[31:0],8'b0},   // sw
-
-        6'b010000, {40'b0,real_readmemdata_EXE[7:0],16'b0},    // sb
-        6'b010001, {32'b0,real_readmemdata_EXE[15:0],16'b0},   // sh
-        6'b010010, {16'b0,real_readmemdata_EXE[31:0],16'b0},   // sw
-
-        6'b011000, {32'b0,real_readmemdata_EXE[7:0],24'b0},    // sb
-        6'b011001, {24'b0,real_readmemdata_EXE[15:0],24'b0},   // sh
-        6'b011010, {8'b0,real_readmemdata_EXE[31:0],24'b0},   // sw
-
-        6'b100000, {24'b0,real_readmemdata_EXE[7:0],32'b0},    // sb
-        6'b100001, {16'b0,real_readmemdata_EXE[15:0],32'b0},   // sh
-        6'b100010, {real_readmemdata_EXE[31:0],32'b0},   // sw
-
-        6'b101000, {16'b0,real_readmemdata_EXE[7:0],40'b0},    // sb
-        6'b101001, {8'b0,real_readmemdata_EXE[15:0],40'b0},   // sh
-
-        6'b110000, {8'b0,real_readmemdata_EXE[7:0],48'b0},    // sb
-        6'b110001, {real_readmemdata_EXE[15:0],48'b0},   // sh
-
-        6'b111000, {real_readmemdata_EXE[7:0],56'b0}    // sb
-    });
-    wire [63:0]real_readmemdata_EXE_64_mask;
-    ysyx_22050854_MuxKey #(21,6,64) gen_real_readmemdata_EXE_64 (real_readmemdata_EXE_64_mask,{ alu_out[2:0],EXEreg_memop },{
-        6'b000000, {56'b0,8'hff},    // sb
-        6'b000001, {48'b0,16'hffff},   // sh
-        6'b000010, {32'b0,32'hffffffff},   // sw
-        6'b000011, 64'hffffffffffffffff,   // sd
-
-        6'b001000, {48'b0,8'hff,8'b0},    // sb
-        6'b001001, {40'b0,16'hffff,8'b0},   // sh
-        6'b001010, {24'b0,32'hffffffff,8'b0},   // sw
-
-        6'b010000, {40'b0,8'hff,16'b0},    // sb
-        6'b010001, {32'b0,16'hffff,16'b0},   // sh
-        6'b010010, {16'b0,32'hffffffff,16'b0},   // sw
-
-        6'b011000, {32'b0,8'hff,24'b0},    // sb
-        6'b011001, {24'b0,16'hffff,24'b0},   // sh
-        6'b011010, {8'b0,32'hffffffff,24'b0},   // sw
-
-        6'b100000, {24'b0,8'hff,32'b0},    // sb
-        6'b100001, {16'b0,16'hffff,32'b0},   // sh
-        6'b100010, {32'hffffffff,32'h0},   // sw
-
-        6'b101000, {16'b0,8'hff,40'b0},    // sb
-        6'b101001, {8'b0,16'hffff,40'b0},   // sh
-
-        6'b110000, {8'b0,8'hff,48'b0},    // sb
-        6'b110001, {16'hffff,48'b0},   // sh
-
-        6'b111000, {8'hff,56'b0}    // sb
-    });
-
-    wire [63:0]real_readmemdata_MEM_64;
-    ysyx_22050854_MuxKey #(21,6,64) gen_real_readmemdata_MEM_64 (real_readmemdata_MEM_64,{ MEMreg_aluout[2:0],MEMreg_memop },{
-        6'b000000, {56'b0,real_readnendata_MEM[7:0]},    // sb
-        6'b000001, {48'b0,real_readnendata_MEM[15:0]},   // sh
-        6'b000010, {32'b0,real_readnendata_MEM[31:0]},   // sw
-        6'b000011, real_readnendata_MEM,                 // sd
-
-        6'b001000, {48'b0,real_readnendata_MEM[7:0],8'b0},    // sb
-        6'b001001, {40'b0,real_readnendata_MEM[15:0],8'b0},   // sh
-        6'b001010, {24'b0,real_readnendata_MEM[31:0],8'b0},   // sw
-
-        6'b010000, {40'b0,real_readnendata_MEM[7:0],16'b0},    // sb
-        6'b010001, {32'b0,real_readnendata_MEM[15:0],16'b0},   // sh
-        6'b010010, {16'b0,real_readnendata_MEM[31:0],16'b0},   // sw
-
-        6'b011000, {32'b0,real_readnendata_MEM[7:0],24'b0},    // sb
-        6'b011001, {24'b0,real_readnendata_MEM[15:0],24'b0},   // sh
-        6'b011010, {8'b0,real_readnendata_MEM[31:0],24'b0},   // sw
-
-        6'b100000, {24'b0,real_readnendata_MEM[7:0],32'b0},    // sb
-        6'b100001, {16'b0,real_readnendata_MEM[15:0],32'b0},   // sh
-        6'b100010, {real_readnendata_MEM[31:0],32'b0},   // sw
-
-        6'b101000, {16'b0,real_readnendata_MEM[7:0],40'b0},    // sb
-        6'b101001, {8'b0,real_readnendata_MEM[15:0],40'b0},   // sh
-
-        6'b110000, {8'b0,real_readnendata_MEM[7:0],48'b0},    // sb
-        6'b110001, {real_readnendata_MEM[15:0],48'b0},   // sh
-
-        6'b111000, {real_readnendata_MEM[7:0],56'b0}    // sb
-    });
-    wire [63:0]real_readmemdata_MEM_64_mask;
-    ysyx_22050854_MuxKey #(21,6,64) gen_real_readmemdata_EXE_64_11 (real_readmemdata_MEM_64_mask,{ MEMreg_aluout[2:0],MEMreg_memop },{
-        6'b000000, {56'b0,8'hff},    // sb
-        6'b000001, {48'b0,16'hffff},   // sh
-        6'b000010, {32'b0,32'hffffffff},   // sw
-        6'b000011, 64'hffffffffffffffff,   // sd
-
-        6'b001000, {48'b0,8'hff,8'b0},    // sb
-        6'b001001, {40'b0,16'hffff,8'b0},   // sh
-        6'b001010, {24'b0,32'hffffffff,8'b0},   // sw
-
-        6'b010000, {40'b0,8'hff,16'b0},    // sb
-        6'b010001, {32'b0,16'hffff,16'b0},   // sh
-        6'b010010, {16'b0,32'hffffffff,16'b0},   // sw
-
-        6'b011000, {32'b0,8'hff,24'b0},    // sb
-        6'b011001, {24'b0,16'hffff,24'b0},   // sh
-        6'b011010, {8'b0,32'hffffffff,24'b0},   // sw
-
-        6'b100000, {24'b0,8'hff,32'b0},    // sb
-        6'b100001, {16'b0,16'hffff,32'b0},   // sh
-        6'b100010, {32'hffffffff,32'h0},   // sw
-
-        6'b101000, {16'b0,8'hff,40'b0},    // sb
-        6'b101001, {8'b0,16'hffff,40'b0},   // sh
-
-        6'b110000, {8'b0,8'hff,48'b0},    // sb
-        6'b110001, {16'hffff,48'b0},   // sh
-
-        6'b111000, {8'hff,56'b0}    // sb
-    });
-
-    wire [63:0]real_readmemdata_right;
-    assign real_readmemdata_right = real_readmemdata_EXE_64 | real_readmemdata_MEM_64;
-
-
     //-------------- GEN readmemaddr -----------//在译码级就计算出load的地址
     wire [63:0]readmemaddr;
-    assign readmemaddr = MemRd ? (alu_src1 + alu_src2) : 64'd0;
+    assign readmemaddr = MemRd | MemWr ? (alu_src1 + alu_src2) : 64'd0;
   
     //----------------- GEN PC -----------------//
     wire [31:0]current_pc;
@@ -765,7 +756,7 @@ assign test_one = { 28'b0,Last_ALUsuspend_IFUsuspend    ,Last_Jump_Suspend   ,La
     .clk(clk),
     .IDreg_valid(ID_reg_valid),
     .Data_Conflict(Data_Conflict_block),
-    .suspend(Suspend_ALU),
+    .suspend(Suspend_ALU | Suspend_LSU),
     .Branch(Branch),
     .No_branch(No_branch),
     .is_csr_pc(ecall_or_mret),
@@ -784,9 +775,11 @@ assign test_one = { 28'b0,Last_ALUsuspend_IFUsuspend    ,Last_Jump_Suspend   ,La
     import "DPI-C" function void get_jump_value(int jump_32);
     always@(*) get_jump_value(jump_32);
 
+    import "DPI-C" function void get_current_pc_value(int current_pc);
+    always@(*) get_current_pc_value(current_pc);
+
     //----------------------------------------------- EXE_reg ------------------------------------------------//
     reg EXEreg_valid;
-    
     reg EXEreg_inst_enable;
     reg [31:0]EXEreg_inst;
     reg EXEreg_pc_enable;
@@ -821,41 +814,32 @@ assign test_one = { 28'b0,Last_ALUsuspend_IFUsuspend    ,Last_Jump_Suspend   ,La
     reg EXEreg_Datablock;
     reg EXEreg_readmemaddr_enable;
     reg [63:0]EXEreg_readmemaddr;
-    reg EXEreg_memconflict_enable;
-    reg EXEreg_memconflict;
-    reg EXEreg_memconflict_data_enable;
-    reg [63:0]EXEreg_memconflict_data;
-    reg [63:0]EXEreg_real_readmemdata_EXE_64_mask;
-    reg [63:0]EXEreg_real_readmemdata_MEM_64_mask;
     reg EXEreg_CSRrd_enable;
     reg EXEreg_CSRrd;
     reg EXEreg_CSRrdata_enable;
     reg [63:0]EXEreg_CSRrdata;
-
     always@(*)begin               //如果当前的ALU出现阻塞，则EXEreg不变，直到它计算完成
-        EXEreg_inst_enable             =  ~Suspend_ALU;  
-        EXEreg_pc_enable               =  ~Suspend_ALU;
-        EXEreg_alusrc1_enable          =  ~Suspend_ALU;
-        EXEreg_alusrc2_enable          =  ~Suspend_ALU;
-        EXEreg_ALUctr_enable           =  ~Suspend_ALU;
-        EXEreg_MULctr_enable           =  ~Suspend_ALU;
-        EXEreg_ALUext_enable           =  ~Suspend_ALU;
-        EXEreg_regWr_enable            =  ~Suspend_ALU;
-        EXEreg_Rd_enable               =  ~Suspend_ALU;
-        EXEreg_memWr_enable            =  ~Suspend_ALU;
-        EXEreg_memRd_enable            =  ~Suspend_ALU;
-        EXEreg_memop_enable            =  ~Suspend_ALU;
-        EXEreg_memtoreg_enable         =  ~Suspend_ALU;
-        EXEreg_writememdata_enable     =  ~Suspend_ALU;
-        EXEreg_jump_enable             =  ~Suspend_ALU;
-        EXEreg_Datablock_enable        =  ~Suspend_ALU;
-        EXEreg_readmemaddr_enable      =  ~Suspend_ALU;
-        EXEreg_memconflict_enable      =  ~Suspend_ALU;
-        EXEreg_memconflict_data_enable =  ~Suspend_ALU;
-        EXEreg_CSRrd_enable            =  ~Suspend_ALU;
-        EXEreg_CSRrdata_enable         =  ~Suspend_ALU;
+        EXEreg_inst_enable             =  ~Suspend_ALU & ~Suspend_LSU;  
+        EXEreg_pc_enable               =  ~Suspend_ALU & ~Suspend_LSU;
+        EXEreg_alusrc1_enable          =  ~Suspend_ALU & ~Suspend_LSU;
+        EXEreg_alusrc2_enable          =  ~Suspend_ALU & ~Suspend_LSU;
+        EXEreg_ALUctr_enable           =  ~Suspend_ALU & ~Suspend_LSU;
+        EXEreg_MULctr_enable           =  ~Suspend_ALU & ~Suspend_LSU;
+        EXEreg_ALUext_enable           =  ~Suspend_ALU & ~Suspend_LSU;
+        EXEreg_regWr_enable            =  ~Suspend_ALU & ~Suspend_LSU;
+        EXEreg_Rd_enable               =  ~Suspend_ALU & ~Suspend_LSU;
+        EXEreg_memWr_enable            =  ~Suspend_ALU & ~Suspend_LSU;
+        EXEreg_memRd_enable            =  ~Suspend_ALU & ~Suspend_LSU;
+        EXEreg_memop_enable            =  ~Suspend_ALU & ~Suspend_LSU;
+        EXEreg_memtoreg_enable         =  ~Suspend_ALU & ~Suspend_LSU;
+        EXEreg_writememdata_enable     =  ~Suspend_ALU & ~Suspend_LSU;
+        EXEreg_jump_enable             =  ~Suspend_ALU & ~Suspend_LSU;
+        EXEreg_Datablock_enable        =  ~Suspend_ALU & ~Suspend_LSU;
+        EXEreg_readmemaddr_enable      =  ~Suspend_ALU & ~Suspend_LSU;
+        EXEreg_CSRrd_enable            =  ~Suspend_ALU & ~Suspend_LSU;
+        EXEreg_CSRrdata_enable         =  ~Suspend_ALU & ~Suspend_LSU;
     end
-    ysyx_22050854_Reg #(1,1'b0) EXEreg_gen0 (clk, rst,( (ID_reg_valid & (~Data_Conflict_block)) | Suspend_ALU ), EXEreg_valid, 1'b1);
+    ysyx_22050854_Reg #(1,1'b0) EXEreg_gen0 (clk, rst,( (ID_reg_valid & (~Data_Conflict_block)) | Suspend_ALU | Suspend_LSU), EXEreg_valid, 1'b1);
     ysyx_22050854_Reg #(32,32'b0) EXEreg_geninst (clk, rst, ID_reg_inst, EXEreg_inst, EXEreg_inst_enable);
     ysyx_22050854_Reg #(32,32'h0) EXEreg_genPC (clk, rst, ID_reg_pc, EXEreg_pc, EXEreg_pc_enable);
     ysyx_22050854_Reg #(64,64'b0) EXEreg_gen1 (clk, rst, alu_src1, EXEreg_alusrc1, EXEreg_alusrc1_enable);
@@ -873,10 +857,6 @@ assign test_one = { 28'b0,Last_ALUsuspend_IFUsuspend    ,Last_Jump_Suspend   ,La
     ysyx_22050854_Reg #(1,1'b0) EXEreg_gen13 (clk, rst, jump, EXEreg_jump, EXEreg_jump_enable);
     ysyx_22050854_Reg #(1,1'b0) EXEreg_gen14 (clk, rst, Data_Conflict_block, EXEreg_Datablock, EXEreg_Datablock_enable);
     ysyx_22050854_Reg #(64,64'b0) EXEreg_gen15 (clk, rst, readmemaddr, EXEreg_readmemaddr, EXEreg_readmemaddr_enable);
-    ysyx_22050854_Reg #(1,1'b0) EXEreg_gen16 (clk, rst, mem_Conflict, EXEreg_memconflict, EXEreg_memconflict_enable);
-    ysyx_22050854_Reg #(64,64'b0) EXEreg_gen17 (clk, rst, real_readmemdata_right, EXEreg_memconflict_data, EXEreg_memconflict_data_enable);
-    ysyx_22050854_Reg #(64,64'b0) EXEreg_gen18 (clk, rst, real_readmemdata_EXE_64_mask, EXEreg_real_readmemdata_EXE_64_mask, 1'b1);
-    ysyx_22050854_Reg #(64,64'b0) EXEreg_gen19 (clk, rst, real_readmemdata_MEM_64_mask, EXEreg_real_readmemdata_MEM_64_mask, 1'b1);
     ysyx_22050854_Reg #(1,1'b0) EXEreg_gen20 (clk, rst, CSRrd, EXEreg_CSRrd, EXEreg_CSRrd_enable);
     ysyx_22050854_Reg #(64,64'b0) EXEreg_gen21 (clk, rst, csr_rdata, EXEreg_CSRrdata, EXEreg_CSRrdata_enable);
 
@@ -900,11 +880,6 @@ assign test_one = { 28'b0,Last_ALUsuspend_IFUsuspend    ,Last_Jump_Suspend   ,La
     assign EXEreg_writememdata_32 = EXEreg_writememdata[31:0];
     import "DPI-C" function void get_EXEreg_writememdata_value(int EXEreg_writememdata_32);
     always@(*) get_EXEreg_writememdata_value(EXEreg_writememdata_32);
-    wire [31:0]real_readmemdata_right_32;
-    assign real_readmemdata_right_32 = real_readmemdata_right[31:0];
-    import "DPI-C" function void get_real_readmemdata_right_value(int EXEreg_writememdata_32);
-    always@(*) get_real_readmemdata_right_value(real_readmemdata_right_32);
-
 
     //------------ALU------------//
     wire Suspend_ALU;
@@ -929,7 +904,7 @@ assign test_one = { 28'b0,Last_ALUsuspend_IFUsuspend    ,Last_Jump_Suspend   ,La
 
     //--------------------------------------------- MEM_reg ---------------------------------------------//
     reg MEMreg_valid;
-    ysyx_22050854_Reg #(1,1'b0) MEMreg_gen0 (clk, rst, ( EXEreg_valid & ~Suspend_ALU ), MEMreg_valid, 1'b1); //如果ALU出现暂停信号，那么下周期MEMreg无效
+    ysyx_22050854_Reg #(1,1'b0) MEMreg_gen0 (clk, rst, ( EXEreg_valid & ~Suspend_ALU & ~Suspend_LSU ), MEMreg_valid, 1'b1); //如果ALU出现暂停信号，那么下周期MEMreg无效,如果LSU出现暂停，下周期MEMreg也无效
     reg MEMreg_inst_enable;
     reg [31:0]MEMreg_inst;
     reg MEMreg_pc_enable;
@@ -952,12 +927,6 @@ assign test_one = { 28'b0,Last_ALUsuspend_IFUsuspend    ,Last_Jump_Suspend   ,La
     reg [63:0]MEMreg_writememdata;
     reg MEMreg_readmemaddr_enable;
     reg [63:0]MEMreg_readmemaddr; //为判断 内存的数据冲突
-    reg MEMreg_memconflict_enable;
-    reg MEMreg_memconflict;
-    reg MEMreg_memconflict_data_enable;
-    reg [63:0]MEMreg_memconflict_data;
-    reg [63:0]MEMreg_real_readmemdata_EXE_64_mask;
-    reg [63:0]MEMreg_real_readmemdata_MEM_64_mask;
     reg MEMreg_CSRrd_enable;
     reg MEMreg_CSRrd;
     reg MEMreg_CSRrdata_enable;
@@ -977,8 +946,6 @@ assign test_one = { 28'b0,Last_ALUsuspend_IFUsuspend    ,Last_Jump_Suspend   ,La
         MEMreg_memtoreg_enable = 1'b1;
         MEMreg_writememdata_enable = 1'b1;
         MEMreg_readmemaddr_enable = 1'b1;
-        MEMreg_memconflict_enable = 1'b1;
-        MEMreg_memconflict_data_enable = 1'b1;
         MEMreg_CSRrd_enable = 1'b1;
         MEMreg_CSRrdata_enable = 1'b1;
     end
@@ -991,10 +958,6 @@ assign test_one = { 28'b0,Last_ALUsuspend_IFUsuspend    ,Last_Jump_Suspend   ,La
     ysyx_22050854_Reg #(1,1'b0) MEMreg_gen7 (clk, rst, EXEreg_memtoreg, MEMreg_memtoreg, MEMreg_memtoreg_enable);
     ysyx_22050854_Reg #(64,64'b0) MEMreg_gen8 (clk, rst, EXEreg_writememdata, MEMreg_writememdata, MEMreg_writememdata_enable);
     ysyx_22050854_Reg #(64,64'b0) MEMreg_gen9 (clk, rst, EXEreg_readmemaddr, MEMreg_readmemaddr, MEMreg_readmemaddr_enable); //
-    ysyx_22050854_Reg #(1,1'b0) MEMreg_gen10 (clk, rst, EXEreg_memconflict, MEMreg_memconflict, MEMreg_memconflict_enable);
-    ysyx_22050854_Reg #(64,64'b0) MEMreg_ge11 (clk, rst, EXEreg_memconflict_data, MEMreg_memconflict_data, MEMreg_memconflict_data_enable);
-    ysyx_22050854_Reg #(64,64'b0) MEMreg_ge12 (clk, rst, EXEreg_real_readmemdata_EXE_64_mask, MEMreg_real_readmemdata_EXE_64_mask, 1'b1);
-    ysyx_22050854_Reg #(64,64'b0) MEMreg_ge13 (clk, rst, EXEreg_real_readmemdata_MEM_64_mask, MEMreg_real_readmemdata_MEM_64_mask, 1'b1);
     ysyx_22050854_Reg #(1,1'b0) MEMreg_ge14 (clk, rst, EXEreg_CSRrd, MEMreg_CSRrd, MEMreg_CSRrd_enable);
     ysyx_22050854_Reg #(64,64'b0) MEMreg_ge15 (clk, rst, EXEreg_CSRrdata, MEMreg_CSRrdata, MEMreg_CSRrdata_enable);
 
@@ -1021,68 +984,241 @@ assign test_one = { 28'b0,Last_ALUsuspend_IFUsuspend    ,Last_Jump_Suspend   ,La
     always@(*) get_MEMreg_valid_value(MEMreg_valid_32);
 
     wire [63:0] rdata;
-    wire [63:0] rdata_t;
-/*     wire [31:0]rdata_32;
-    assign rdata_32 = rdata[31:0];
-    import "DPI-C" function void get_rdata_value(int rdata_32);
-    always@(*) get_rdata_value(rdata_32);    */ 
-    wire dsram_arvalid;
-    assign dsram_arvalid = MemRd & ID_reg_valid & ~Suspend_ALU;
-    wire dsram_arready;
-    wire dsram_rresp;
-    wire dsram_rvalid;
-    wire dsram_rready;
-    assign dsram_rready = MemRd & ID_reg_valid & ~Suspend_ALU;
-    wire dsram_awvalid;
-    assign dsram_awvalid = MEMreg_memwr & MEMreg_valid;
-    wire dsram_awready;
-    wire dsram_wvalid;
-    assign dsram_wvalid = MEMreg_memwr & MEMreg_valid;
-    wire dsram_wready;
-    wire [7:0]dsram_wstrb;
-    wire dsram_bresp;
-    wire dsram_bvalid;
-    ysyx_22050854_MuxKey #(4,3,8) gen_dsram_wstrb (dsram_wstrb,MEMreg_memop,{
+    wire [63:0] Dcache_ret_data;
+ 
+    wire Access_mem;
+    assign Access_mem = ( readmemaddr[31:0] <= 32'h87ffffff ) ? 1'b1 : 1'b0;   // access device cannot use cache. for debug
+    wire Data_cache_valid;
+    assign Data_cache_valid =  ( MemRd | MemWr ) & ID_reg_valid & ~Suspend_ALU & ~Suspend_LSU & ~Data_Conflict_block;  //
+    wire Data_cache_valid_debug;
+    assign Data_cache_valid_debug =  Data_cache_valid & Access_mem;
+    wire Access_device;
+    assign Access_device = Data_cache_valid & ~Access_mem;
+    wire Data_cache_op;
+    assign Data_cache_op = ( MemWr & ID_reg_valid & ~Suspend_ALU & ~Data_Conflict_block );
+    wire [6:0]Data_cache_index;
+    wire [20:0]Data_cache_tag;
+    wire [3:0]Data_cache_offset;
+    assign Data_cache_offset = readmemaddr[3:0] ;
+    assign Data_cache_index = readmemaddr[10:4];
+    assign Data_cache_tag = readmemaddr[31:11];
+    wire Data_cache_addr_ok;
+    wire Data_cache_Data_ok;
+    wire [7:0]Dcache_wr_wstb;
+    ysyx_22050854_MuxKey #(4,3,8) gen_Dcache_wr_wstb (Dcache_wr_wstb,MemOP,{
         3'b000,8'b00000001,  // sb   000
         3'b001,8'b00000011,  // sh
         3'b010,8'b00001111,  // sw
         3'b011,8'b11111111   // sd
     });
-    ysyx_22050854_SRAM_LSU cpu_lsu (
+
+    wire AXI_Dcache_rd_req;
+    wire [2:0]AXI_Dcache_rd_type;
+    wire [31:0]AXI_Dcache_rd_addr;
+    wire AXI_Dcache_rd_rdy;
+    wire AXI_Dcache_ret_valid;
+    wire AXI_Dcache_ret_last;
+    wire [63:0]AXI_Dcache_ret_data;
+    wire AXI_Dcache_wr_req;
+    wire [2:0]AXI_Dcache_wr_type;
+    wire [31:0]AXI_Dcache_wr_addr;
+    wire [7:0]AXI_Dcache_wr_wstb;
+    wire [127:0]AXI_Dcache_wr_data;
+    wire AXI_Dcache_wr_rdy;
+    assign AXI_Dcache_wr_rdy = 1'b1;
+    assign AXI_Dcache_rd_rdy = 1'b1;
+    wire Suspend_LSU;
+    assign AXI_Dcache_ret_valid = ( io_master_rresp  == 2'b10 ) && ( io_master_rid == 4'b0010 );
+    assign AXI_Dcache_ret_last = io_master_rlast;
+    assign AXI_Dcache_ret_data = io_master_rdata;
+    ysyx_22050854_Dcache data_cache_inst (
+        .clk(clk),
+        .rst(rst),
+        .valid(Data_cache_valid_debug),
+        .op(Data_cache_op),
+        .index(Data_cache_index),
+        .tag(Data_cache_tag),
+        .offset(Data_cache_offset),
+        .wstrb(Dcache_wr_wstb),
+        .wdata(real_storememdata_right),
+        .addr_ok(Data_cache_addr_ok),
+        .data_ok(Data_cache_Data_ok),
+        .rdata(Dcache_ret_data),
+        .unshoot(Suspend_LSU),
+
+        //Dcache & AXI4 交互信号
+        .rd_req(AXI_Dcache_rd_req),
+        .rd_type(AXI_Dcache_rd_type),
+        .rd_addr(AXI_Dcache_rd_addr),
+        .rd_rdy(AXI_Dcache_rd_rdy),
+        .ret_valid(AXI_Dcache_ret_valid),
+        .ret_last(AXI_Dcache_ret_last),
+        .ret_data(AXI_Dcache_ret_data),
+        .wr_req(AXI_Dcache_wr_req),
+        .wr_type(AXI_Dcache_wr_type),
+        .wr_addr(AXI_Dcache_wr_addr),
+        .wr_wstb(AXI_Dcache_wr_wstb),
+        .wr_data(AXI_Dcache_wr_data),
+        .wr_rdy(AXI_Dcache_wr_rdy),
+
+        .sram4_addr(cpu_io_sram4_addr),
+        .sram4_cen(cpu_io_sram4_cen),
+        .sram4_wen(cpu_io_sram4_wen),
+        .sram4_wmask(cpu_io_sram4_wmask),
+        .sram4_wdata(cpu_io_sram4_wdata),
+        .sram4_rdata(cpu_io_sram4_rdata),
+
+        .sram5_addr(cpu_io_sram5_addr),
+        .sram5_cen(cpu_io_sram5_cen),
+        .sram5_wen(cpu_io_sram5_wen),
+        .sram5_wmask(cpu_io_sram5_wmask),
+        .sram5_wdata(cpu_io_sram5_wdata),
+        .sram5_rdata(cpu_io_sram5_rdata),
+
+        .sram6_addr(cpu_io_sram6_addr),
+        .sram6_cen(cpu_io_sram6_cen),
+        .sram6_wen(cpu_io_sram6_wen),
+        .sram6_wmask(cpu_io_sram6_wmask),
+        .sram6_wdata(cpu_io_sram6_wdata),
+        .sram6_rdata(cpu_io_sram6_rdata),
+
+        .sram7_addr(cpu_io_sram7_addr),
+        .sram7_cen(cpu_io_sram7_cen),
+        .sram7_wen(cpu_io_sram7_wen),
+        .sram7_wmask(cpu_io_sram7_wmask),
+        .sram7_wdata(cpu_io_sram7_wdata),
+        .sram7_rdata(cpu_io_sram7_rdata)
+    );
+
+    reg AXI_Dcache_wlast;
+    reg AXI_Dcache_wvalid;
+    reg [63:0]AXI_Dcache_data_64;
+    reg AXI_Dcache_data_first_over;
+    reg [127:0]Dcache_to_AXI_data_temp;
+    always @(posedge clk)begin
+        if(rst)
+            Dcache_to_AXI_data_temp <= 128'b0;
+        else if(AXI_Dcache_wr_req)
+            Dcache_to_AXI_data_temp <= AXI_Dcache_wr_data;
+    end
+    
+//由于采用突发传输传输128位，而总线位宽为64位，所以需要传递两次，需要重新组织待传输的数据
+//当检测到写地址信号时，第一个上升沿准备第一个写数据，并置写数据信号有效，第二个上升沿准备第二个写信号，同样置写数据信号有效
+    always @(posedge clk)begin
+        if(rst)begin
+            AXI_Dcache_data_64 <= 64'b0;
+            AXI_Dcache_data_first_over <= 1'b0;
+            AXI_Dcache_wvalid <= 1'b0;
+            AXI_Dcache_wlast <= 1'b0;
+        end
+        else if( AXI_Dcache_data_first_over )begin
+            AXI_Dcache_data_64 <= Dcache_to_AXI_data_temp[127:64];
+            AXI_Dcache_wvalid <= 1'b1;
+            AXI_Dcache_data_first_over <= 1'b0;
+            AXI_Dcache_wlast <= 1'b1;
+        end
+        else if( AXI_Dcache_wr_req ) begin     //读请求只持续一个周期
+            AXI_Dcache_data_64 <= AXI_Dcache_wr_data[63:0];
+            AXI_Dcache_wvalid <= 1'b1;
+            AXI_Dcache_data_first_over <= 1'b1;
+        end
+        else begin
+            AXI_Dcache_data_first_over <= 1'b0;
+            AXI_Dcache_data_64 <= 64'b0;
+            AXI_Dcache_wvalid <= 1'b0;
+            AXI_Dcache_wlast <= 1'b0;
+        end
+    end
+
+    assign io_master_awvalid = AXI_Dcache_wr_req;
+    assign io_master_awaddr =  AXI_Dcache_wr_addr;
+    assign io_master_awid = 4'b0010;
+    assign io_master_awlen = 8'd128;
+    assign io_master_awsize = 3'b0;
+    assign io_master_awburst = 2'b0;
+
+    assign io_master_wvalid = AXI_Dcache_wvalid;
+    assign io_master_wdata = AXI_Dcache_data_64;
+    assign io_master_wstrb = 8'hff;
+    assign io_master_wlast = AXI_Dcache_wlast;
+
+    assign io_master_bready = 1'b1;
+
+    ysyx_22050854_AXI_arbiter GEN_AXI_signal (
+        .clk(clk),
+        .rst(rst),
+
+        .IFU_request(AXI_Icache_rd_req),
+        .LSU_request(AXI_Dcache_rd_req),
+        .IFU_addr(AXI_Icache_rd_addr),
+        .LSU_addr(AXI_Dcache_rd_addr),
+        .AXI_arbiter_arvalid(io_master_arvalid),
+        .AXI_arbiter_arid(io_master_arid),
+        .AXI_arbiter_addr(io_master_araddr)
+    );
+    assign io_master_arlen = 8'b0;
+    assign io_master_arsize = 3'b0;
+    assign io_master_arburst = 2'b1;
+
+    assign io_master_rready = 1'b1;
+
+    //专门用来访问设备 可以说是调试用
+    wire [63:0]device_rdata;
+    wire device_arready;
+    wire device_rresp;
+    wire device_awready;
+    wire device_wready;
+    wire device_rvalid;
+    wire device_bresp;
+    wire device_bvalid;
+    ysyx_22050854_SRAM_LSU cpu_access_device (
         .clk(clk),
         .rst_n(rst_n),
 
         //read address channel
         .araddr(readmemaddr[31:0]),
-        .arvalid(dsram_arvalid),
-        .arready(dsram_arready), 
+        .arvalid(Access_device & MemRd),
+        .arready(device_arready), 
 
         //read data channel
-        .rdata(rdata_t),
-        .rresp(dsram_rresp),
-        .rvalid(dsram_rvalid),
-        .rready(dsram_arready),
+        .rdata(device_rdata),
+        .rresp(device_rresp),
+        .rvalid(device_rvalid),
+        .rready(1'b1),
 
         //write address channel
-        .awaddr(MEMreg_aluout[31:0]),
-        .awvalid(dsram_awvalid),
-        .awready(dsram_awready),
+        .awaddr(readmemaddr[31:0]),
+        .awvalid(Access_device & MemWr),
+        .awready(device_awready),
 
         //write data channel
-        .wdata(MEMreg_writememdata),
-        .wvalid(dsram_wvalid),
-        .wready(dsram_wready),
-        .wstrb(dsram_wstrb),
+        .wdata(real_storememdata_right),
+        .wvalid(Access_device & MemWr),
+        .wready(device_wready),
+        .wstrb(Dcache_wr_wstb),
 
         //write response channel
-        .bresp(dsram_bresp),
-        .bvalid(dsram_bvalid),
+        .bresp(device_bresp),
+        .bvalid(device_bvalid),
         .bready(1'b1)
     );
 
-    //因为从存储器读出的数据总是8字节的,所以要根据地址以及位数获得不同的数据
+    reg [63:0]Data_while_SuspendLSU;
+    always @(posedge clk)begin
+        if(rst)
+            Data_while_SuspendLSU <= 64'b0;
+        else if( Suspend_LSU & Data_cache_Data_ok)
+            Data_while_SuspendLSU <= read_mem_data;
+    end
+
+    wire [63:0]Memdata_to_WBreg_2;
+    assign Memdata_to_WBreg_2 = Data_cache_Data_ok ? read_mem_data : Data_while_SuspendLSU;
+    wire [63:0]Memdata_to_WBreg;
+    assign Memdata_to_WBreg = device_rresp ? read_mem_data : Memdata_to_WBreg_2; //访问设备固定两个周期读出
+    //如果Dcache没有命中，那么需要暂停，此时读内存的数据就应该是之前记录的暂停期间读到的数
     wire [63:0]read_mem_data;
-    assign rdata = MEMreg_memconflict ? ( (rdata_t & (~MEMreg_real_readmemdata_EXE_64_mask) & ( ~MEMreg_real_readmemdata_MEM_64_mask)) | MEMreg_memconflict_data ) : rdata_t;
+    assign rdata = ( Data_cache_Data_ok ) ? Dcache_ret_data : device_rdata;
+    //因为从存储器读出的数据总是8字节的,所以要根据地址以及位数获得不同的数据
     ysyx_22050854_MuxKey #(41,6,64) gen_read_mem_data (read_mem_data,{ MEMreg_aluout[2:0],MEMreg_memop },{
         6'b000000, {{56{rdata[7]}},rdata[7:0]},  //1 bytes signed extend  lb 000
         6'b000001, {{48{rdata[15]}},rdata[15:0]}, //2 bytes signed extend  lh
@@ -1133,20 +1269,57 @@ assign test_one = { 28'b0,Last_ALUsuspend_IFUsuspend    ,Last_Jump_Suspend   ,La
         6'b111000, {{56{rdata[63]}},rdata[63:56]},  //1 bytes signed extend  lb 111
         6'b111100, {56'b0,rdata[63:56]}    // 1 bytes unsigned extend lbu
     });
-    
-    wire [31:0]dsram_rresp_32;
-    assign dsram_rresp_32 = {31'b0,dsram_rresp};
-    import "DPI-C" function void get_dsram_rresp_value(int dsram_rresp_32);
-    always@(*) get_dsram_rresp_value(dsram_rresp_32);
+
     wire [31:0]wr_reg_data_32;
     assign wr_reg_data_32 = wr_reg_data[31:0];
     import "DPI-C" function void get_wr_reg_data_value(int wr_reg_data_32);
     always@(*) get_wr_reg_data_value(wr_reg_data_32);
+
     wire [31:0]rdata_32;
     assign rdata_32 = read_mem_data[31:0];
     import "DPI-C" function void get_rdata_value(int rdata_32);
     always@(*) get_rdata_value(rdata_32);
 
+    wire [31:0]Suspend_LSU_32;
+    assign Suspend_LSU_32 = { 31'b0 , Suspend_LSU };
+    import "DPI-C" function void get_Suspend_LSU_value(int Suspend_LSU_32);
+    always@(*) get_Suspend_LSU_value( Suspend_LSU_32 );
+
+
+    wire [31:0]Data_cache_Data_ok_32;
+    assign Data_cache_Data_ok_32 = { 31'b0 , Data_cache_Data_ok };
+    import "DPI-C" function void get_Data_cache_Data_ok_value(int Data_cache_Data_ok_32);
+    always@(*) get_Data_cache_Data_ok_value( Data_cache_Data_ok_32 );
+
+    wire [31:0]Dcache_ret_data_32;
+    assign Dcache_ret_data_32 = Dcache_ret_data[31:0];
+    import "DPI-C" function void get_Dcache_ret_data_value(int Dcache_ret_data_32);
+    always@(*) get_Dcache_ret_data_value(Dcache_ret_data_32);
+
+    wire [31:0]Data_cache_valid_32;
+    assign Data_cache_valid_32 = { 31'b0 , Data_cache_valid };
+    import "DPI-C" function void get_Data_cache_valid_value(int Data_cache_valid_32);
+    always@(*) get_Data_cache_valid_value( Data_cache_valid_32 );
+
+    wire [31:0]real_storememdata_right_32;
+    assign real_storememdata_right_32 = real_storememdata_right[31:0];
+    import "DPI-C" function void get_real_storememdata_right_value(int real_storememdata_right_32);
+    always@(*) get_real_storememdata_right_value(real_storememdata_right_32);
+
+    wire [31:0]Dcache_addr;
+    assign Dcache_addr = readmemaddr[31:0];
+    import "DPI-C" function void get_Dcache_addr_value(int Dcache_addr);
+    always@(*) get_Dcache_addr_value(Dcache_addr);
+
+    import "DPI-C" function void get_AXI_Dcache_wr_addr_value(int AXI_Dcache_wr_addr);
+    always@(*) get_AXI_Dcache_wr_addr_value(AXI_Dcache_wr_addr);
+
+    wire [31:0]AXI_Dcache_data_32;
+    assign AXI_Dcache_data_32 = AXI_Dcache_data_64[31:0];
+    import "DPI-C" function void get_AXI_Dcache_data_64_value(int AXI_Dcache_data_32);
+    always@(*) get_AXI_Dcache_data_64_value(AXI_Dcache_data_32);
+
+    //AXI_Dcache_rd_req
     //----------------------------------- WBreg -------------------------------------------------------------//
     reg WBreg_valid;
     reg WBreg_inst_enable;
@@ -1172,7 +1345,8 @@ assign test_one = { 28'b0,Last_ALUsuspend_IFUsuspend    ,Last_Jump_Suspend   ,La
     always@(*)begin
         WBreg_inst_enable = 1'b1;
         WBreg_pc_enable = 1'b1;
-        WBreg_readmemdata_enable = dsram_rresp;
+        //WBreg_readmemdata_enable = dsram_rresp;
+        WBreg_readmemdata_enable = 1'b1;
         WBreg_regwr_enable = 1'b1;
         WBreg_rd_enable = 1'b1;
         WBreg_memtoreg_enable = 1'b1;
@@ -1184,7 +1358,7 @@ assign test_one = { 28'b0,Last_ALUsuspend_IFUsuspend    ,Last_Jump_Suspend   ,La
     ysyx_22050854_Reg #(32,32'b0) WBreg_geninst (clk, rst, MEMreg_inst, WBreg_inst, WBreg_inst_enable);
     ysyx_22050854_Reg #(32,32'h0) WBreg_genPC (clk, rst, MEMreg_pc, WBreg_pc, WBreg_pc_enable);
     ysyx_22050854_Reg #(1,1'b0) WBreg_gen0 (clk, rst, MEMreg_valid, WBreg_valid, 1'b1);
-    ysyx_22050854_Reg #(64,64'b0) WBreg_gen1 (clk, rst, read_mem_data, WBreg_readmemdata, WBreg_readmemdata_enable);
+    ysyx_22050854_Reg #(64,64'b0) WBreg_gen1 (clk, rst, Memdata_to_WBreg, WBreg_readmemdata, WBreg_readmemdata_enable);
     ysyx_22050854_Reg #(1,1'b0) WBreg_gen2 (clk, rst, MEMreg_regwr, WBreg_regwr, WBreg_regwr_enable);
     ysyx_22050854_Reg #(5,5'b0) WBreg_gen3 (clk, rst, MEMreg_rd, WBreg_rd, WBreg_rd_enable);
     ysyx_22050854_Reg #(64,64'b0) WBreg_gen4 (clk, rst, MEMreg_aluout, WBreg_aluout, WBreg_aluout_enable);
@@ -1193,11 +1367,22 @@ assign test_one = { 28'b0,Last_ALUsuspend_IFUsuspend    ,Last_Jump_Suspend   ,La
     ysyx_22050854_Reg #(1,1'b0) WBreg_gen7 (clk, rst, MEMreg_CSRrd, WBreg_CSRrd, WBreg_CSRrd_enable);
     ysyx_22050854_Reg #(64,64'b0) WBreg_gen8 (clk, rst, MEMreg_CSRrdata, WBreg_CSRrdata, WBreg_CSRrdata_enable);
 
+    wire ebreak;
     assign ebreak = ( ( WBreg_inst == 32'b0000_0000_0001_0000_0000_0000_0111_0011 ) &  WBreg_valid ) ? 1'b1 : 1'b0;
+    wire [31:0]ebreak_32;
+    assign ebreak_32 = { 31'b0,ebreak };
+    import "DPI-C" function void get_ebreak_value(int ebreak_32);
+    always@(*) get_ebreak_value(ebreak_32);
 
-    //写回寄存器的数据，总共有三种可能 1.alu计算值  2.从内存读出的数据 3.从CSR读出的数据
+    wire [31:0]x10_32;
+    assign x10_32 = x10[31:0];
+    import "DPI-C" function void get_x10_value(int x10_32);
+    always@(*) get_x10_value(x10_32);
+
+
+    //写回寄存器的数据，总共有三种可能 1.ALU计算值  2.从内存读出的数据 3.从CSR读出的数据
     wire [63:0]wr_reg_data;
-    assign wr_reg_data = WBreg_memtoreg ? ( WBreg_readmemdata ): (WBreg_CSRrd ? WBreg_CSRrdata : WBreg_aluout);
+    assign wr_reg_data = WBreg_memtoreg ? WBreg_readmemdata : ( WBreg_CSRrd ? WBreg_CSRrdata : WBreg_aluout );
 
     import "DPI-C" function void get_WBreginst_value(int WBreg_inst);
     always@(*) get_WBreginst_value(WBreg_inst);

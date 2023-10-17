@@ -14,9 +14,10 @@
 ***************************************************************************************/
 
 #include "sdb.h"
+#include <memory/vaddr.h>
+#include <memory/paddr.h>
 
 #define NR_WP 32
-
 typedef struct watchpoint {
   int NO;
   char expr[64];
@@ -70,7 +71,7 @@ void print_wp(){
   bool *su=false;
   while(PB != free_)
   {
-    printf("wp_pool.NO = %d  expr = (%s)  value = %ld\n",PB->NO,PB->expr,expr(PB->expr,su));
+    printf("wp_pool.NO = %d  expr = (%s)  value = %ld\n",PB->NO,PB->expr,vaddr_read( expr(PB->expr,su),4 ));
     PB = PB->next;
   }
   }
@@ -116,12 +117,13 @@ void wp_detect(){
     pb = head;
     while(pb != free_)
     {
-      pb->cur_value = expr(pb->expr,suc); 
+      //pb->cur_value = expr(pb->expr,suc);
+      pb->cur_value =  vaddr_read( expr(pb->expr,suc),4 );
       if(pb->cur_value != pb->last_value && count !=0)
       {
         nemu_state.state = NEMU_STOP;
         printf("The NO.%d Watchpoint %s change! \n",pb->NO,pb->expr);
-        printf("Old value = %ld \nNew value = %ld \n",pb->last_value, pb->cur_value);
+        printf("Old value = %lx \nNew value = %lx \n",pb->last_value, pb->cur_value);
       }
       pb->last_value = pb->cur_value;
       pb = pb->next;
