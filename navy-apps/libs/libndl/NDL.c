@@ -91,12 +91,13 @@ void NDL_DrawRect(uint32_t *pixels, int x, int y, int w, int h) {
   assert(fd != -1);
   int fc = 0;
   int len = 0;
-  for(int i = 0; i < h; i++){
+  for(int i = 0; i < h; i++){ // write one line at a time
       fc = lseek(fd, ((y + i) * 400 + x) * 4, SEEK_SET);
       assert(fc != -1);
       len = write( fd, pixels + i * w, w * sizeof(uint32_t));
       //printf("len = %d \n" ,len);
   }
+  //printf("----------------navy-apps: out NDL_DrawRect----------------\n");
 /*   fc = lseek(fd, 0, SEEK_SET);
   assert(fc != -1);
   int result = close(fd);

@@ -9,8 +9,8 @@
 
 
 module ysyx_22050854_multiplier_v1(
-    input clk,
-    input rst,
+    input clock,
+    input reset,
     input mul_valid, //1:input data valid
     input flush,     //1:cancel multi
     input mulw,      //1:32 bit multi
@@ -29,8 +29,8 @@ reg [63:0]multiplicand_temp;
 reg [63:0]multiplier_temp;
 reg mul32ss_go;  //32 x 32 符号相乘准备好标志  直到运算结束才置0
 reg mul_ready_t;
-always @(posedge clk)begin
-    if(rst)begin
+always @(posedge clock)begin
+    if(reset)begin
         mul32ss_go <= 1'b0;
         mul_ready_t <= 1'b1;
         multiplicand_temp <= 64'b0;
@@ -51,8 +51,8 @@ always @(posedge clk)begin
 end
 
 reg [6:0]mul_count; //用于给移位计数 需要移位32次 采用6位数 大一位
-always @(posedge clk)begin
-    if(rst)begin
+always @(posedge clock)begin
+    if(reset)begin
         mul_count <= 7'd0;
     end
     else if( mul32ss_go & ((mul_count >= 7'd31) | ( multiplier_temp == 64'b0)) )
@@ -68,8 +68,8 @@ end
 
 reg [63:0]mul32_result_temp; //存放32 x 32 位的乘积
 //启动 32 x 32 位无符号数的运算
-always @(posedge clk)begin
-    if(rst)begin
+always @(posedge clock)begin
+    if(reset)begin
         mul32_result_temp <= 64'b0;
     end
     else if(mul32ss_go & (mul_count < 7'd32))begin
@@ -88,8 +88,8 @@ always @(posedge clk)begin
 end
 
 reg mul32_over;
-always @(posedge clk)begin
-    if(rst)
+always @(posedge clock)begin
+    if(reset)
         mul32_over <= 1'b0;
     else if( mul32ss_go & ((mul_count >= 7'd31) | ( multiplier_temp == 64'b0)) )
         mul32_over <= 1'b1;
@@ -101,8 +101,8 @@ end
 reg [127:0]multiplicand_temp_128; //64位运算的被乘数寄存器
 reg mul64_go;
 reg mul64_multiplier_sign;
-always @(posedge clk)begin
-    if(rst)begin
+always @(posedge clock)begin
+    if(reset)begin
         multiplicand_temp_128 <= 128'b0;
         mul64_go <= 1'b0;
         mul64_multiplier_sign <= 1'b0;
@@ -127,8 +127,8 @@ always @(posedge clk)begin
 end
 
 reg [127:0]mul64_result_temp;
-always @(posedge clk)begin
-    if(rst)
+always @(posedge clock)begin
+    if(reset)
         mul64_result_temp <= 128'b0;
     else if( mul64_go & ( mul_count < 7'd64) )begin
         if( multiplier_temp[0] & ( mul_count == 7'd63 ) & mul64_multiplier_sign )begin //对于补码乘法，最后一次被累加的乘积需要使用补码减法来操作
@@ -145,8 +145,8 @@ always @(posedge clk)begin
 end
 
 reg mul64_over;
-always @(posedge clk)begin
-    if(rst)
+always @(posedge clock)begin
+    if(reset)
         mul64_over <= 1'b0;
     else if(mul64_go & ( (mul_count >= 7'd63) |  multiplier_temp == 64'b0) )
         mul64_over <= 1'b1;

@@ -22,6 +22,25 @@ extern "C" void get_pc_value(int data)
   verilog_pc = data;
 }
 
+uint32_t Dcache_FenceI = 0;
+extern "C" void get_fencei_value(int data)
+{
+  Dcache_FenceI = data;
+}
+
+
+uint32_t Fence_counter = 0;
+extern "C" void get_Fence_counter_32_value(int data)
+{
+  Fence_counter = data;
+}
+
+uint32_t Fence_state = 0;
+extern "C" void get_Fence_state_32_value(int data)
+{
+  Fence_state = data;
+}
+
 uint32_t Suspend_LSU = 0;
 extern "C" void get_Suspend_LSU_value(int data)
 {
@@ -590,45 +609,50 @@ void sim_exit(){
 }
 
 static void single_cycle(){
-  top->clk = 0; sim_exit();
-  top->clk = 1; sim_exit();
+  top->clock = 0; sim_exit();
+  top->clock = 1; sim_exit();
 }
 
 static void reset(int n){
-  top->rst = 1;
+  top->reset = 1;
   while (n -- > 0) single_cycle();
-  top->rst = 0;
+  top->reset = 0;
 }
 
 static uint64_t inst_start_time;
 static uint64_t inst_over_time;
+static uint64_t inst_last_time;
 int last_inst_ex = 0;
 void cpu_exec(int n){
   int this_cycle_inst = n;
   gettimeofday(&currentTime,NULL);
-  inst_start_time = currentTime.tv_sec * 1000000 + currentTime.tv_usec;
-
+  //inst_start_time = currentTime.tv_sec * 1000000 + currentTime.tv_usec;
+  inst_start_time = currentTime.tv_sec;
+  printf("inst_start_time = %d \n" , inst_start_time);
   while((n || Execute) && !npc_stop){  //!contextp->gotFinish()
     //如果执行到了ebreak 或指令条数 或发现差异 就停
     if( ebreak_cpu || (n-- == 0 && !Execute) || dut_find_difftest ) { break; }
 
-    top->clk = 0; sim_exit();
+    top->clock = 0; sim_exit();
     uint64_t top_pc = verilog_pc;
     uint32_t top_inst = verilog_inst;
-    top->clk = 1; sim_exit();
+    top->clock = 1; sim_exit();
     top_pc = WBreg_pc;
     top_inst = verilog_WBinst;
     total_cycle = total_cycle + 1; 
     if(inst_finish) total_inst_num += 1;
 
     if(total_inst_num % 10000000 == 0){printf("total_inst_num = %d, total_cycle = %d\n",total_inst_num++,total_cycle);}
-
+    
+    if(verilog_IDinst & 0x7f == 0xf ) printf("PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP- PPPPPPPPPPPPPPPpp Find fence.I \n");
+    //if(Dcache_FenceI) printf("Find FenceI, inst_num = %d \n" ,total_cycle);
     if(this_cycle_inst < 51 && !Execute){
     printf("total_cycle = %d ,valid inst num = %d\n" ,total_cycle ,total_inst_num);
     printf("inst = %x, pc_real = %lx,hit_cache = %d, IFU_valid = %d,PC_JUMP_Suspend = %x\n,\
   Icache_state = %x , rd_req = %d, rd_addr = %x, araddr_pc = %x,ret_valid = %d,ret_last = %x, ret_data_32= %x,Data_OK = %d,cache_rdata_32 = %x,Suspend_IFU = %d\n,\
 IDreg_pc = %x, IDreg_inst = %x, next_pc = %x, current_pc = %x ,jump = %d, Data_Conflict = %x, Dcache_request = %d, dsram_write_addr = %x, awvalid = %d, dsram_wdata = %x, IDreg_valid = %d\n,\
   Dcache_state = %d, HitWay = %d, address = %x, retData = %x, read_mem_data = %x, Dataok = %d, wmask = %x, wdata = %x, Dcache_AXIretData = %x,Replace_data = %x,AXI_Dcache_addr = %x,AXI_Dcache_data = %x\n,\
+  Dcache_FenceI = %d, Fence_state = %x, Fence_counter = %d\n,\
 EXEreg_pc = %x, EXEreg_inst = %x, Suspend_LSU = %d, Suspend_ALU = %d, EXEreg_valid = %d\n,\
 MEMreg_pc = %x, MEMreg_inst = %x, MEMreg_aluout = 0x%lx, MEMreg_memwr = %d, MEMreg_valid=%d\n,\
 WBreg_pc = %x,  WBreg_inst = %x, WBreg_aluout = 0x%lx ,WBreg_rd = %d ,wr_reg_data = 0x%lx,WBreg_valid = %d\n\n" \
@@ -636,6 +660,7 @@ WBreg_pc = %x,  WBreg_inst = %x, WBreg_aluout = 0x%lx ,WBreg_rd = %d ,wr_reg_dat
      ,cache_state_32, rd_req_32, rd_addr, araddr_pc, ret_valid_32,ret_last_32,ret_data_32,Data_OK_32,cache_rdata_32,Suspend_IFU_32\
      ,verilog_IDpc,verilog_IDinst,next_pc,current_pc,jump,Data_Conflict,Dcache_valid,dsram_write_addr,awvalid,dsram_wdata,IDreg_valid\
      ,Dcache_state,Dcache_Hitway,Dcache_addr,Dcache_ret_Data,read_mem_data,Data_cache_Data_ok,writeDcache_data,Dcache_wdata,Dcache_AXI_ret_data,Replace_cache_data_32,AXI_Dcache_addr,AXI_Dcache_data\
+     ,Dcache_FenceI,Fence_state,Fence_counter\
      ,EXEreg_pc,verilog_EXEinst,Suspend_LSU,Suspend_alu,EXEreg_valid\ 
      ,MEMreg_pc,verilog_MEMinst,MEMreg_aluout,MEMreg_memwr,MEMreg_valid\
      ,WBreg_pc,verilog_WBinst,WBreg_aluout ,WBreg_rd,wr_reg_data,WBreg_valid);
@@ -719,6 +744,7 @@ WBreg_pc = %x,  WBreg_inst = %x, WBreg_aluout = 0x%lx ,WBreg_rd = %d ,wr_reg_dat
 
     //访问设备指令跳过
     if(is_device)  { cpu.pc = inst_finishpc+4; difftest_skip_ref(); }
+    //fenceI跳过
     //检测
     difftest_step(inst_finishpc,inst_finishpc);
     //printf("difftest over\n");
@@ -728,15 +754,19 @@ WBreg_pc = %x,  WBreg_inst = %x, WBreg_aluout = 0x%lx ,WBreg_rd = %d ,wr_reg_dat
 
   //printf("cpu_exec while over!\n");
   gettimeofday(&currentTime,NULL);
-  inst_over_time = currentTime.tv_sec *1000000 + currentTime.tv_usec - inst_start_time;
-  inst_over_time = inst_over_time / 1000000;
-  double inst_frequency = (double)total_inst_num / (double)inst_over_time;
+  //inst_over_time = currentTime.tv_sec *1000000 + currentTime.tv_usec - inst_start_time;
+  inst_over_time = currentTime.tv_sec;
+  //inst_last_time = inst_over_time / 1000000;
+  inst_last_time = inst_over_time - inst_start_time;
+
+  double inst_frequency = (double)total_inst_num / (double)inst_last_time;
+  double Cycle_frequency = (double)total_cycle / (double)inst_last_time;
   double IPC = (double)total_inst_num / (double)total_cycle;
 
   if( (!x10_cpu && ebreak_cpu) || (npc_stop)){
-    Log("npc = %s at pc = 0x%x" ,ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN),verilog_pc);
-    Log("total guest instructions = %d, total cycle = %ld, IPC = %.2f " ,total_inst_num ,total_cycle,IPC);
-    //Log("simulation frequency = %d inst/s, total time: %ld s \n" ,inst_frequency ,inst_over_time );
+    Log("NPC = %s at PC = 0x%x" ,ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN),verilog_pc);
+    Log("Total guest Instructions = %d, total cycle = %ld, IPC = %.2f " ,total_inst_num ,total_cycle,IPC);
+    Log("Instruction Frequency = %.2f inst/s, Simulation frequency = %.2f inst/s, total time: %d s \n" ,inst_frequency,Cycle_frequency ,inst_last_time );
   }
   else if ( ebreak_cpu && x10_cpu != 0 ){
     Log("npc = %s at pc = 0x%x" ,ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED),verilog_pc);
@@ -763,8 +793,8 @@ int main(int argc, char** argv, char** env){
   //top->trace(tfp,0);
   //tfp->open("wave.vcd");
 
-  top->rst = 0;
-  top->clk = 0;
+  top->reset = 0;
+  top->clock = 0;
   reset(2);
 
   cpu.pc = (uint64_t)0x80000000;

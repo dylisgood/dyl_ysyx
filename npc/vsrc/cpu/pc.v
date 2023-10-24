@@ -1,7 +1,7 @@
 
 module ysyx_22050854_pc(
-    input rst,
-    input clk,
+    input reset,
+    input clock,
     input IDreg_valid,
     input Data_Conflict,
     input suspend,
@@ -23,8 +23,8 @@ module ysyx_22050854_pc(
     assign zero = ( ( $signed(alu_src1) ) - ( $signed(alu_src2) ) == 0 ) ? 1'b1 : 1'b0;
     assign less = unsigned_compare ? ( alu_src1 < alu_src2 ? 1'b1 : 1'b0 ) : ( ($signed(alu_src1)) < ($signed(alu_src2)) ? 1'b1 : 1'b0 );
 
-    reg [2:0]PCsrc;
-    reg [31:0]PCsrc1,PCsrc2;
+    wire [2:0]PCsrc;
+    wire [31:0]PCsrc1,PCsrc2;
     //default----00---pc + 4 但是这样的话 每个上升沿都会使pc+4
     //于是 我想再译出一位控制信号，当这个信号为1 时才有效
     //PCsrc[2]用于指示这是一个跳转指令,并且进行了跳转
@@ -66,7 +66,7 @@ module ysyx_22050854_pc(
     });
 
     always@(*)begin
-        if(rst)                         //复位
+        if(reset)                         //复位
             next_pc = 32'h80000000;
         else if( (is_csr_pc == 1'b1) )     //ecall mret
             next_pc = csr_pc;
@@ -78,8 +78,8 @@ module ysyx_22050854_pc(
             next_pc = pc + 32'd0;
     end
 
-    always@(posedge clk)begin
-        if(rst)
+    always@(posedge clock)begin
+        if(reset)
             pc <= 32'h80000000;
         else if(~Data_Conflict & ~suspend & IDreg_valid) //如果遇到了数据阻塞或者暂停，PC保持不变
             pc <= next_pc;

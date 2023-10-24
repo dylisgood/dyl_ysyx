@@ -1,8 +1,8 @@
 `timescale 1ns/1ps
 module top(
-    input clk,
-    input rst,
-    output timer_interrupt
+    input clock,
+    input reset,
+    input cpu_io_interrupt
 );
 
 wire  cpu_io_master_awready; // @[CPU.scala 51:21]
@@ -123,10 +123,10 @@ wire [127:0] cpu_io_sram7_wdata; // @[CPU.scala 51:21]
 wire [127:0] cpu_io_sram7_rdata; // @[CPU.scala 51:21]
 
 
-ysyx_22050854_cpu inst_cpu(
-    .clk(clk),
-    .rst(rst),
-    .timer_interrupt(timer_interrupt),
+ysyx_22050854 inst_cpu(
+    .clock(clock),
+    .reset(reset),
+    .io_interrupt(cpu_io_interrupt),
 
     .io_master_awready(cpu_io_master_awready),
     .io_master_awvalid(cpu_io_master_awvalid), 
@@ -192,61 +192,61 @@ ysyx_22050854_cpu inst_cpu(
     .io_slave_rresp(cpu_io_slave_rresp),
     .io_slave_rlast(cpu_io_slave_rlast),
 
-    .cpu_io_sram0_addr(cpu_io_sram0_addr),
-    .cpu_io_sram0_cen(cpu_io_sram0_cen),
-    .cpu_io_sram0_wen(cpu_io_sram0_wen),
-    .cpu_io_sram0_wmask(cpu_io_sram0_wmask),
-    .cpu_io_sram0_wdata(cpu_io_sram0_wdata),
-    .cpu_io_sram0_rdata(cpu_io_sram0_rdata),
-    .cpu_io_sram1_addr(cpu_io_sram1_addr),
-    .cpu_io_sram1_cen(cpu_io_sram1_cen),
-    .cpu_io_sram1_wen(cpu_io_sram1_wen),
-    .cpu_io_sram1_wmask(cpu_io_sram1_wmask),
-    .cpu_io_sram1_wdata(cpu_io_sram1_wdata),
-    .cpu_io_sram1_rdata(cpu_io_sram1_rdata),
-    .cpu_io_sram2_addr(cpu_io_sram2_addr),
-    .cpu_io_sram2_cen(cpu_io_sram2_cen),
-    .cpu_io_sram2_wen(cpu_io_sram2_wen),
-    .cpu_io_sram2_wmask(cpu_io_sram2_wmask),
-    .cpu_io_sram2_wdata(cpu_io_sram2_wdata),
-    .cpu_io_sram2_rdata(cpu_io_sram2_rdata),
-    .cpu_io_sram3_addr(cpu_io_sram3_addr),
-    .cpu_io_sram3_cen(cpu_io_sram3_cen),
-    .cpu_io_sram3_wen(cpu_io_sram3_wen),
-    .cpu_io_sram3_wmask(cpu_io_sram3_wmask),
-    .cpu_io_sram3_wdata(cpu_io_sram3_wdata),
-    .cpu_io_sram3_rdata(cpu_io_sram3_rdata),
-    .cpu_io_sram4_addr(cpu_io_sram4_addr),
-    .cpu_io_sram4_cen(cpu_io_sram4_cen),
-    .cpu_io_sram4_wen(cpu_io_sram4_wen),
-    .cpu_io_sram4_wmask(cpu_io_sram4_wmask),
-    .cpu_io_sram4_wdata(cpu_io_sram4_wdata),
-    .cpu_io_sram4_rdata(cpu_io_sram4_rdata),
-    .cpu_io_sram5_addr(cpu_io_sram5_addr),
-    .cpu_io_sram5_cen(cpu_io_sram5_cen),
-    .cpu_io_sram5_wen(cpu_io_sram5_wen),
-    .cpu_io_sram5_wmask(cpu_io_sram5_wmask),
-    .cpu_io_sram5_wdata(cpu_io_sram5_wdata),
-    .cpu_io_sram5_rdata(cpu_io_sram5_rdata),
-    .cpu_io_sram6_addr(cpu_io_sram6_addr),
-    .cpu_io_sram6_cen(cpu_io_sram6_cen),
-    .cpu_io_sram6_wen(cpu_io_sram6_wen),
-    .cpu_io_sram6_wmask(cpu_io_sram6_wmask),
-    .cpu_io_sram6_wdata(cpu_io_sram6_wdata),
-    .cpu_io_sram6_rdata(cpu_io_sram6_rdata),
-    .cpu_io_sram7_addr(cpu_io_sram7_addr),
-    .cpu_io_sram7_cen(cpu_io_sram7_cen),
-    .cpu_io_sram7_wen(cpu_io_sram7_wen),
-    .cpu_io_sram7_wmask(cpu_io_sram7_wmask),
-    .cpu_io_sram7_wdata(cpu_io_sram7_wdata),
-    .cpu_io_sram7_rdata(cpu_io_sram7_rdata)
+    .io_sram0_addr(cpu_io_sram0_addr),
+    .io_sram0_cen(cpu_io_sram0_cen),
+    .io_sram0_wen(cpu_io_sram0_wen),
+    .io_sram0_wmask(cpu_io_sram0_wmask),
+    .io_sram0_wdata(cpu_io_sram0_wdata),
+    .io_sram0_rdata(cpu_io_sram0_rdata),
+    .io_sram1_addr(cpu_io_sram1_addr),
+    .io_sram1_cen(cpu_io_sram1_cen),
+    .io_sram1_wen(cpu_io_sram1_wen),
+    .io_sram1_wmask(cpu_io_sram1_wmask),
+    .io_sram1_wdata(cpu_io_sram1_wdata),
+    .io_sram1_rdata(cpu_io_sram1_rdata),
+    .io_sram2_addr(cpu_io_sram2_addr),
+    .io_sram2_cen(cpu_io_sram2_cen),
+    .io_sram2_wen(cpu_io_sram2_wen),
+    .io_sram2_wmask(cpu_io_sram2_wmask),
+    .io_sram2_wdata(cpu_io_sram2_wdata),
+    .io_sram2_rdata(cpu_io_sram2_rdata),
+    .io_sram3_addr(cpu_io_sram3_addr),
+    .io_sram3_cen(cpu_io_sram3_cen),
+    .io_sram3_wen(cpu_io_sram3_wen),
+    .io_sram3_wmask(cpu_io_sram3_wmask),
+    .io_sram3_wdata(cpu_io_sram3_wdata),
+    .io_sram3_rdata(cpu_io_sram3_rdata),
+    .io_sram4_addr(cpu_io_sram4_addr),
+    .io_sram4_cen(cpu_io_sram4_cen),
+    .io_sram4_wen(cpu_io_sram4_wen),
+    .io_sram4_wmask(cpu_io_sram4_wmask),
+    .io_sram4_wdata(cpu_io_sram4_wdata),
+    .io_sram4_rdata(cpu_io_sram4_rdata),
+    .io_sram5_addr(cpu_io_sram5_addr),
+    .io_sram5_cen(cpu_io_sram5_cen),
+    .io_sram5_wen(cpu_io_sram5_wen),
+    .io_sram5_wmask(cpu_io_sram5_wmask),
+    .io_sram5_wdata(cpu_io_sram5_wdata),
+    .io_sram5_rdata(cpu_io_sram5_rdata),
+    .io_sram6_addr(cpu_io_sram6_addr),
+    .io_sram6_cen(cpu_io_sram6_cen),
+    .io_sram6_wen(cpu_io_sram6_wen),
+    .io_sram6_wmask(cpu_io_sram6_wmask),
+    .io_sram6_wdata(cpu_io_sram6_wdata),
+    .io_sram6_rdata(cpu_io_sram6_rdata),
+    .io_sram7_addr(cpu_io_sram7_addr),
+    .io_sram7_cen(cpu_io_sram7_cen),
+    .io_sram7_wen(cpu_io_sram7_wen),
+    .io_sram7_wmask(cpu_io_sram7_wmask),
+    .io_sram7_wdata(cpu_io_sram7_wdata),
+    .io_sram7_rdata(cpu_io_sram7_rdata)
 );
 
 wire rst_n;
-assign rst_n = ~rst;
+assign rst_n = ~reset;
 
 ysyx_22050854_AXI_SRAM_LSU Cache_AXI_DDR (
-    .clk(clk),
+    .clock(clock),
     .rst_n(rst_n),
 
     //read address channel
@@ -292,7 +292,7 @@ ysyx_22050854_AXI_SRAM_LSU Cache_AXI_DDR (
 //一个ram的大小是64 * 16B = 1kB
 ysyx_22050854_S011HD1P_X32Y2D128_BW ram_inst0(
     .Q(cpu_io_sram0_rdata),  //读到的数据
-    .CLK(clk),      //时钟
+    .CLK(clock),      //时钟
     .CEN(cpu_io_sram0_cen),         //使能信号，低电平有效
     .WEN(cpu_io_sram0_wen),         //写使能信号，低电平有效
     .BWEN(cpu_io_sram0_wmask),        //写掩码信号，掩码粒度为1bit,低电平有效
@@ -302,7 +302,7 @@ ysyx_22050854_S011HD1P_X32Y2D128_BW ram_inst0(
 
 ysyx_22050854_S011HD1P_X32Y2D128_BW ram_inst1(
     .Q(cpu_io_sram1_rdata),  //读到的数据
-    .CLK(clk),      //时钟
+    .CLK(clock),      //时钟
     .CEN(cpu_io_sram1_cen),         //使能信号，低电平有效
     .WEN(cpu_io_sram1_wen),         //写使能信号，低电平有效
     .BWEN(cpu_io_sram1_wmask),        //写掩码信号，掩码粒度为1bit,低电平有效
@@ -312,7 +312,7 @@ ysyx_22050854_S011HD1P_X32Y2D128_BW ram_inst1(
 
 ysyx_22050854_S011HD1P_X32Y2D128_BW ram_inst2(
     .Q(cpu_io_sram2_rdata),  //读到的数据
-    .CLK(clk),      //时钟
+    .CLK(clock),      //时钟
     .CEN(cpu_io_sram2_cen),         //使能信号，低电平有效
     .WEN(cpu_io_sram2_wen),         //写使能信号，低电平有效
     .BWEN(cpu_io_sram2_wmask),        //写掩码信号，掩码粒度为1bit,低电平有效
@@ -322,7 +322,7 @@ ysyx_22050854_S011HD1P_X32Y2D128_BW ram_inst2(
 
 ysyx_22050854_S011HD1P_X32Y2D128_BW ram_inst3(
     .Q(cpu_io_sram3_rdata),  //读到的数据
-    .CLK(clk),      //时钟
+    .CLK(clock),      //时钟
     .CEN(cpu_io_sram3_cen),         //使能信号，低电平有效
     .WEN(cpu_io_sram3_wen),         //写使能信号，低电平有效
     .BWEN(cpu_io_sram3_wmask),        //写掩码信号，掩码粒度为1bit,低电平有效
@@ -332,7 +332,7 @@ ysyx_22050854_S011HD1P_X32Y2D128_BW ram_inst3(
 
 ysyx_22050854_S011HD1P_X32Y2D128_BW ram_inst4(
     .Q(cpu_io_sram4_rdata),  //读到的数据
-    .CLK(clk),      //时钟
+    .CLK(clock),      //时钟
     .CEN(cpu_io_sram4_cen),         //使能信号，低电平有效
     .WEN(cpu_io_sram4_wen),         //写使能信号，低电平有效
     .BWEN(cpu_io_sram4_wmask),        //写掩码信号，掩码粒度为1bit,低电平有效
@@ -342,7 +342,7 @@ ysyx_22050854_S011HD1P_X32Y2D128_BW ram_inst4(
 
 ysyx_22050854_S011HD1P_X32Y2D128_BW ram_inst5(
     .Q(cpu_io_sram5_rdata),  //读到的数据
-    .CLK(clk),      //时钟
+    .CLK(clock),      //时钟
     .CEN(cpu_io_sram5_cen),         //使能信号，低电平有效
     .WEN(cpu_io_sram5_wen),         //写使能信号，低电平有效
     .BWEN(cpu_io_sram5_wmask),        //写掩码信号，掩码粒度为1bit,低电平有效
@@ -352,7 +352,7 @@ ysyx_22050854_S011HD1P_X32Y2D128_BW ram_inst5(
 
 ysyx_22050854_S011HD1P_X32Y2D128_BW ram_inst6(
     .Q(cpu_io_sram6_rdata),  //读到的数据
-    .CLK(clk),      //时钟
+    .CLK(clock),      //时钟
     .CEN(cpu_io_sram6_cen),         //使能信号，低电平有效
     .WEN(cpu_io_sram6_wen),         //写使能信号，低电平有效
     .BWEN(cpu_io_sram6_wmask),        //写掩码信号，掩码粒度为1bit,低电平有效
@@ -362,7 +362,7 @@ ysyx_22050854_S011HD1P_X32Y2D128_BW ram_inst6(
 
 ysyx_22050854_S011HD1P_X32Y2D128_BW ram_inst7(
     .Q(cpu_io_sram7_rdata),  //读到的数据
-    .CLK(clk),      //时钟
+    .CLK(clock),      //时钟
     .CEN(cpu_io_sram7_cen),         //使能信号，低电平有效
     .WEN(cpu_io_sram7_wen),         //写使能信号，低电平有效
     .BWEN(cpu_io_sram7_wmask),        //写掩码信号，掩码粒度为1bit,低电平有效

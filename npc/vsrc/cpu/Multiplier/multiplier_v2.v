@@ -8,8 +8,8 @@
 */
 
 module ysyx_22050854_multiplier_v2(
-    input clk,
-    input rst,
+    input clock,
+    input reset,
     input mul_valid, //1:input data valid
     input flush,     //1:cancel multi
     input mulw,      //1:32 bit multi
@@ -31,8 +31,8 @@ reg [63:0]REG0_multiplicand_32;
 reg [131:0]REG0_multiplicand_64; //64位运算的被乘数寄存器
 reg [66:0]REG0_multiplier;     //y-1 一位 ， 为了支持无符号运算 最高位再加一位 加一位好像不够 
 reg mul_ready_t;
-always @(posedge clk)begin
-    if(rst)begin
+always @(posedge clock)begin
+    if(reset)begin
         REG0_valid <= 1'b0;
         REG0_mul32 <= 1'b0;
         REG0_multiplicand_32 <= 64'b0;
@@ -63,8 +63,8 @@ always @(posedge clk)begin
     end
 end
 //由于目前只是改成多周期的，暂不考虑流水，所以ready信号从取到操作数时无效，到运算完成后再恢复有效
-always @(posedge clk)begin
-    if(rst) mul_ready_t <= 1'b1;
+always @(posedge clock)begin
+    if(reset) mul_ready_t <= 1'b1;
     else if(REG3_valid) mul_ready_t <= 1'b1; 
 end
 
@@ -118,13 +118,13 @@ reg [15:0] REG1_WLCinput32 [63:0];
 reg [32:0] REG1_WLCinput64 [131:0];
 reg [15:0]REG1_c32;
 reg [32:0]REG1_c64;
-ysyx_22050854_Reg #(1,1'b0) REG1_gen0 (clk, rst, REG0_valid, REG1_valid, 1'b1);
-ysyx_22050854_Reg #(1,1'b0) REG1_gen1 (clk, rst, REG0_mul32, REG1_mul32, 1'b1);
-ysyx_22050854_Reg #(16,16'b0) REG1_gen2 (clk, rst, c32, REG1_c32, 1'b1);
-ysyx_22050854_Reg #(33,33'b0) REG1_gen3 (clk, rst, c64, REG1_c64, 1'b1);
+ysyx_22050854_Reg #(1,1'b0) REG1_gen0 (clock, reset, REG0_valid, REG1_valid, 1'b1);
+ysyx_22050854_Reg #(1,1'b0) REG1_gen1 (clock, reset, REG0_mul32, REG1_mul32, 1'b1);
+ysyx_22050854_Reg #(16,16'b0) REG1_gen2 (clock, reset, c32, REG1_c32, 1'b1);
+ysyx_22050854_Reg #(33,33'b0) REG1_gen3 (clock, reset, c64, REG1_c64, 1'b1);
 genvar k,l;
-always @(posedge clk)begin
-    if(rst)begin
+always @(posedge clock)begin
+    if(reset)begin
 /*         for(k = 0; k < 64; k = k + 1)begin
             REG1_WLCinput32[k] <= 16'b0;
         end
@@ -207,14 +207,14 @@ reg [131:0]REG2_mul64_src1;
 reg [131:0]REG2_mul64_src2;
 reg REG2_C32;
 reg REG2_C64;
-ysyx_22050854_Reg #(1,1'b0) REG2_gen0 (clk, rst, REG1_valid, REG2_valid, 1'b1);
-ysyx_22050854_Reg #(1,1'b0) REG2_gen1 (clk, rst, REG1_mul32, REG2_mul32, 1'b1);
-ysyx_22050854_Reg #(1,1'b0) REG2_gen2 (clk, rst, REG1_c32[15], REG2_C32, 1'b1);
-ysyx_22050854_Reg #(1,1'b0) REG2_gen3 (clk, rst, REG1_c64[32], REG2_C64, 1'b1);
-ysyx_22050854_Reg #(64,64'b0) REG2_gen4 (clk, rst, mul32_src1, REG2_mul32_src1, 1'b1);
-ysyx_22050854_Reg #(64,64'b0) REG2_gen5 (clk, rst, mul32_src2, REG2_mul32_src2, 1'b1);
-ysyx_22050854_Reg #(132,132'b0) REG2_gen6 (clk, rst, mul64_src1, REG2_mul64_src1, 1'b1);
-ysyx_22050854_Reg #(132,132'b0) REG2_gen7 (clk, rst, mul64_src2, REG2_mul64_src2, 1'b1);
+ysyx_22050854_Reg #(1,1'b0) REG2_gen0 (clock, reset, REG1_valid, REG2_valid, 1'b1);
+ysyx_22050854_Reg #(1,1'b0) REG2_gen1 (clock, reset, REG1_mul32, REG2_mul32, 1'b1);
+ysyx_22050854_Reg #(1,1'b0) REG2_gen2 (clock, reset, REG1_c32[15], REG2_C32, 1'b1);
+ysyx_22050854_Reg #(1,1'b0) REG2_gen3 (clock, reset, REG1_c64[32], REG2_C64, 1'b1);
+ysyx_22050854_Reg #(64,64'b0) REG2_gen4 (clock, reset, mul32_src1, REG2_mul32_src1, 1'b1);
+ysyx_22050854_Reg #(64,64'b0) REG2_gen5 (clock, reset, mul32_src2, REG2_mul32_src2, 1'b1);
+ysyx_22050854_Reg #(132,132'b0) REG2_gen6 (clock, reset, mul64_src1, REG2_mul64_src1, 1'b1);
+ysyx_22050854_Reg #(132,132'b0) REG2_gen7 (clock, reset, mul64_src2, REG2_mul64_src2, 1'b1);
 
 /////////////////////////////////////  加法器  /////////////////////////////////////////////
 wire [63:0]mul32_result_temp; //存放32 x 32 位的乘积
@@ -226,10 +226,10 @@ reg REG3_valid;
 reg REG3_mul32;
 reg [63:0]REG3_mul32_result;
 reg [131:0]REG3_mul64_result;
-ysyx_22050854_Reg #(1,1'b0) REG3_gen0 (clk, rst, REG2_valid, REG3_valid, 1'b1);
-ysyx_22050854_Reg #(1,1'b0) REG3_gen1 (clk, rst, REG2_mul32, REG3_mul32, 1'b1);
-ysyx_22050854_Reg #(64,64'b0) REG3_gen2 (clk, rst, mul32_result_temp, REG3_mul32_result, 1'b1);
-ysyx_22050854_Reg #(132,132'b0) REG3_gen3 (clk, rst, mul64_result_temp, REG3_mul64_result, 1'b1);
+ysyx_22050854_Reg #(1,1'b0) REG3_gen0 (clock, reset, REG2_valid, REG3_valid, 1'b1);
+ysyx_22050854_Reg #(1,1'b0) REG3_gen1 (clock, reset, REG2_mul32, REG3_mul32, 1'b1);
+ysyx_22050854_Reg #(64,64'b0) REG3_gen2 (clock, reset, mul32_result_temp, REG3_mul32_result, 1'b1);
+ysyx_22050854_Reg #(132,132'b0) REG3_gen3 (clock, reset, mul64_result_temp, REG3_mul64_result, 1'b1);
 
 assign mul_ready = mul_ready_t;
 assign out_valid = REG3_valid;  //只持续一周期

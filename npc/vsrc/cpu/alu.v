@@ -3,8 +3,8 @@
 `define ysyx_22050854_USE_MULTIPLIER_1
 
 module ysyx_22050854_alu(
-    input clk,
-    input rst,
+    input clock,
+    input reset,
     input EXEreg_valid,
     input [3:0]ALUctr,
     input [3:0]MULctr,
@@ -12,16 +12,16 @@ module ysyx_22050854_alu(
     input [63:0]src1,
     input [63:0]src2,
     output alu_busy,
-    output signed [63:0]alu_out 
+    output [63:0]alu_out 
 );
-    reg signed [31:0]alu_temp_32;
+    wire [31:0]alu_temp_32;
     ysyx_22050854_MuxKey #(3,4,32) gen_alu_temp_32 (alu_temp_32, ALUctr, {
         4'b0001,src1[31:0] << src2[4:0], //slliw sllw
         4'b0101,src1[31:0] >> src2[4:0], //srliw srlw
         4'b1101,($signed(src1[31:0])) >>> src2[4:0] //sraiw sraw
     });
 
-    reg signed [63:0]alu_temp;
+    wire [63:0]alu_temp;
     ysyx_22050854_MuxKeyWithDefault #(11,4,64) gen_alu_temp (alu_temp,ALUctr,64'd0,{
         4'b0000,src1 + src2,
         4'b0001,src1 << src2[5:0], //sll,slli
@@ -57,7 +57,7 @@ module ysyx_22050854_alu(
         4'b1000,1'b1
     });
     assign op_mul = op_mul_t & EXEreg_valid;
-    assign mul_valid = op_mul & !mul_doing & !mul_out_valid;
+    assign mul_valid = op_mul & !mul_doing & !mul_out_valid & mul_ready;
     assign mulw = ( MULctr == 4'b1000 ) ? 1'b1 : 1'b0;
     ysyx_22050854_MuxKey #(5,4,2) gen_mul_signed (mul_signed, MULctr, {
         4'b1001,2'b11, //mul
@@ -69,8 +69,8 @@ module ysyx_22050854_alu(
 
     `ifdef ysyx_22050854_USE_MULTIPLIER_1
     ysyx_22050854_multiplier_v1 shiftadd_multiplier (
-        .clk(clk),
-        .rst(rst),
+        .clock(clock),
+        .reset(reset),
         .mul_valid(mul_valid), //1:input data valid
         .flush(1'b0),     //1:cancel multi
         .mulw(mulw),      //1:32 bit multi
@@ -85,8 +85,8 @@ module ysyx_22050854_alu(
     );
     `else
     ysyx_22050854_multiplier_v2 use_multiplier_2 (
-        .clk(clk),
-        .rst(rst),
+        .clock(clock),
+        .reset(reset),
         .mul_valid(mul_valid), //1:input data valid
         .flush(1'b0),     //1:cancel multi
         .mulw(mulw),      //1:32 bit multi
@@ -122,12 +122,12 @@ module ysyx_22050854_alu(
         4'b1111,1'b1
     });
     assign op_div = div_t & EXEreg_valid;
-    assign div_valid = op_div & !div_doing & !div_out_valid; //只持续两个周期
+    assign div_valid = op_div & !div_doing & !div_out_valid & div_ready; //只持续两个周期
     assign divw = MULctr[3]; //由MULctr第4位决定
     assign div_signed = ~MULctr[0];
     ysyx_22050854_divider_1 shift_divider_1 (
-        .clk(clk),
-        .rst(rst),
+        .clock(clock),
+        .reset(reset),
         .dividend(src1),  //被除数
         .divisor(src2),   //除数
         .div_valid(div_valid),       //为高表示输入的数据有效，如果没有新的除法输入，在除法被接受的下一个周期要置低

@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 module ysyx_22050854_SRAM_LSU (
-    input clk,
+    input clock,
     input rst_n,
 
     //read address channel
@@ -44,7 +44,7 @@ reg read_state, write_state; */
 // 8.16 change to every cycle can get addr ,next cycle send data
 reg [63:0]read_addr_64;
 reg get_read_addr;
-always @(posedge clk)begin
+always @(posedge clock)begin
     if(!rst_n) begin
         arready <= 1'b1;      //假设DATA SRAM是一直能接收地址信号的，即每周期都能接收
         get_read_addr <= 1'b0;
@@ -57,7 +57,7 @@ always @(posedge clk)begin
         get_read_addr <= 1'b0;
 end
 
-always @(posedge clk)begin
+always @(posedge clock)begin
     if(!rst_n)begin
         rresp <= 1'b0;
         rvalid <= 1'b1;  //假设DATA SRAM的数据一直是准备好的，收到地址的下一个周期就能把数据送出去
@@ -78,7 +78,7 @@ wire [63:0]wmask;
 assign wmask = { {8{dsram_wtsb[7]}}, {8{dsram_wtsb[6]}}, {8{dsram_wtsb[5]}}, {8{dsram_wtsb[4]}}, {8{dsram_wtsb[3]}}, {8{dsram_wtsb[2]}}, {8{dsram_wtsb[1]}}, {8{dsram_wtsb[0]}} };
 
 reg get_write_addr;
-always @(posedge clk)begin
+always @(posedge clock)begin
     if(!rst_n) begin
         awready <= 1'd1;
         get_write_addr <= 1'b0;
@@ -92,7 +92,7 @@ always @(posedge clk)begin
 end
 
 reg get_write_data;
-always @(posedge clk)begin
+always @(posedge clock)begin
     if(!rst_n)begin
         wready <= 1'd1;
         get_write_data <= 1'b0;
@@ -106,7 +106,7 @@ always @(posedge clk)begin
         get_write_data <= 1'b0;
 end
 
-always @(posedge clk)begin
+always @(posedge clock)begin
     if(!rst_n)
         bresp <= 1'b0;
     else if(get_write_addr && get_write_data)begin

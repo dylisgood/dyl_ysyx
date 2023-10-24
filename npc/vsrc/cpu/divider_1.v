@@ -5,8 +5,8 @@
 */
 
 module ysyx_22050854_divider_1 (
-    input clk,
-    input rst,
+    input clock,
+    input reset,
     input [63:0]dividend,  //被除数
     input [63:0]divisor,   //除数
     input div_valid,       //为高表示输入的数据有效，如果没有新的除法输入，在除法被接受的下一个周期要置低
@@ -42,8 +42,8 @@ assign divisor_32 = {31'b0,div32_over};
 import "DPI-C" function void get_divisor_value(int divisor_32);
 always@(*) get_divisor_value(divisor_32);
 
-always @(posedge clk)begin
-    if(rst)begin
+always @(posedge clock)begin
+    if(reset)begin
         sign_quotient <= 1'b0;
         sign_remainder <= 1'b0;
         ABS_dividend_32 <= 64'b0;
@@ -103,8 +103,8 @@ end
 
 //计数器
 reg [7:0]div_count;
-always @(posedge clk)begin
-    if(rst)
+always @(posedge clock)begin
+    if(reset)
         div_count <= 8'b0;
     else if( div32_go & (div_count >= 8'd32) ) //得需要33个周期，因为获得余数还需要一个周期
         div_count <= 8'b0;
@@ -123,8 +123,8 @@ reg [63:0]div64_result_quotient;
 reg [63:0]div64_result_remainder;
 reg [4:0]div32_index;
 reg [5:0]div64_index;
-always @(posedge clk)begin
-    if(rst)begin
+always @(posedge clock)begin
+    if(reset)begin
         div32_result_quotient <= 32'b0;
         div32_result_remainder <= 32'b0;
         div64_result_quotient <= 64'b0;
@@ -178,8 +178,8 @@ end
 
 reg div32_over;
 reg div64_over;
-always @(posedge clk)begin
-    if(rst)begin
+always @(posedge clock)begin
+    if(reset)begin
         div32_over <= 1'b0;
         div64_over <= 1'b0;
     end

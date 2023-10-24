@@ -7,8 +7,8 @@
 */
 
 module ysyx_22050854_multiplier_2(
-    input clk,
-    input rst,
+    input clock,
+    input reset,
     input mul_valid, //1:input data valid
     input flush,     //1:cancel multi
     input mulw,      //1:32 bit multi
@@ -27,8 +27,8 @@ module ysyx_22050854_multiplier_2(
 reg [63:0]multiplicand_temp; 
 reg mul32ss_go;  //32 x 32 符号相乘准备好标志  直到运算结束才置0
 reg mul_ready_t;
-always @(posedge clk)begin
-    if(rst)begin
+always @(posedge clock)begin
+    if(reset)begin
         mul32ss_go <= 1'b0;
         mul_ready_t <= 1'b1;
         multiplicand_temp <= 64'b0;
@@ -48,8 +48,8 @@ always @(posedge clk)begin
 end
 
 reg [6:0]mul_count; //用于给移位计数 需要移位32次 采用6位数 大一位
-always @(posedge clk)begin
-    if(rst)begin
+always @(posedge clock)begin
+    if(reset)begin
         mul_count <= 7'd0;
     end
     else if( mul32ss_go & ( ( multiplier_temp_128 == 67'b0) | ( mul_count >= 7'd15 )) )
@@ -80,9 +80,13 @@ wire [63:0]x;
 assign x = multiplicand_temp;
 reg [63:0]p;
 always @(*)begin
-    p[0] = ~( ~(sel_negative & ~x[0]) & ~(sel_double_negative & 1'b1) & ~(sel_positive & x[0] ) & ~(sel_double_positive & 1'b0) );
-    for (int i = 1; i < 64; i = i + 1)begin
-        p[i] = ~( ~(sel_negative & ~x[i]) & ~(sel_double_negative & ~x[i-1]) & ~(sel_positive & x[i] ) & ~(sel_double_positive & x[i-1]) );
+    if(reset)
+        p = 64'd0;
+    else begin
+        p[0] = ~( ~(sel_negative & ~x[0]) & ~(sel_double_negative & 1'b1) & ~(sel_positive & x[0] ) & ~(sel_double_positive & 1'b0) );
+        for (int i = 1; i < 64; i = i + 1)begin
+            p[i] = ~( ~(sel_negative & ~x[i]) & ~(sel_double_negative & ~x[i-1]) & ~(sel_positive & x[i] ) & ~(sel_double_positive & x[i-1]) );
+        end
     end
 end
 wire [63:0]bufenji;
@@ -95,9 +99,13 @@ wire [131:0]x_64;
 assign x_64 = multiplicand_temp_128;
 reg [131:0]p64;
 always @(*)begin
-    p64[0] = ~( ~(sel_negative & ~x_64[0]) & ~(sel_double_negative & 1'b1) & ~(sel_positive & x_64[0] ) & ~(sel_double_positive & 1'b0) );
-    for (int i = 1; i < 132; i = i + 1)begin
-        p64[i] = ~( ~(sel_negative & ~x_64[i]) & ~(sel_double_negative & ~x_64[i-1]) & ~(sel_positive & x_64[i] ) & ~(sel_double_positive & x_64[i-1]) );
+    if(reset)
+        p64 = 132'b0;
+    else begin
+        p64[0] = ~( ~(sel_negative & ~x_64[0]) & ~(sel_double_negative & 1'b1) & ~(sel_positive & x_64[0] ) & ~(sel_double_positive & 1'b0) );
+        for (int i = 1; i < 132; i = i + 1)begin
+            p64[i] = ~( ~(sel_negative & ~x_64[i]) & ~(sel_double_negative & ~x_64[i-1]) & ~(sel_positive & x_64[i] ) & ~(sel_double_positive & x_64[i-1]) );
+        end
     end
 end
 wire [131:0]bufenji_64;
@@ -107,8 +115,8 @@ assign bufenji_64 = p64 + c_64;
 
 //启动 32 x 32 位符号数的运算
 reg [63:0]mul32_result_temp; //存放32 x 32 位的乘积
-always @(posedge clk)begin
-    if(rst)begin
+always @(posedge clock)begin
+    if(reset)begin
         mul32_result_temp <= 64'b0;
     end
     else if( mul32ss_go & ( multiplier_temp_128 != 67'b0 | ( mul_count < 7'd16 ) ) )begin  //总共移位16次就够了--->现在改为了由乘数是否为0判断
@@ -122,8 +130,8 @@ always @(posedge clk)begin
 end
 
 reg mul32_over;
-always @(posedge clk)begin
-    if(rst)
+always @(posedge clock)begin
+    if(reset)
         mul32_over <= 1'b0;
     else if( mul32ss_go & ( multiplier_temp_128 == 67'b0 | mul_count >= 7'd15) )
         mul32_over <= 1'b1;
@@ -136,8 +144,8 @@ end
 reg [131:0]multiplicand_temp_128; //64位运算的被乘数寄存器
 reg [66:0]multiplier_temp_128;     //y-1 一位 ， 为了支持无符号运算 最高位再加一位 加一位好像不够
 reg mul64_go;
-always @(posedge clk)begin
-    if(rst)begin
+always @(posedge clock)begin
+    if(reset)begin
         multiplicand_temp_128 <= 132'b0;
         multiplier_temp_128 <= 67'b0;
         mul64_go <= 1'b0;
@@ -160,8 +168,8 @@ end
 
 // 65 * 65 运算
 reg [131:0]mul64_result_temp;
-always @(posedge clk)begin
-    if(rst)
+always @(posedge clock)begin
+    if(reset)
         mul64_result_temp <= 132'b0;
     else if( mul64_go & ( multiplier_temp_128 != 67'b0 |  mul_count < 7'd33 ) )begin  //0-32 共有34个部分积 但是只需要加33次
         mul64_result_temp <= mul64_result_temp + bufenji_64;
@@ -173,8 +181,8 @@ always @(posedge clk)begin
 end
 
 reg mul64_over;
-always @(posedge clk)begin
-    if(rst)
+always @(posedge clock)begin
+    if(reset)
         mul64_over <= 1'b0;
     else if( mul64_go & ( multiplier_temp_128 == 67'b0 | mul_count >= 7'd32) )
         mul64_over <= 1'b1;

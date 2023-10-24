@@ -46,7 +46,7 @@ module ysyx_22050854_IDU(
 
     //generate RegWr 是否写回寄存器
     wire RegWr_t;
-    ysyx_22050854_MuxKeyWithDefault #(12,7,1) RegWr_gen (RegWr_t,op[6:0],1'b0,{
+    ysyx_22050854_MuxKeyWithDefault #(13,7,1) RegWr_gen (RegWr_t,op[6:0],1'b0,{
         7'b0110111,1'b1,  //lui
         7'b0010111,1'b1,  //auipc
         7'b0010011,1'b1,  //addi
@@ -58,9 +58,13 @@ module ysyx_22050854_IDU(
         7'b0100011,1'b0,  //sb sh sw sd
         7'b0011011,1'b1,  //ADDIW
         7'b0111011,1'b1,  //ADDW
-        7'b1110011,1'b1   //ecall csrw csrr, but mret ebreak should not write register
+        7'b1110011,1'b1,   //ecall csrw csrr, but mret ebreak should not write register
+        7'b0001111,1'b0   //fence.i 
     });
     assign RegWr = (instr == 32'h30200073) ? 0 : ( (instr == 32'h100073) ? 0 : RegWr_t);  //mret and ebreak not write
+
+    //generate MemtoReg 写回寄存器的内容来自哪里 0-alu_out 1-mem_data
+    assign MemtoReg = op == 7'b0000011 ? 1'b1 : 1'b0;
 
     //generate Branch 
     ysyx_22050854_MuxKey #(22,8,3) Branch_gen (Branch,{op[6:2],func3},{
@@ -89,7 +93,7 @@ module ysyx_22050854_IDU(
     });
 
     //generate No_branch pc + 4
-    ysyx_22050854_MuxKeyWithDefault #(10,7,1) No_branch_gen (No_branch,op,1'b0,{
+    ysyx_22050854_MuxKeyWithDefault #(11,7,1) No_branch_gen (No_branch,op,1'b0,{
         7'b0110111,1'b1,  //lui
         7'b0010111,1'b1,  //auipc
         7'b0000011,1'b1,  //ld
@@ -99,12 +103,9 @@ module ysyx_22050854_IDU(
         7'b1110011,1'b1,  //csrrw csrr but not ecall mret
         7'b0011011,1'b1,  //slliw
         7'b0111011,1'b1,  //sllw
-        7'b0111011,1'b1   //mulw
+        7'b0111011,1'b1,   //mulw
+        7'b0001111,1'b1   //fence.I
     });
-
-    
-    //generate MemtoReg 写回寄存器的内容来自哪里 0-alu_out 1-mem_data
-    assign MemtoReg = op == 7'b0000011 ? 1'b1 : 1'b0;
 
     //generate MemWr 是否写存储器
     assign MemWr = op == 7'b0100011 ? 1'b1 : 1'b0;
@@ -126,7 +127,6 @@ module ysyx_22050854_IDU(
         8'b01000010,3'b010,  //sw
         8'b01000011,3'b011   //sd
     });
-    //MemOP = func3 ?
 
     //generate ALUsrc1    0---rs1  1---pc
    ysyx_22050854_MuxKeyWithDefault #(11,5,1) ALUsrc1_gen (ALUsrc1,op[6:2],1'b1,{

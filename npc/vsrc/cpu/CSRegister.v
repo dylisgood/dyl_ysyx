@@ -1,6 +1,6 @@
 module ysyx_22050854_CSRegister  (
-  input clk,
-  input rst,
+  input clock,
+  input reset,
   input [63:0] wdata1,
   input [63:0] wdata2,
   input [11:0] waddr1,
@@ -13,9 +13,9 @@ module ysyx_22050854_CSRegister  (
   output reg timer_interrupt
 );
   reg [63:0] csrf [31:0]; //define 32 cs register
-  reg [4:0]csr_addr1;
-  reg [4:0]csr_addr2;
-  reg [4:0]csr_raddr;
+  wire [4:0]csr_addr1;
+  wire [4:0]csr_addr2;
+  wire [4:0]csr_raddr;
   import "DPI-C" function void set_csr_ptr(input logic [63:0] a []);
   initial set_csr_ptr(csrf);  // rf为通用寄存器的二维数组变量
 
@@ -48,7 +48,7 @@ module ysyx_22050854_CSRegister  (
 
   assign rdata = ren ? csrf[csr_raddr] : 64'd0;  //read csr
 
-  always @(posedge clk) begin        //write csrs
+  always @(posedge clock) begin        //write csrs
     if(wen)
       csrf[csr_addr1] <= wdata1;
     if(wen2)
@@ -58,15 +58,15 @@ module ysyx_22050854_CSRegister  (
   reg [63:0]mtime;
   reg [63:0]mtimecmp;
   //计时器逻辑，每个周期自增
-  always @(posedge clk) begin
-    if(rst)
+  always @(posedge clock) begin
+    if(reset)
       mtime <= 64'd0;
     else
       mtime <= mtime + 1'd1;
   end
   //中断逻辑 根据条件判断是否产生计时器中断
-  always @(posedge clk) begin
-    if(rst)begin
+  always @(posedge clock) begin
+    if(reset)begin
       csrf[5] <= 64'd0;
       timer_interrupt <= 1'd0;
       csrf[2][3] <= 1'd1; //mstatus 的 MIE位
@@ -78,8 +78,8 @@ module ysyx_22050854_CSRegister  (
     end
   end
   //
-  always @(posedge clk) begin
-    if(rst)
+  always @(posedge clock) begin
+    if(reset)
       mtimecmp  <= 64'd100;
     else if(mtime >= mtimecmp)
       mtimecmp <= mtimecmp + 64'd100;

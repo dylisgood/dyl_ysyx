@@ -1,5 +1,5 @@
-module ysyx_22050854_Dcache (clk,rst,
-    valid,op,index,tag,offset,wstrb,wdata,addr_ok,data_ok,rdata,unshoot,
+module ysyx_22050854_Dcache (clock,reset,
+    valid,op,index,tag,offset,wstrb,wdata,addr_ok,data_ok,rdata,unshoot,fencei,
     rd_req,rd_type,rd_addr,rd_rdy,ret_valid,ret_last,ret_data,wr_req,wr_type,wr_addr,wr_wstb,wr_data,wr_rdy,
     sram4_addr,sram4_cen,sram4_wen,sram4_wmask,sram4_wdata,sram4_rdata,
     sram5_addr,sram5_cen,sram5_wen,sram5_wmask,sram5_wdata,sram5_rdata,
@@ -11,8 +11,8 @@ parameter Offset_Bits = 4; //每一个cache块的大小是16B
 parameter Index_Bits = 7;  //
 parameter Tag_Bits = 21;
 
-input clk;
-input rst;
+input clock;
+input reset;
 //Cache & CPU interface 
 input valid;    //表明请求有效
 input op;       // 1:write 0:read
@@ -25,6 +25,7 @@ output addr_ok;       //表示这次请求的地址传输OK
 output data_ok;       //表示这次请求的数据传输OK
 output [63:0]rdata;    //读cache的结果
 output reg unshoot;
+input fencei;
 
 //Cache 与 AXI总线接口的交互接口
 output reg rd_req;        //读请求有效信号，高电平valid
@@ -87,15 +88,6 @@ reg [21:0] Way0_TagV [127:0];
 reg [21:0] Way1_TagV [127:0];
 reg [127:0] Way0_D;
 reg [127:0] Way1_D;
-initial 
-begin
-    for (int i = 0; i < 128; i = i + 1)begin
-        Way0_TagV[i] = 0;
-        Way1_TagV[i] = 0;
-    end
-    Way0_D = 128'b0;
-    Way1_D = 128'b0;
-end
 
 reg ram4_CEN;
 reg ram4_WEN;
@@ -145,9 +137,152 @@ assign wdata_t = wdata << ( offset_8 << 3 );
 wire [127:0]wdata_128;
 assign wdata_128 = offset[3] ? { wdata_t , 64'b0 } : { 64'b0 , wdata_t };
 
+//Fence.I
+localparam Fence_Idle = 4'b0001, Fence_Check = 4'b0010, Fence_Read = 4'b0100, Fence_Write = 4'b1000;
+reg [3:0]Fence_state;
+
+reg [8:0]Fence_counter;
+always @(posedge clock)begin
+    if( Fence_counter[8] ) begin
+        unshoot <= 1'b0;
+        Fence_counter <= 9'b0;
+    end
+end
+
+reg Fence_ram4_CEN;
+reg Fence_ram5_CEN;
+reg Fence_ram6_CEN;
+reg Fence_ram7_CEN;
+reg [5:0]Fence_ram4_addr;
+reg [5:0]Fence_ram5_addr;
+reg [5:0]Fence_ram6_addr;
+reg [5:0]Fence_ram7_addr;
+
+reg [127:0]Fence_read_data;
+reg Fence_wr;
+//check way0_D, if dirty, first read ram, then write it to AXI
+always @(posedge clock)begin
+    if(reset) begin
+        Fence_read_data <= 128'b0;
+        Fence_counter <= 9'b0;
+        Fence_state <= Fence_Idle;
+        Fence_wr <= 1'b0;
+        Fence_ram4_CEN <= 1'b1;
+        Fence_ram5_CEN <= 1'b1;
+        Fence_ram6_CEN <= 1'b1;
+        Fence_ram7_CEN <= 1'b1;
+        Fence_ram4_addr <= 6'b0;
+        Fence_ram5_addr <= 6'b0;
+        Fence_ram6_addr <= 6'b0;
+        Fence_ram7_addr <= 6'b0;
+    end
+    else
+    case(Fence_state)
+    Fence_Idle:
+        begin
+            if( Fence_wr )begin  //if from Fence_Write
+                wr_req <= 1'b0;
+                wr_type <= 3'b100;
+                wr_addr <= 32'b0;
+                wr_wstb <= 8'h0;
+                wr_data <= 128'b0;
+
+                Fence_counter <= Fence_counter + 9'b1;
+                Fence_state <= Fence_Check;
+                Fence_wr <= 1'b0;
+            end
+            else if( ( state == IDLE || state == LOOKUP ) && fencei ) begin
+                Fence_state <= Fence_Check;
+                unshoot <= 1'b1;
+                Fence_counter <= 9'b0;
+            end
+            else 
+                Fence_state <= Fence_Idle;    
+        end
+    Fence_Check:
+        begin
+            if( Fence_counter[8] ) begin
+                unshoot <= 1'b0;
+                Fence_counter <= 9'b0;
+                Fence_state <= Fence_Idle;
+            end
+            else
+            begin
+                if( ~Fence_counter[7] && Way0_D[Fence_counter[6:0]] ) //if Dirty, read ram   
+                begin
+                    Fence_state <= Fence_Read;
+                    Way0_D[Fence_counter[6:0]] <= 1'b0;
+                    
+                    Fence_ram4_CEN <= ~Fence_counter[6] ? 1'b0 : 1'b1;
+                    Fence_ram5_CEN <= Fence_counter[6] ? 1'b0 : 1'b1;
+                    Fence_ram4_addr <= Fence_counter[5:0];
+                    Fence_ram5_addr <= Fence_counter[5:0];
+                end
+                else if( Fence_counter[7] && Way1_D[Fence_counter[6:0]] )  //  
+                begin
+                    Fence_state <= Fence_Read;
+                    Way1_D[Fence_counter[6:0]] <= 1'b0;
+
+                    Fence_ram6_CEN <= ~Fence_counter[6] ? 1'b0 : 1'b1;
+                    Fence_ram7_CEN <= Fence_counter[6] ? 1'b0 : 1'b1;
+                    Fence_ram6_addr <= Fence_counter[5:0];
+                    Fence_ram7_addr <= Fence_counter[5:0];
+                end
+                else begin
+                    Fence_state <= Fence_Check;
+                    Fence_counter <= Fence_counter + 9'b1;
+                end
+            end
+        end
+    Fence_Read:
+        begin
+            if( ~Fence_counter[7] && Fence_ram4_CEN && Fence_ram5_CEN )begin      //Way0
+                Fence_state <= Fence_Write;
+                Fence_read_data <= Fence_counter[6] ? sram5_rdata : sram4_rdata;
+            end
+            else if( Fence_counter[7] && Fence_ram6_CEN && Fence_ram7_CEN )begin  //Way1
+                Fence_state <= Fence_Write;
+                Fence_read_data <= Fence_counter[6] ? sram7_rdata : sram6_rdata;
+            end
+            else begin
+                Fence_state <= Fence_Read; 
+                Fence_ram4_CEN <= 1'b1;
+                Fence_ram5_CEN <= 1'b1;
+                Fence_ram6_CEN <= 1'b1;
+                Fence_ram7_CEN <= 1'b1;
+                Fence_ram4_addr <= 6'b0;
+                Fence_ram5_addr <= 6'b0;
+                Fence_ram6_addr <= 6'b0;
+                Fence_ram7_addr <= 6'b0;
+            end
+        end
+    Fence_Write:
+        begin
+            if( wr_rdy ) begin                      // 向AXI 发出写请求, 同时将AXI获得的数据写回到cache中
+                Fence_state <= Fence_Idle;
+                Fence_wr <= 1'b1;
+                
+                wr_req <= 1'b1;
+                wr_type <= 3'b100;                  //写一个cache块
+                wr_wstb <= 8'hff;
+                wr_data <= Fence_read_data; 
+                if( ~Fence_counter[7] )
+                    wr_addr <= { Way0_TagV[ Fence_counter[6:0] ][20:0], Fence_counter[6:0], 4'b0 };   //***
+                else if( Fence_counter[7] )
+                    wr_addr <= { Way1_TagV[ Fence_counter[6:0] ][20:0], Fence_counter[6:0], 4'b0 };   //***
+
+            end
+            else 
+                Fence_state <= Fence_Write;
+        end
+    default:
+        Fence_state <= Fence_Idle;
+    endcase
+end
+
 //state machine transition
-always @(posedge clk)begin
-    if(rst)begin
+always @(posedge clock)begin
+    if(reset)begin
         state <= IDLE;
         RB_index <= 7'd0;
         RB_tag <= 21'd0;
@@ -198,7 +333,10 @@ always @(posedge clk)begin
         RB_wstrb <= 8'b0;
         RB_wdata <= 128'b0;
         RB_BWEN <= 128'hffffffffffffffffffffffffffffffff;
+        Bus_retdata <= 128'b0;
 
+        Way0_D <= 128'b0;
+        Way1_D <= 128'b0;
     end
     else begin
     case(state)
@@ -206,11 +344,13 @@ always @(posedge clk)begin
             begin 
                 Data_OK <= 1'b0;
 
-                wr_req <= 1'b0;
-                wr_type <= 3'b100;
-                wr_addr <= 32'b0;
-                wr_wstb <= 8'h0;
-                wr_data <= 128'b0;
+                if(Fence_state != Fence_Write)begin
+                    wr_req <= 1'b0;
+                    wr_type <= 3'b100;
+                    wr_addr <= 32'b0;
+                    wr_wstb <= 8'h0;
+                    wr_data <= 128'b0;
+                end
 
                 if(valid & !op ) begin   // read
                     ram4_WEN <= 1'b1;  //if last cycle is write shoot but this cycle is read
@@ -675,26 +815,26 @@ assign rdata = Data_OK ? ( ( state == REPLACE ) ? (  RB_offset[3] ?  Bus_retdata
 assign data_ok = Data_OK;
 assign addr_ok = ADDR_OK;
 
-assign sram4_addr = ram4_addr;
-assign sram4_cen = ram4_CEN;
+assign sram4_addr = ~ram4_CEN ? ram4_addr : Fence_ram4_addr;
+assign sram4_cen = ram4_CEN & Fence_ram4_CEN;
 assign sram4_wen = ram4_WEN;
 assign sram4_wmask = ram4_bwen;
 assign sram4_wdata = ram4_wdata;
 
-assign sram5_addr = ram5_addr;
-assign sram5_cen = ram5_CEN;
+assign sram5_addr = ~ram5_CEN ? ram5_addr : Fence_ram5_addr;
+assign sram5_cen = ram5_CEN & Fence_ram5_CEN;
 assign sram5_wen = ram5_WEN;
 assign sram5_wmask = ram5_bwen;
 assign sram5_wdata = ram5_wdata;
 
-assign sram6_addr = ram6_addr;
-assign sram6_cen = ram6_CEN;
+assign sram6_addr = ~ram6_CEN ? ram6_addr : Fence_ram6_addr;
+assign sram6_cen = ram6_CEN & Fence_ram6_CEN;
 assign sram6_wen = ram6_WEN;
 assign sram6_wmask = ram6_bwen;
 assign sram6_wdata = ram6_wdata;
 
-assign sram7_addr = ram7_addr;
-assign sram7_cen = ram7_CEN;
+assign sram7_addr = ~ram7_CEN ? ram7_addr : Fence_ram7_addr;
+assign sram7_cen = ram7_CEN & Fence_ram7_CEN;
 assign sram7_wen = ram7_WEN;
 assign sram7_wmask = ram7_bwen;
 assign sram7_wdata = ram7_wdata;
@@ -725,9 +865,19 @@ assign Replace_cache_data_32 = Replace_cache_data[95:64];
 import "DPI-C" function void get_Replace_cache_data_value(int Replace_cache_data_32);
 always@(*) get_Replace_cache_data_value(Replace_cache_data_32);
 
-/* wire [31:0]wr_req_32;
-assign wr_req_32 = {Replace_cache_data[95:64]};
-import "DPI-C" function void get_Replace_cache_data_value(int Replace_cache_data_32);
-always@(*) get_Replace_cache_data_value(Replace_cache_data_32); */
+wire [31:0]Fence_32;
+assign Fence_32 = { 31'b0,fencei };
+import "DPI-C" function void get_fencei_value(int Fence_32);
+always@(*) get_fencei_value(Fence_32);
+
+wire [31:0]Fence_counter_32;
+assign Fence_counter_32 = { 23'b0,Fence_counter };
+import "DPI-C" function void get_Fence_counter_32_value(int Fence_counter_32);
+always@(*) get_Fence_counter_32_value(Fence_counter_32);
+
+wire [31:0]Fence_state_32;
+assign Fence_state_32 = { 24'b0,Fence_ram4_CEN,Fence_ram5_CEN,Fence_ram6_CEN,Fence_ram7_CEN,Fence_state };
+import "DPI-C" function void get_Fence_state_32_value(int Fence_state_32);
+always@(*) get_Fence_state_32_value(Fence_state_32);
 
 endmodule 

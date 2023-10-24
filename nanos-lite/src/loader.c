@@ -92,6 +92,7 @@ static uintptr_t loader(PCB *pcb, const char *filename) {
 
 void naive_uload(PCB *pcb, const char *filename) {
   uintptr_t entry = loader(pcb, filename);
+  asm volatile("fence.i");
   Log("Jump to entry = %lx", entry);
   ((void(*)())entry) ();
 }

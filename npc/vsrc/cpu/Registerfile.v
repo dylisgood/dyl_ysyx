@@ -1,6 +1,6 @@
 //`timescale 1ns/1ps
 module ysyx_22050854_RegisterFile  (
-  input clk,
+  input clock,
   input [63:0] wdata,
   input reg[4:0] waddr,
   input wen,
@@ -15,7 +15,7 @@ module ysyx_22050854_RegisterFile  (
   output reg[63:0]test_rdata2
 );
   reg [63:0] rf [31:0];
-  always @(posedge clk) begin
+  always @(posedge clock) begin
     if(waddr==5'd0)
       rf[waddr] <= 64'd0;
     else begin
@@ -29,18 +29,18 @@ module ysyx_22050854_RegisterFile  (
   initial set_gpr_ptr(rf);  // rf为通用寄存器的二维数组变量
   
   always @(*) begin
-      rf[5'b0] = 64'b0;
+    rf[5'b0] = 64'b0;
   end
 
   always@(*)begin
-    if(raddra==5'd0)
+    if(raddra == 5'd0)
       rdata1 = 64'd0;
     else
       rdata1 = rf[raddra];
   end
 
   always@(*)begin
-    if(raddrb==5'd0)
+    if(raddrb == 5'd0)
       rdata2 = 64'd0;
     else
       rdata2 = rf[raddrb];

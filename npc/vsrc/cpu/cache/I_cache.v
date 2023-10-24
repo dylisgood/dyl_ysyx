@@ -6,7 +6,7 @@
 
 */
 
-module ysyx_22050854_Icache (clk,rst,
+module ysyx_22050854_Icache (clock,reset,
     valid,op,index,tag,offset,addr_ok,data_ok,rdata,unshoot,
     rd_req,rd_type,rd_addr,rd_rdy,ret_valid,ret_last,ret_data,
     sram0_addr,sram0_cen,sram0_wen,sram0_wmask,sram0_wdata,sram0_rdata,
@@ -19,8 +19,8 @@ parameter Offset_Bits = 4; //每一个cache块的大小是16B
 parameter Index_Bits = 7;  //
 parameter Tag_Bits = 21;
 
-input clk;
-input rst;
+input clock;
+input reset;
 //Cache & CPU interface 
 input valid;    //表明请求有效
 input op;       // 1:write 0:read
@@ -123,8 +123,8 @@ reg HIT_way0;
 reg HIT_way1;
 wire [127:0]read_ramdata;
 //state machine transition
-always @(posedge clk)begin
-    if(rst)begin
+always @(posedge clock)begin
+    if(reset)begin
         state <= IDLE;
         RB_index <= 7'd0;
         RB_tag <= 21'd0;
@@ -158,7 +158,12 @@ always @(posedge clk)begin
         ram4_WEN <= 1'b1;
         ram4_bwen <= 128'hffffffffffffffffffffffffffffffff;
         ram4_addr <= 6'b0;
-        ram4_wdata <= 128'b0; 
+        ram4_wdata <= 128'b0;
+
+        rd_req <= 1'b0;
+        rd_type <= 3'b0;
+        rd_addr <= 32'b0;
+        Bus_retdata <= 128'b0; 
     end
     else begin
     case(state)

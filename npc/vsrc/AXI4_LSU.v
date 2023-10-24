@@ -4,11 +4,10 @@
   接口信号为ysyxSoc的接口信号 就是一个不完整的AXI4 协议
   由于为仿真设计，所以其不具备通用性
   其功能为读/写 一个cache块的内容 
-    当收到一个读请求时，第一个周期锁存地址，第二个周期发出地址的内容，第三周期计算出下一个地址，第四周期再次发出内容
 */
 
 module ysyx_22050854_AXI_SRAM_LSU (
-    input clk,
+    input clock,
     input rst_n,
 
     //read address channel
@@ -61,7 +60,7 @@ reg first_over;
 reg get_addr;
 reg [63:0]first_addr;
 reg [3:0]first_arid;
-always @(posedge clk)begin
+always @(posedge clock)begin
     if(!rst_n)begin
         arready <= 1'b1;
         get_addr <= 1'b0;
@@ -77,7 +76,7 @@ end
 
 reg [63:0]Next_addr;
 reg [3:0]Next_arid;
-always @(posedge clk)begin
+always @(posedge clock)begin
     if(!rst_n)begin
         rresp <= 2'b00;
         rvalid <= 1'b1;
@@ -121,7 +120,7 @@ reg [7:0]dsram_wtsb;
 wire [63:0]wmask;
 //assign wmask = { {8{dsram_wtsb[7]}}, {8{dsram_wtsb[6]}}, {8{dsram_wtsb[5]}}, {8{dsram_wtsb[4]}}, {8{dsram_wtsb[3]}}, {8{dsram_wtsb[2]}}, {8{dsram_wtsb[1]}}, {8{dsram_wtsb[0]}} };
 assign wmask = 64'hffffffffffffffff;
-always @(posedge clk)begin
+always @(posedge clock)begin
     if(!rst_n) begin
         awready <= 1'd1;
     end
@@ -130,7 +129,7 @@ always @(posedge clk)begin
     end
 end
 
-always @(posedge clk)begin
+always @(posedge clock)begin
     if(!rst_n)begin
         wready <= 1'd1;
         bresp <= 2'b00;

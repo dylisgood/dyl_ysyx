@@ -70,6 +70,15 @@ all: default
 
 run: $(BIN)
 	@$(NPC_ECEC) 
+
+CPUPATH=$(abspath ./vsrc/cpu)
+VSRCPATH=$(abspath ./vsrc)
+
+merge:
+	cat $(CPUPATH)/cpu.v $(CPUPATH)/decode.v  $(CPUPATH)/gen_imm.v  $(CPUPATH)/gen_src.v  $(CPUPATH)/pc.v  $(CPUPATH)/Registerfile.v  $(CPUPATH)/CSRegister.v \
+	$(CPUPATH)/alu.v $(CPUPATH)/multiplier_v1.v  $(CPUPATH)/divider_1.v  $(VSRCPATH)/template/Mux.v  $(VSRCPATH)/template/Reg.v  \
+	$(VSRCPATH)/AXI4_Arbiter.v  $(CPUPATH)/cache/I_cache.v $(CPUPATH)/cache/D_cache.v  \
+       	> ysyx_22050854.v
 		
 wave: $(VSRCS) $(CSRCS)
 	$(VERILATOR) --cc --exe --build -j 0 --trace sim_main.cpp --top-module $(VSRCS)
