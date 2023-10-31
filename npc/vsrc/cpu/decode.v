@@ -22,14 +22,16 @@ module ysyx_22050854_IDU(
 ); 
     wire [6:0]op;
     wire [2:0]func3;
-    wire [6:0]func7;
+    wire func7_5;
+    wire func7_0;
 
     assign op = instr[6:0];
     assign rs1 = instr[19:15];
     assign rs2 = ( instr == 32'h73 ) ? 5'd17 : instr[24:20]; //对于ecall指令，虽然指令上rs2的位置是全零，但按照指令的行为看，是要将x17的值写进CSR的mcause中
     assign rd = instr[11:7];
     assign func3 = instr[14:12];
-    assign func7 = instr[31:25];
+    assign func7_0 = instr[25];
+    assign func7_5 = instr[30];
 
     //generate ExtOP for generate imm
     ysyx_22050854_MuxKeyWithDefault #(9,5,3) ExtOP_gen (ExtOP,op[6:2],3'b111,{
@@ -159,7 +161,7 @@ module ysyx_22050854_IDU(
     });
 
     //generate ALUext for rv64I
-    ysyx_22050854_MuxKey #(35,10,3) ALUext_gen (ALUext,{op[6:2],func3,func7[5],func7[0]},{
+    ysyx_22050854_MuxKey #(35,10,3) ALUext_gen (ALUext,{ op[6:2],func3,func7_5,func7_0 },{
         10'b0011000000,3'b010,  // + addiw
         10'b0011000010,3'b010,  // + addiw
         10'b0011000001,3'b010,  // + addiw
@@ -198,7 +200,7 @@ module ysyx_22050854_IDU(
     });
 
     //generate ALUctr according to op funct3,funct7
-    ysyx_22050854_MuxKeyWithDefault #(119,9,4) ALUctr_gen (ALUctr,{op[6:2],func3,func7[5]},4'b1111,{
+    ysyx_22050854_MuxKeyWithDefault #(119,9,4) ALUctr_gen ( ALUctr,{op[6:2],func3,func7_5 },4'b1111,{
         9'b011010000,4'b0011,  // lui copy
         9'b011010001,4'b0011,  // lui copy
         9'b011010010,4'b0011,  // lui copy
@@ -320,7 +322,7 @@ module ysyx_22050854_IDU(
         9'b010000111,4'b0000  // + sd
     });
 
-    ysyx_22050854_MuxKeyWithDefault #(13,9,4)  gen_64M_ctr (MULctr,{op[6:2],func3,func7[0]},4'b0000,{
+    ysyx_22050854_MuxKeyWithDefault #(13,9,4)  gen_64M_ctr ( MULctr,{op[6:2],func3,func7_0 },4'b0000,{
         9'b011000001,4'b1001,  //mul
         9'b011000011,4'b0001,  //mulh
         9'b011000101,4'b0010,  //mulhsu
@@ -337,3 +339,4 @@ module ysyx_22050854_IDU(
     });
 
 endmodule
+

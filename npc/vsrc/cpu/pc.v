@@ -12,10 +12,9 @@ module ysyx_22050854_pc(
     input unsigned_compare,
     input [63:0]alu_src1,
     input [63:0]alu_src2,
-    input [63:0]src1,
-    input [63:0]imm,
+    input [31:0]src1,
+    input [31:0]imm,
     output jump,
-    output reg[31:0]pc,
     output reg[31:0]next_pc
 );
     wire zero;
@@ -57,12 +56,12 @@ module ysyx_22050854_pc(
     //00---pc + 4  10---pc + imm   
     ysyx_22050854_MuxKey #(2,1,32) gen_PCsrc1 (PCsrc1,PCsrc[1],{
         1'b0,32'd4,
-        1'b1,imm[31:0]
+        1'b1,imm
     });
 
     ysyx_22050854_MuxKey #(2,1,32) gen_PCsrc2 (PCsrc2,PCsrc[0],{
         1'b0,pc,
-        1'b1,src1[31:0]
+        1'b1,src1
     });
 
     always@(*)begin
@@ -78,6 +77,7 @@ module ysyx_22050854_pc(
             next_pc = pc + 32'd0;
     end
 
+    reg [31:0]pc;
     always@(posedge clock)begin
         if(reset)
             pc <= 32'h80000000;
@@ -92,3 +92,4 @@ module ysyx_22050854_pc(
     always@(*) get_PCsrc2_value(PCsrc2);
 
 endmodule
+

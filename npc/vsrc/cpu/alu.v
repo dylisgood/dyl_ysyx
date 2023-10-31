@@ -72,7 +72,6 @@ module ysyx_22050854_alu(
         .clock(clock),
         .reset(reset),
         .mul_valid(mul_valid), //1:input data valid
-        .flush(1'b0),     //1:cancel multi
         .mulw(mulw),      //1:32 bit multi
         .mul_signed(mul_signed),  //2’b11（signed x signed）；2’b10（signed x unsigned）；2’b00（unsigned x unsigned）；
         .multiplicand(src1), //被乘数
@@ -88,7 +87,6 @@ module ysyx_22050854_alu(
         .clock(clock),
         .reset(reset),
         .mul_valid(mul_valid), //1:input data valid
-        .flush(1'b0),     //1:cancel multi
         .mulw(mulw),      //1:32 bit multi
         .mul_signed(mul_signed),  //2’b11（signed x signed）；2’b10（signed x unsigned）；2’b00（unsigned x unsigned）；
         .multiplicand(src1), //被乘数
@@ -133,7 +131,6 @@ module ysyx_22050854_alu(
         .div_valid(div_valid),       //为高表示输入的数据有效，如果没有新的除法输入，在除法被接受的下一个周期要置低
         .divw(divw),            //为高表示输入是32位除法
         .div_signed(div_signed),      //为高表示是有符号除法
-        .flush(1'b0),           //为高表示除法无效
         .div_doing(div_doing),
         .div_ready(div_ready),      //为高表示除法器空闲，可以输入数据
         .out_valid(div_out_valid),      //为高表示除法器输出结果有效
@@ -160,3 +157,4 @@ module ysyx_22050854_alu(
     });
 
 endmodule
+

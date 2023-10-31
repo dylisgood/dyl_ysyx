@@ -8,7 +8,7 @@
 
 module ysyx_22050854_Icache (clock,reset,
     valid,op,index,tag,offset,addr_ok,data_ok,rdata,unshoot,
-    rd_req,rd_type,rd_addr,rd_rdy,ret_valid,ret_last,ret_data,
+    rd_req,rd_addr,rd_rdy,ret_valid,ret_last,ret_data,
     sram0_addr,sram0_cen,sram0_wen,sram0_wmask,sram0_wdata,sram0_rdata,
     sram1_addr,sram1_cen,sram1_wen,sram1_wmask,sram1_wdata,sram1_rdata,
     sram2_addr,sram2_cen,sram2_wen,sram2_wmask,sram2_wdata,sram2_rdata,
@@ -33,7 +33,6 @@ output [63:0]rdata;    //读cache的结果
 output reg unshoot;
 //Cache 与 AXI总线接口的交互接口
 output reg rd_req;        //读请求有效信号，高电平valid
-output reg [2:0]rd_type;       //读请求类型，3‘b000: 字节 001---半字  010---字 100-cache行
 output reg [31:0]rd_addr;       //读请求起始地址
 input rd_rdy;       //读请求能否被接受的握手信号，高电平有效
 input ret_valid;      //返回数据有效   
@@ -71,10 +70,9 @@ reg [3:0]state;
 
 reg [Index_Bits - 1 : 0]RB_index;
 reg [Tag_Bits - 1 : 0]RB_tag;
-reg [Offset_Bits - 1 : 0]RB_offset;
-reg [Index_Bits - 1 : 0]HIT_index;
-reg [Tag_Bits - 1 : 0]HIT_tag;
-reg [Offset_Bits - 1 : 0]HIT_offset;
+reg RB_offset;
+reg HIT_index;
+reg HIT_offset;
 reg [127:0] Bus_retdata;
 
 reg [21:0] Way0_TagV [127:0];
@@ -87,28 +85,24 @@ begin
     end
 end
 
-wire [127:0]ram1_data;
 reg ram1_CEN;
 reg ram1_WEN;
 reg [127:0]ram1_bwen;
 reg [5:0]ram1_addr;
 reg [127:0]ram1_wdata;
 
-wire [127:0]ram2_data;
 reg ram2_CEN;
 reg ram2_WEN;
 reg [127:0]ram2_bwen;
 reg [5:0]ram2_addr;
 reg [127:0]ram2_wdata;
 
-wire [127:0]ram3_data;
 reg ram3_CEN;
 reg ram3_WEN;
 reg [127:0]ram3_bwen;
 reg [5:0]ram3_addr;
 reg [127:0]ram3_wdata;
 
-wire [127:0]ram4_data;
 reg ram4_CEN;
 reg ram4_WEN;
 reg [127:0]ram4_bwen;
@@ -128,10 +122,9 @@ always @(posedge clock)begin
         state <= IDLE;
         RB_index <= 7'd0;
         RB_tag <= 21'd0;
-        RB_offset <= 4'd0;
-        HIT_index <= 7'd0;
-        HIT_tag <= 21'd0;
-        HIT_offset <= 4'd0;
+        RB_offset <= 1'b0;
+        HIT_index <= 1'b0;
+        HIT_offset <= 1'b0;
         ADDR_OK <= 1'b0;
         hit_way0 <= 1'b0;
         hit_way1 <= 1'b0;
@@ -161,9 +154,8 @@ always @(posedge clock)begin
         ram4_wdata <= 128'b0;
 
         rd_req <= 1'b0;
-        rd_type <= 3'b0;
         rd_addr <= 32'b0;
-        Bus_retdata <= 128'b0; 
+        Bus_retdata <= 128'b0;
     end
     else begin
     case(state)
@@ -191,7 +183,7 @@ always @(posedge clock)begin
                 if(valid & !op ) begin
                     RB_index <= index;  
                     RB_tag <= tag;
-                    RB_offset <= offset;
+                    RB_offset <= offset[3];
                     ADDR_OK <= 1'b1;
                     if( Way0_TagV[index] == {1'b1,tag} ) begin //hit way0
                         state <= LOOKUP;
@@ -218,7 +210,6 @@ always @(posedge clock)begin
                     else begin                      //unshoot
                         if(rd_rdy)begin             // only AXI(SRAM) ready cloud generate request
                             rd_req <= 1'b1;
-                            rd_type <= 3'b100;
                             rd_addr <= {tag,index,offset};
                         end
                         state <= MISS;
@@ -234,7 +225,8 @@ always @(posedge clock)begin
                 else begin
                     state <= IDLE;
                     ADDR_OK <= 1'b0;
-
+                    hit_way1 <= 1'b0;
+                    hit_way0 <= 1'b0;
                     ram1_CEN <= 1'b1;
                     ram2_CEN <= 1'b1;
                     ram3_CEN <= 1'b1;
@@ -244,8 +236,7 @@ always @(posedge clock)begin
         LOOKUP:                      //only hit could enter state:LOOKUP
             begin
                 if( hit_way0 || hit_way1) begin
-                    HIT_index <= RB_index;  
-                    HIT_tag <= RB_tag;
+                    HIT_index <= RB_index[6];  
                     HIT_offset <= RB_offset;
                     HIT_way0 <= hit_way0;
                     HIT_way1 <= hit_way1;
@@ -266,7 +257,7 @@ always @(posedge clock)begin
                 else if( valid & !op) begin   //get valid again
                     RB_index <= index;  
                     RB_tag <= tag;
-                    RB_offset <= offset;
+                    RB_offset <= offset[3];
                     ADDR_OK <= 1'b1;
                     if( Way0_TagV[index] == {1'b1,tag} ) begin //hit way0
                         state <= LOOKUP;
@@ -289,7 +280,6 @@ always @(posedge clock)begin
                     else begin                      // unshoot
                         if(rd_rdy)begin             // only AXI(SRAM) ready cloud generate request
                             rd_req <= 1'b1;
-                            rd_type <= 3'b100;
                             rd_addr <= {tag,index,offset};
                         end
                         state <= MISS;
@@ -302,23 +292,23 @@ always @(posedge clock)begin
         MISS:
             begin
                 rd_req <= 1'b0;
-                rd_type <= 3'b100;
                 rd_addr <= 32'b0;
                 ADDR_OK <= 1'b0;
                 Data_OK <= 1'b0;
                 HIT_way0 <= hit_way0;
                 HIT_way1 <= hit_way1;
-                if(ret_valid & !ret_last) begin //bus return data
+                if( ret_valid && !ret_last ) begin //bus return data
                     state <= MISS;
-                    Bus_retdata[63:0] <= ret_data; 
+                    Bus_retdata[63:0] <= ret_data;
                 end
-                else if(ret_valid & ret_last)begin        //got whole cacheline from AXI
+                else if( ret_valid && ret_last )begin        //got whole cacheline from AXI
                     state <= REPLACE;
                     Bus_retdata[127:64] <= ret_data;
                     Data_OK <= 1'b1;
                 end
-                else 
+                else begin
                     state <= MISS;
+                end
             end
         REPLACE:
             begin
@@ -382,8 +372,8 @@ always @(posedge clock)begin
     end
 end
 
-assign read_ramdata = Data_OK ? ( HIT_way0 ? ( HIT_index[6] ? sram1_rdata : sram0_rdata ) : ( HIT_way1 ? ( HIT_index[6] ? sram3_rdata : sram2_rdata) : 128'b0 ) ) : 128'b0;
-assign rdata = Data_OK ? ( ( state == REPLACE ) ? (  RB_offset[3] ?  Bus_retdata[127:64] : Bus_retdata[63:0] ) : ( HIT_offset[3] ?  read_ramdata[127:64] : read_ramdata[63:0] ) ) : 64'b0;
+assign read_ramdata = Data_OK ? ( HIT_way0 ? ( HIT_index ? sram1_rdata : sram0_rdata ) : ( HIT_way1 ? ( HIT_index ? sram3_rdata : sram2_rdata) : 128'b0 ) ) : 128'b0;
+assign rdata = Data_OK ? ( ( state == REPLACE ) ? (  RB_offset ?  Bus_retdata[127:64] : Bus_retdata[63:0] ) : ( HIT_offset ?  read_ramdata[127:64] : read_ramdata[63:0] ) ) : 64'b0;
 
 assign data_ok = Data_OK;
 assign addr_ok = ADDR_OK;
@@ -418,7 +408,7 @@ import "DPI-C" function void get_cache_state_32_value(int cache_state_32);
 always@(*) get_cache_state_32_value(cache_state_32);
 
 wire [31:0]rd_req_32;
-assign rd_req_32 = {31'b0,rd_req};
+assign rd_req_32 = {30'b0,RB_offset,rd_req};
 import "DPI-C" function void get_rd_req_32_value(int rd_req_32);
 always@(*) get_rd_req_32_value(rd_req_32);
 
@@ -446,7 +436,7 @@ import "DPI-C" function void get_Data_OK_32_value(int Data_OK_32);
 always@(*) get_Data_OK_32_value(Data_OK_32);
 
 wire [31:0]rdata_32;
-assign rdata_32 = read_ramdata[31:0];
+assign rdata_32 = Bus_retdata[31:0];
 import "DPI-C" function void get_cache_rdata_32_value(int rdata_32);
 always@(*) get_cache_rdata_32_value(rdata_32);
 
@@ -456,3 +446,4 @@ import "DPI-C" function void get_hit_32_value(int hit_32);
 always@(*) get_hit_32_value(hit_32);
 
 endmodule
+

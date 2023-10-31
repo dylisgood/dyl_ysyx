@@ -10,7 +10,6 @@ module ysyx_22050854_multiplier_2(
     input clock,
     input reset,
     input mul_valid, //1:input data valid
-    input flush,     //1:cancel multi
     input mulw,      //1:32 bit multi
     input [1:0]mul_signed,  //2’b11（signed x signed）；2’b10（signed x unsigned）；2’b00（unsigned x unsigned）；
     input [63:0]multiplicand, //被乘数

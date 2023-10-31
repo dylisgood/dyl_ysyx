@@ -28,6 +28,23 @@ extern "C" void get_fencei_value(int data)
   Dcache_FenceI = data;
 }
 
+uint32_t AXI_slave_arvalid = 0;
+extern "C" void get_arvalid_32_value(int data)
+{
+  AXI_slave_arvalid = data;
+}
+
+uint32_t AXI_slave_araddr = 0;
+extern "C" void get_first_addr_32_value(int data)
+{
+  AXI_slave_araddr = data;
+}
+
+uint32_t AXI_arbiter_arvalid_32 = 0;
+extern "C" void get_AXI_arbiter_arvalid_32_value(int data)
+{
+  AXI_arbiter_arvalid_32 = data;
+}
 
 uint32_t Fence_counter = 0;
 extern "C" void get_Fence_counter_32_value(int data)
@@ -455,12 +472,6 @@ extern "C" void get_ebreak_value(uint32_t data)
   ebreak_cpu = data;
 }
 
-uint32_t current_pc = 0;
-extern "C" void get_current_pc_value(uint32_t data)
-{
-  current_pc = data;
-}
-
 uint32_t x10_cpu = 0;
 extern "C" void get_x10_value(uint32_t data)
 {
@@ -628,37 +639,38 @@ void cpu_exec(int n){
   gettimeofday(&currentTime,NULL);
   //inst_start_time = currentTime.tv_sec * 1000000 + currentTime.tv_usec;
   inst_start_time = currentTime.tv_sec;
-  printf("inst_start_time = %d \n" , inst_start_time);
+  //printf("inst_start_time = %d \n" , inst_start_time);
   while((n || Execute) && !npc_stop){  //!contextp->gotFinish()
     //如果执行到了ebreak 或指令条数 或发现差异 就停
     if( ebreak_cpu || (n-- == 0 && !Execute) || dut_find_difftest ) { break; }
 
     top->clock = 0; sim_exit();
-    uint64_t top_pc = verilog_pc;
-    uint32_t top_inst = verilog_inst;
     top->clock = 1; sim_exit();
-    top_pc = WBreg_pc;
-    top_inst = verilog_WBinst;
-    total_cycle = total_cycle + 1; 
+
+    uint64_t top_pc = WBreg_pc;
+    uint32_t top_inst = verilog_WBinst;
+
+    total_cycle = total_cycle + 1;
+
     if(inst_finish) total_inst_num += 1;
 
     if(total_inst_num % 10000000 == 0){printf("total_inst_num = %d, total_cycle = %d\n",total_inst_num++,total_cycle);}
     
     if(verilog_IDinst & 0x7f == 0xf ) printf("PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP- PPPPPPPPPPPPPPPpp Find fence.I \n");
-    //if(Dcache_FenceI) printf("Find FenceI, inst_num = %d \n" ,total_cycle);
+
     if(this_cycle_inst < 51 && !Execute){
     printf("total_cycle = %d ,valid inst num = %d\n" ,total_cycle ,total_inst_num);
-    printf("inst = %x, pc_real = %lx,hit_cache = %d, IFU_valid = %d,PC_JUMP_Suspend = %x\n,\
-  Icache_state = %x , rd_req = %d, rd_addr = %x, araddr_pc = %x,ret_valid = %d,ret_last = %x, ret_data_32= %x,Data_OK = %d,cache_rdata_32 = %x,Suspend_IFU = %d\n,\
-IDreg_pc = %x, IDreg_inst = %x, next_pc = %x, current_pc = %x ,jump = %d, Data_Conflict = %x, Dcache_request = %d, dsram_write_addr = %x, awvalid = %d, dsram_wdata = %x, IDreg_valid = %d\n,\
+    printf("pc_real = %lx,hit_cache = %d, IFU_valid = %d,PC_JUMP_Suspend = %x,AXI_arbiter_arvalid = %x\n,\
+  Icache_state = %x , rd_req = %d, rd_addr = %x, AXI_slave_arvalid = %x, AXI_slave_araddr = %x, araddr_pc = %x,ret_valid = %d,ret_last = %x, AXI_ret_data = %x,Data_OK = %d, Cache_retdata = %x,Suspend_IFU = %d\n,\
+IDreg_pc = %x, IDreg_inst = %x, next_pc = %x, jump = %d, Data_Conflict = %x, Dcache_request = %d, dsram_write_addr = %x, awvalid = %d, dsram_wdata = %x, IDreg_valid = %d\n,\
   Dcache_state = %d, HitWay = %d, address = %x, retData = %x, read_mem_data = %x, Dataok = %d, wmask = %x, wdata = %x, Dcache_AXIretData = %x,Replace_data = %x,AXI_Dcache_addr = %x,AXI_Dcache_data = %x\n,\
   Dcache_FenceI = %d, Fence_state = %x, Fence_counter = %d\n,\
 EXEreg_pc = %x, EXEreg_inst = %x, Suspend_LSU = %d, Suspend_ALU = %d, EXEreg_valid = %d\n,\
 MEMreg_pc = %x, MEMreg_inst = %x, MEMreg_aluout = 0x%lx, MEMreg_memwr = %d, MEMreg_valid=%d\n,\
 WBreg_pc = %x,  WBreg_inst = %x, WBreg_aluout = 0x%lx ,WBreg_rd = %d ,wr_reg_data = 0x%lx,WBreg_valid = %d\n\n" \
-     ,top_inst, verilog_pc, hit_32 ,IFU_valid_32,PC_JUMP_Suspend\
-     ,cache_state_32, rd_req_32, rd_addr, araddr_pc, ret_valid_32,ret_last_32,ret_data_32,Data_OK_32,cache_rdata_32,Suspend_IFU_32\
-     ,verilog_IDpc,verilog_IDinst,next_pc,current_pc,jump,Data_Conflict,Dcache_valid,dsram_write_addr,awvalid,dsram_wdata,IDreg_valid\
+     ,verilog_pc, hit_32 ,IFU_valid_32,PC_JUMP_Suspend,AXI_arbiter_arvalid_32\
+     ,cache_state_32, rd_req_32, rd_addr, AXI_slave_arvalid, AXI_slave_araddr, araddr_pc, ret_valid_32,ret_last_32,ret_data_32,Data_OK_32,cache_rdata_32,Suspend_IFU_32\
+     ,verilog_IDpc,verilog_IDinst,next_pc,jump,Data_Conflict,Dcache_valid,dsram_write_addr,awvalid,dsram_wdata,IDreg_valid\
      ,Dcache_state,Dcache_Hitway,Dcache_addr,Dcache_ret_Data,read_mem_data,Data_cache_Data_ok,writeDcache_data,Dcache_wdata,Dcache_AXI_ret_data,Replace_cache_data_32,AXI_Dcache_addr,AXI_Dcache_data\
      ,Dcache_FenceI,Fence_state,Fence_counter\
      ,EXEreg_pc,verilog_EXEinst,Suspend_LSU,Suspend_alu,EXEreg_valid\ 

@@ -1,6 +1,6 @@
 module ysyx_22050854_Dcache (clock,reset,
-    valid,op,index,tag,offset,wstrb,wdata,addr_ok,data_ok,rdata,unshoot,fencei,
-    rd_req,rd_type,rd_addr,rd_rdy,ret_valid,ret_last,ret_data,wr_req,wr_type,wr_addr,wr_wstb,wr_data,wr_rdy,
+    valid,op,index,tag,offset,wstrb,wdata,data_ok,rdata,unshoot,fencei,
+    rd_req,rd_addr,rd_rdy,ret_valid,ret_last,ret_data,wr_req,wr_addr,wr_wstb,wr_data,wr_rdy,wr_resp,
     sram4_addr,sram4_cen,sram4_wen,sram4_wmask,sram4_wdata,sram4_rdata,
     sram5_addr,sram5_cen,sram5_wen,sram5_wmask,sram5_wdata,sram5_rdata,
     sram6_addr,sram6_cen,sram6_wen,sram6_wmask,sram6_wdata,sram6_rdata,
@@ -21,7 +21,6 @@ input [Tag_Bits - 1 : 0 ]tag;    // 32 - 4- 7 = 21
 input [Offset_Bits - 1:0]offset;   //每一个块的大小是16字节
 input [7:0]wstrb;    //最大是能写八个字节的
 input [63:0]wdata;    //写数据
-output addr_ok;       //表示这次请求的地址传输OK
 output data_ok;       //表示这次请求的数据传输OK
 output [63:0]rdata;    //读cache的结果
 output reg unshoot;
@@ -29,18 +28,17 @@ input fencei;
 
 //Cache 与 AXI总线接口的交互接口
 output reg rd_req;        //读请求有效信号，高电平valid
-output reg [2:0]rd_type;       //读请求类型，3‘b000: 字节 001---半字  010---字 100-cache行
 output reg [31:0]rd_addr;       //读请求起始地址
 input rd_rdy;       //读请求能否被接受的握手信号，高电平有效
 input ret_valid;      //返回数据有效   
 input ret_last;     //返回数据是一次读请求对应最后一个返回的数据
 input [63:0]ret_data;     //读返回数据
 output reg wr_req;     //写请求信号，高电平有效
-output reg [2:0]wr_type;     //写请求类型， 000---字节 001---半字  010---字  100----cache行
 output reg [31:0]wr_addr;     //写请求地址
 output reg [7:0]wr_wstb;   //写操作的字节掩码
 output reg [127:0]wr_data;        //写数据
 input wr_rdy;          //写请求能否被接收的握手信号，高电平有效，要求wr_rdy先于wr_req置起，wr_req看到wr_rdy置起后才可能置起
+input wr_resp;         //写请求是否获得回应
 
 //cache 与 ram的交互信号
 output [5:0]sram4_addr;
@@ -68,20 +66,18 @@ output [127:0]sram7_wmask;
 output [127:0]sram7_wdata;
 input [127:0]sram7_rdata;
 
-parameter IDLE = 6'b000001,LOOKUP = 6'b000010, MISS = 6'b000100, REPLACE = 6'b001000,REWAIT = 6'b010000,REFILL = 6'b100000;
-reg [5:0]state;
+parameter IDLE = 7'b0000001,LOOKUP = 7'b0000010, MISS = 7'b0000100, REPLACE = 7'b0001000,REWAIT = 7'b0010000,REFILL = 7'b0100000,WAIT_WR_RESPONSE = 7'b1000000;
+reg [6:0]state;
 
 reg [Index_Bits - 1 : 0]RB_index;
 reg [Tag_Bits - 1 : 0]RB_tag;
-reg [Offset_Bits - 1 : 0]RB_offset;
-reg [7:0]RB_wstrb;
+reg RB_offset;
 reg [127:0]RB_wdata;
 reg RB_OP;
 reg [127:0]RB_BWEN;
 
-reg [Index_Bits - 1 : 0]HIT_index;
-reg [Tag_Bits - 1 : 0]HIT_tag;
-reg [Offset_Bits - 1 : 0]HIT_offset;
+reg HIT_index;
+reg HIT_offset;
 reg [127:0] Bus_retdata;
 
 reg [21:0] Way0_TagV [127:0];
@@ -111,7 +107,6 @@ reg [5:0]ram7_addr;
 reg [127:0]ram7_wdata;
 
 reg Data_OK;
-reg ADDR_OK;
 reg hit_way0;
 reg hit_way1;
 reg HIT_way0;
@@ -182,7 +177,6 @@ always @(posedge clock)begin
         begin
             if( Fence_wr )begin  //if from Fence_Write
                 wr_req <= 1'b0;
-                wr_type <= 3'b100;
                 wr_addr <= 32'b0;
                 wr_wstb <= 8'h0;
                 wr_data <= 128'b0;
@@ -263,7 +257,6 @@ always @(posedge clock)begin
                 Fence_wr <= 1'b1;
                 
                 wr_req <= 1'b1;
-                wr_type <= 3'b100;                  //写一个cache块
                 wr_wstb <= 8'hff;
                 wr_data <= Fence_read_data; 
                 if( ~Fence_counter[7] )
@@ -286,12 +279,10 @@ always @(posedge clock)begin
         state <= IDLE;
         RB_index <= 7'd0;
         RB_tag <= 21'd0;
-        RB_offset <= 4'd0;
+        RB_offset <= 1'b0;
         RB_OP <= 1'b0;
-        HIT_index <= 7'd0;
-        HIT_tag <= 21'd0;
-        HIT_offset <= 4'd0;
-        ADDR_OK <= 1'b0;
+        HIT_index <= 1'b0;
+        HIT_offset <= 1'b0;
         hit_way0 <= 1'b0;
         hit_way1 <= 1'b0;
         HIT_way0 <= 1'b0;
@@ -320,17 +311,14 @@ always @(posedge clock)begin
         ram7_wdata <= 128'b0;
 
         rd_req <= 1'b0;
-        rd_type <= 3'b0;
         rd_addr <= 32'b0;
         wr_req <= 1'b0;
-        wr_type <= 3'b100;
         wr_addr <= 32'b0;
         wr_wstb <= 8'h0;
         wr_data <= 128'b0;
 
         Replace_cache_data <= 128'b0;
 
-        RB_wstrb <= 8'b0;
         RB_wdata <= 128'b0;
         RB_BWEN <= 128'hffffffffffffffffffffffffffffffff;
         Bus_retdata <= 128'b0;
@@ -346,7 +334,6 @@ always @(posedge clock)begin
 
                 if(Fence_state != Fence_Write)begin
                     wr_req <= 1'b0;
-                    wr_type <= 3'b100;
                     wr_addr <= 32'b0;
                     wr_wstb <= 8'h0;
                     wr_data <= 128'b0;
@@ -360,10 +347,8 @@ always @(posedge clock)begin
 
                     RB_index <= index;  
                     RB_tag <= tag;
-                    RB_offset <= offset;
+                    RB_offset <= offset[3];
                     RB_OP <= op;
-
-                    ADDR_OK <= 1'b1;
 
                     if( Way0_TagV[index] == {1'b1,tag} ) begin //hit way0
                         state <= LOOKUP;
@@ -390,7 +375,6 @@ always @(posedge clock)begin
                     else begin                      //unshoot
                         if(rd_rdy)begin             // only AXI(SRAM) ready cloud generate request
                             rd_req <= 1'b1;
-                            rd_type <= 3'b100;
                             rd_addr <= {tag,index,offset};
                         end
                         state <= MISS;
@@ -405,12 +389,10 @@ always @(posedge clock)begin
                 else if( valid && op) begin  //wirite
                     RB_index <= index;  
                     RB_tag <= tag;
-                    RB_offset <= offset;
-                    RB_wstrb <= wstrb;
+                    RB_offset <= offset[3];
                     RB_wdata <= wdata_128;
                     RB_OP <= op;
                     RB_BWEN <= wstrb_to_bwen_128;
-                    ADDR_OK <= 1'b1;
 
                     if( Way0_TagV[index] == { 1'b1,tag } ) begin //hit way0
                         state <= IDLE;
@@ -457,7 +439,6 @@ always @(posedge clock)begin
                     else begin                      // unshoot
                         if(rd_rdy)begin             // only AXI(SRAM) ready cloud generate request
                             rd_req <= 1'b1;
-                            rd_type <= 3'b100;
                             rd_addr <= {tag,index,offset};
                         end
                         state <= MISS;
@@ -475,7 +456,6 @@ always @(posedge clock)begin
                 end
                 else begin    //if no request
                     state <= IDLE;
-                    ADDR_OK <= 1'b0;
 
                     ram4_CEN <= 1'b1;                //last state maybe replace, so need stop write ram
                     ram4_WEN <= 1'b1;
@@ -505,8 +485,7 @@ always @(posedge clock)begin
             begin
                 if( hit_way0 || hit_way1) begin
                     Data_OK <= 1'b1;
-                    HIT_index <= RB_index;  
-                    HIT_tag <= RB_tag;
+                    HIT_index <= RB_index[6];  
                     HIT_offset <= RB_offset;
                     HIT_way0 <= hit_way0;
                     HIT_way1 <= hit_way1;
@@ -518,15 +497,13 @@ always @(posedge clock)begin
                     ram5_CEN <= 1'b1;
                     ram6_CEN <= 1'b1;
                     ram7_CEN <= 1'b1;
-                    ADDR_OK <= 1'b0;
                     hit_way0 <= 1'b0;
                     hit_way1 <= 1'b0;
                 end
                 else if( valid & !op) begin   // read
                     RB_index <= index;  
                     RB_tag <= tag;
-                    RB_offset <= offset;
-                    ADDR_OK <= 1'b1;
+                    RB_offset <= offset[3];
                     if( Way0_TagV[index] == {1'b1,tag} ) begin //hit way0
                         state <= LOOKUP;
                         ram4_CEN <= ~index[6] ? 1'b0 : 1'b1;
@@ -552,7 +529,6 @@ always @(posedge clock)begin
                     else begin                      // unshoot
                         if(rd_rdy)begin             // only AXI(SRAM) ready cloud generate request
                             rd_req <= 1'b1;
-                            rd_type <= 3'b100;
                             rd_addr <= {tag,index,offset};
                         end
                         state <= MISS;
@@ -572,12 +548,10 @@ always @(posedge clock)begin
 
                     RB_index <= index;  
                     RB_tag <= tag;
-                    RB_offset <= offset;
-                    RB_wstrb <= wstrb;
+                    RB_offset <= offset[3];
                     RB_wdata <= wdata_128;
                     RB_OP <= op;
                     RB_BWEN <= wstrb_to_bwen_128;
-                    ADDR_OK <= 1'b1;
 
                     if( Way0_TagV[index] == { 1'b1,tag } ) begin //hit way0
                         state <= IDLE;
@@ -620,7 +594,6 @@ always @(posedge clock)begin
                     else begin                      // unshoot
                         if(rd_rdy)begin             // only AXI(SRAM) ready cloud generate request
                             rd_req <= 1'b1;
-                            rd_type <= 3'b100;
                             rd_addr <= {tag,index,offset};
                         end
                         state <= MISS;
@@ -636,9 +609,7 @@ always @(posedge clock)begin
         MISS:
             begin
                 rd_req <= 1'b0;
-                rd_type <= 3'b100;
                 rd_addr <= 32'b0;
-                ADDR_OK <= 1'b0;
                 Data_OK <= 1'b0;
                 HIT_way0 <= hit_way0;
                 HIT_way1 <= hit_way1;
@@ -771,11 +742,11 @@ always @(posedge clock)begin
         REFILL:
             begin
                 if( wr_rdy ) begin     // 向AXI 发出写请求, 同时将AXI获得的数据写回到cache中
-                    state <= IDLE;
-                    unshoot <= 1'b0;
+                    //state <= IDLE;
+                    //unshoot <= 1'b0;
+                    state <= WAIT_WR_RESPONSE;
 
                     wr_req <= 1'b1;
-                    wr_type <= 3'b100;  //写一个cache块
                     wr_addr <= { Way0_TagV[ RB_index ][20:0],RB_index,4'b0 };  //***
                     wr_wstb <= 8'hff;
                     wr_data <= Replace_cache_data;
@@ -803,17 +774,40 @@ always @(posedge clock)begin
                     state <= REFILL; 
                 end
             end
+        WAIT_WR_RESPONSE:
+            begin
+                    wr_req <= 1'b0;
+                    wr_addr <= 32'b0;
+                    wr_wstb <= 8'h0;
+                    wr_data <= 128'b0;
+
+                    ram4_CEN <= 1'b1;                //last state maybe replace, so need stop write ram
+                    ram4_WEN <= 1'b1;
+                    ram4_bwen <= 128'hffffffffffffffffffffffffffffffff;
+                    ram4_addr <= 6'b0;
+                    ram4_wdata <= 128'b0;
+                    ram5_CEN <= 1'b1;
+                    ram5_WEN <= 1'b1;
+                    ram5_bwen <= 128'hffffffffffffffffffffffffffffffff;
+                    ram5_addr <= 6'b0;
+                    ram5_wdata <= 128'b0;
+
+                    if(wr_resp) begin
+                        state <= IDLE;
+                        unshoot <= 1'b0;
+                    end
+                    else state <= WAIT_WR_RESPONSE;
+            end
         default:
             state <= IDLE;
     endcase 
     end
 end
 
-assign read_ramdata = Data_OK ? ( HIT_way0 ? ( HIT_index[6] ? sram5_rdata : sram4_rdata ) : ( HIT_way1 ? ( HIT_index[6] ? sram7_rdata : sram6_rdata) : 128'b0 ) ) : 128'b0;
-assign rdata = Data_OK ? ( ( state == REPLACE ) ? (  RB_offset[3] ?  Bus_retdata[127:64] : Bus_retdata[63:0] ) : ( HIT_offset[3] ?  read_ramdata[127:64] : read_ramdata[63:0] ) ) : 64'b0;
+assign read_ramdata = Data_OK ? ( HIT_way0 ? ( HIT_index ? sram5_rdata : sram4_rdata ) : ( HIT_way1 ? ( HIT_index ? sram7_rdata : sram6_rdata) : 128'b0 ) ) : 128'b0;
+assign rdata = Data_OK ? ( ( state == REPLACE ) ? (  RB_offset ?  Bus_retdata[127:64] : Bus_retdata[63:0] ) : ( HIT_offset ?  read_ramdata[127:64] : read_ramdata[63:0] ) ) : 64'b0;
 
 assign data_ok = Data_OK;
-assign addr_ok = ADDR_OK;
 
 assign sram4_addr = ~ram4_CEN ? ram4_addr : Fence_ram4_addr;
 assign sram4_cen = ram4_CEN & Fence_ram4_CEN;
@@ -841,7 +835,7 @@ assign sram7_wdata = ram7_wdata;
 
 
 wire [31:0]Dcache_state_32;
-assign Dcache_state_32 = {26'b0,state};
+assign Dcache_state_32 = {25'b0,state};
 import "DPI-C" function void get_Dcache_state_32_value(int Dcache_state_32);
 always@(*) get_Dcache_state_32_value(Dcache_state_32);
 
@@ -880,4 +874,4 @@ assign Fence_state_32 = { 24'b0,Fence_ram4_CEN,Fence_ram5_CEN,Fence_ram6_CEN,Fen
 import "DPI-C" function void get_Fence_state_32_value(int Fence_state_32);
 always@(*) get_Fence_state_32_value(Fence_state_32);
 
-endmodule 
+endmodule

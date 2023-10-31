@@ -259,7 +259,7 @@ ysyx_22050854_AXI_SRAM_LSU Cache_AXI_DDR (
     .arid(cpu_io_master_arid),
 
     //read data channel
-    .rdata(cpu_io_master_rdata),
+    .rrr_data(cpu_io_master_rdata),
     .rresp(cpu_io_master_rresp),
     .rvalid(cpu_io_master_rvalid),
     .rready(cpu_io_master_rready),

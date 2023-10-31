@@ -12,7 +12,6 @@ module ysyx_22050854_divider_1 (
     input div_valid,       //为高表示输入的数据有效，如果没有新的除法输入，在除法被接受的下一个周期要置低
     input divw,            //为高表示输入是32位除法
     input div_signed,      //为高表示是有符号除法
-    input flush,           //为高表示除法无效
     output div_doing,
     output div_ready,      //为高表示除法器空闲，可以输入数据
     output out_valid,      //为高表示除法器输出结果有效
@@ -209,3 +208,4 @@ assign out_valid = div32_over | div64_over;
 assign div_ready = div_ready_t;
 
 endmodule
+
