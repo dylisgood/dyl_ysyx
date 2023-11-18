@@ -375,7 +375,7 @@ always @(posedge clock)begin
                     else begin                      //unshoot
                         if(rd_rdy)begin             // only AXI(SRAM) ready cloud generate request
                             rd_req <= 1'b1;
-                            rd_addr <= {tag,index,offset};
+                            rd_addr <= {tag,index,4'b0};
                         end
                         state <= MISS;
                         unshoot <= 1'b1;
@@ -439,7 +439,7 @@ always @(posedge clock)begin
                     else begin                      // unshoot
                         if(rd_rdy)begin             // only AXI(SRAM) ready cloud generate request
                             rd_req <= 1'b1;
-                            rd_addr <= {tag,index,offset};
+                            rd_addr <= {tag,index,4'b0};
                         end
                         state <= MISS;
                         unshoot <= 1'b1;
@@ -529,7 +529,7 @@ always @(posedge clock)begin
                     else begin                      // unshoot
                         if(rd_rdy)begin             // only AXI(SRAM) ready cloud generate request
                             rd_req <= 1'b1;
-                            rd_addr <= {tag,index,offset};
+                            rd_addr <= {tag,index,4'b0};
                         end
                         state <= MISS;
                         unshoot <= 1'b1;
@@ -594,7 +594,7 @@ always @(posedge clock)begin
                     else begin                      // unshoot
                         if(rd_rdy)begin             // only AXI(SRAM) ready cloud generate request
                             rd_req <= 1'b1;
-                            rd_addr <= {tag,index,offset};
+                            rd_addr <= {tag,index,4'b0};
                         end
                         state <= MISS;
                         unshoot <= 1'b1;

@@ -1,4 +1,3 @@
-`timescale 1ns/1ps
 module ysyx_22050854_imm_gen(
     input [31:0]instr,
     input [2:0]ExtOP,
@@ -22,3 +21,5 @@ module ysyx_22050854_imm_gen(
     });
 
 endmodule
+
+

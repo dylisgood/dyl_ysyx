@@ -1,11 +1,3 @@
-/*
-    I-cache 大小为4KB,一个ram大小为1KB，需要例化4个ram
-    我想分成两路组相连，一路2KB，cache行大小为16B，128个行
-    但这只是data 还有tag v d 呢 
-    tag如何与data联系起来？
-
-*/
-
 module ysyx_22050854_Icache (clock,reset,
     valid,op,index,tag,offset,addr_ok,data_ok,rdata,unshoot,
     rd_req,rd_addr,rd_rdy,ret_valid,ret_last,ret_data,
@@ -210,7 +202,7 @@ always @(posedge clock)begin
                     else begin                      //unshoot
                         if(rd_rdy)begin             // only AXI(SRAM) ready cloud generate request
                             rd_req <= 1'b1;
-                            rd_addr <= {tag,index,offset};
+                            rd_addr <= {tag,index,4'b0};
                         end
                         state <= MISS;
                         unshoot <= 1'b1;
@@ -280,7 +272,7 @@ always @(posedge clock)begin
                     else begin                      // unshoot
                         if(rd_rdy)begin             // only AXI(SRAM) ready cloud generate request
                             rd_req <= 1'b1;
-                            rd_addr <= {tag,index,offset};
+                            rd_addr <= {tag,index,4'b0};
                         end
                         state <= MISS;
                         unshoot <= 1'b1;

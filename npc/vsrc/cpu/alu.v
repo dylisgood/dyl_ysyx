@@ -1,5 +1,3 @@
-//operation
-`timescale 1ns/1ps
 `define ysyx_22050854_USE_MULTIPLIER_1
 
 module ysyx_22050854_alu(

@@ -1,4 +1,3 @@
-`timescale 1ns/1ps
 /*
   这个模块实际上为模拟 接收到AXI信号后 SDRAM 的操作而设计
   接口信号为ysyxSoc的接口信号 就是一个不完整的AXI4 协议
@@ -132,7 +131,7 @@ end
 
 reg [63:0]readdata;
 always @(*)begin
-    if( rready && first_over )  //must at first than get_addr,becayse maybe first IFU then LSU
+    if( rready && first_over )  //must at first than get_addr,because maybe first IFU then LSU
         v_pmem_read( Next_addr, readdata);
     else if( rready && get_addr && ( reg_arburst == 2'b01 ) )
         v_pmem_read( first_addr, readdata);
@@ -140,7 +139,8 @@ always @(*)begin
         readdata = 64'b0;
 end
 
-//write   
+//write 
+//first cycle get awaddr awid, second cycle get wdata   
 reg [63:0]dsram_write_addr;
 reg [7:0]dsram_wtsb;
 wire [63:0]wmask;
@@ -160,6 +160,7 @@ always @(posedge clock)begin
     end
 end
 
+//
 always @(posedge clock)begin
     if(!rst_n)begin
         wready <= 1'd1;
@@ -167,8 +168,8 @@ always @(posedge clock)begin
         bvalid <= 1'b0;
     end
     else if( wvalid && wready )begin
-        if( wlast && ( reg_awburst == 2'b01 )) begin  //only incrementing burst will transfer twice
-            v_pmem_write( { dsram_write_addr[63:4],4'b1000},wdata,wmask);
+        if( wlast && ( reg_awburst == 2'b01 )) begin  //The Dcache's second data
+            v_pmem_write( { dsram_write_addr[63:4],4'b1000},wdata,wmask );
             bvalid <= 1'b1;
             bresp <= 2'b01;
             bid <= reg_awid;
@@ -178,7 +179,7 @@ always @(posedge clock)begin
             bvalid <= 1'b0;
             bid <= reg_awid;
         end
-        else if( reg_awburst == 2'b00 )begin  // for device, device awvalid and wvalid at the same time
+        else if( reg_awburst == 2'b00 )begin  //Write device data
             v_pmem_write(dsram_write_addr,wdata,wmask);
             bvalid <= 1'b1;
             bresp <= 2'b01;

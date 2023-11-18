@@ -1,6 +1,3 @@
-//1.decode
-`timescale 1ns/1ps  
-//2.get operate num from resiger file
 module ysyx_22050854_IDU(
     input [31:0]instr,
     output [4:0]rs1,
@@ -27,7 +24,7 @@ module ysyx_22050854_IDU(
 
     assign op = instr[6:0];
     assign rs1 = instr[19:15];
-    assign rs2 = ( instr == 32'h73 ) ? 5'd17 : instr[24:20]; //对于ecall指令，虽然指令上rs2的位置是全零，但按照指令的行为看，是要将x17的值写进CSR的mcause中
+    assign rs2 = instr[24:20];
     assign rd = instr[11:7];
     assign func3 = instr[14:12];
     assign func7_0 = instr[25];
@@ -339,4 +336,5 @@ module ysyx_22050854_IDU(
     });
 
 endmodule
+
 

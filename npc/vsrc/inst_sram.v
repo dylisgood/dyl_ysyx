@@ -1,4 +1,3 @@
-`timescale 1ns/1ps
 /* read only AXI-lite instruction sram
 8/15
 要求每个周期都能接收地址，第二个周期把数据送出去

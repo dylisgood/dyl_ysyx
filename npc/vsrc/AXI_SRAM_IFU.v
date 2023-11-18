@@ -1,4 +1,3 @@
-`timescale 1ns/1ps
 /* read only AXI-lite instruction sram
    功能：
         接收cache的读数据请求，模拟AXI总线，能够满足突发传输，一个事务传输16个字节

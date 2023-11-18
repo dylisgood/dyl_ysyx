@@ -1,4 +1,3 @@
-//`timescale 1ns/1ps
 module ysyx_22050854_RegisterFile  (
   input clock,
   input [63:0] wdata,
@@ -7,12 +6,7 @@ module ysyx_22050854_RegisterFile  (
   input [4:0] raddra,
   input [4:0] raddrb,
   output reg[63:0] rdata1,
-  output reg[63:0] rdata2,
-
-  input [4:0]test_addr1,
-  input [4:0]test_addr2,
-  output reg[63:0]test_rdata1,
-  output reg[63:0]test_rdata2
+  output reg[63:0] rdata2
 );
   reg [63:0] rf [31:0];
   always @(posedge clock) begin
@@ -46,19 +40,13 @@ module ysyx_22050854_RegisterFile  (
       rdata2 = rf[raddrb];
   end
 
-  always@(*)begin
-    if(test_addr1==5'd0)
-      test_rdata1 = 64'd0;
-    else
-      test_rdata1 = rf[test_addr1];
-  end
-
-  always@(*)begin
-    if(test_addr2==5'd0)
-      test_rdata2 = 64'd0;
-    else
-      test_rdata2 = rf[test_addr2];
-  end
+  wire [63:0]x10;
+  assign x10 = rf[10];
+  wire [31:0]x10_32;
+  assign x10_32 = x10[31:0];
+  import "DPI-C" function void get_x10_value(int x10_32);
+  always@(*) get_x10_value(x10_32);
 
 endmodule
+
 

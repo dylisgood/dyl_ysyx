@@ -378,7 +378,7 @@ extern "C" void get_WBreg_valid_value(uint32_t data)
 }
 
 uint32_t IDreg_valid = 0;
-extern "C" void get_ID_reg_valid_value(uint32_t data)
+extern "C" void get_IDreg_valid_value(uint32_t data)
 {
   IDreg_valid = data;
 }
@@ -497,6 +497,7 @@ extern "C" void v_pmem_read(long long raddr, long long *rdata) {
   else if( raddr == 0xa00003f8 || raddr == 0xa00003f0 )  //串口  for dcache, first read to Dcache, then wirte
   {
     access_device = true;
+    
     *rdata = 0;
   }
   //内存
@@ -547,18 +548,18 @@ extern "C" void v_pmem_write(long long waddr, long long wdata, long long wmask) 
   uint64_t vmem_data = wdata;
   wdata = wdata & wmask;//取出要读的数，其他的置0
   wmask = wmask << (n << 3);
-  if( waddr == 0xa00003f8 ||  waddr == 0xa00003f0)  //串口
+  if( waddr == 0xa00003f8 ||  waddr == 0xa00003f0)  //serial port
   {
     access_device = true;
     //printf("get chuankou\n");
     putchar(wdata);
   }
-  else if(waddr >= 0x80000000 && waddr <= 0x8fffffff) //内存
+  else if(waddr >= 0x80000000 && waddr <= 0x8fffffff) //memory
   {
     access_device = false;
     pmem_write(waddr & ~0x7ull, 8, (wdata << (n << 3)),wmask);
   }
-  else if( ( waddr >= 0xa1000000 )  && ( waddr < ( 0xa1000000 + 400 * 300 * 4)) ){
+  else if( ( waddr >= 0xa1000000 )  && ( waddr < ( 0xa1000000 + 400 * 300 * 4)) ){  //vga
     uint32_t vmem_addr = waddr - 0xa1000000;
     //printf("vmem_addr = %x, vmem_data = %lx, wmask = %lx \n",vmem_addr ,vmem_data, wmask);
     vmem[vmem_addr + 0] = (uint8_t) ( (uint32_t)wdata & 0x000000ff );
@@ -616,7 +617,7 @@ VerilatedVcdC* tfp = new VerilatedVcdC;
 void sim_exit(){
   top->eval();
   contextp->timeInc(1); 
-  tfp->dump(contextp->time());
+  //tfp->dump(contextp->time());
 }
 
 static void single_cycle(){
@@ -639,7 +640,7 @@ void cpu_exec(int n){
   gettimeofday(&currentTime,NULL);
   //inst_start_time = currentTime.tv_sec * 1000000 + currentTime.tv_usec;
   inst_start_time = currentTime.tv_sec;
-  //printf("inst_start_time = %d \n" , inst_start_time);
+
   while((n || Execute) && !npc_stop){  //!contextp->gotFinish()
     //如果执行到了ebreak 或指令条数 或发现差异 就停
     if( ebreak_cpu || (n-- == 0 && !Execute) || dut_find_difftest ) { break; }
@@ -655,8 +656,6 @@ void cpu_exec(int n){
     if(inst_finish) total_inst_num += 1;
 
     if(total_inst_num % 10000000 == 0){printf("total_inst_num = %d, total_cycle = %d\n",total_inst_num++,total_cycle);}
-    
-    if(verilog_IDinst & 0x7f == 0xf ) printf("PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP- PPPPPPPPPPPPPPPpp Find fence.I \n");
 
     if(this_cycle_inst < 51 && !Execute){
     printf("total_cycle = %d ,valid inst num = %d\n" ,total_cycle ,total_inst_num);
@@ -678,8 +677,6 @@ WBreg_pc = %x,  WBreg_inst = %x, WBreg_aluout = 0x%lx ,WBreg_rd = %d ,wr_reg_dat
      ,WBreg_pc,verilog_WBinst,WBreg_aluout ,WBreg_rd,wr_reg_data,WBreg_valid);
     }
 
-//EXEreg_alusrc1 = 0x%lx ,EXEreg_alusrc2 = 0x%lx,EXEreg_writememdata = %lx,,div_doing = %d,dividend = %x,divisor = %x
-//,EXEreg_alusrc1 ,EXEreg_alusrc2,EXEreg_writememdata   ,div_doing,dividend,divisor,
     #ifdef CONFIG_HAS_VGA
       device_update();
     #endif
@@ -741,34 +738,29 @@ WBreg_pc = %x,  WBreg_inst = %x, WBreg_aluout = 0x%lx ,WBreg_rd = %d ,wr_reg_dat
     #ifdef CONFIG_DIFFTEST
     if(inst_finish)
     {
-    //printf("begin difftest\n");
     //copy rtl gpr status to cpu  for difftest
     for (int i = 0; i < 32; i++) {
       cpu.gpr[i] = cpu_gpr[i];
     }
     cpu.pc = inst_finishpc; //用于比较，如果跳过比较，则需要让nemu 的 pc + 4
     //异常指令跳过
-/*     if( (instruction_finsh & 0x707f) == 0x1073 || (instruction_finsh & 0x707f) == 0x73 || \
+    if( (instruction_finsh & 0x707f) == 0x1073 || (instruction_finsh & 0x707f) == 0x73 || \
         (instruction_finsh & 0x707f) == 0x2073 || (instruction_finsh & 0x707f) == 0x3073 ){
         difftest_skip_ref();
         cpu.pc = inst_finishpc + 4;
-    } */
+    }
 
     //访问设备指令跳过
     if(is_device)  { cpu.pc = inst_finishpc+4; difftest_skip_ref(); }
     //fenceI跳过
     //检测
     difftest_step(inst_finishpc,inst_finishpc);
-    //printf("difftest over\n");
     }
     #endif
   }
 
-  //printf("cpu_exec while over!\n");
   gettimeofday(&currentTime,NULL);
-  //inst_over_time = currentTime.tv_sec *1000000 + currentTime.tv_usec - inst_start_time;
   inst_over_time = currentTime.tv_sec;
-  //inst_last_time = inst_over_time / 1000000;
   inst_last_time = inst_over_time - inst_start_time;
 
   double inst_frequency = (double)total_inst_num / (double)inst_last_time;

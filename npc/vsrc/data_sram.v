@@ -1,4 +1,3 @@
-`timescale 1ns/1ps
 module ysyx_22050854_SRAM_LSU (
     input clock,
     input rst_n,

@@ -1,4 +1,3 @@
-`timescale 1ns/1ps
 module ysyx_22050854_src_gen(
     input ALUsrc1,
     input [1:0]ALUsrc2,

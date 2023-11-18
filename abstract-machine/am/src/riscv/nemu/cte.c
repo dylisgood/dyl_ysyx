@@ -8,26 +8,29 @@ static Context* (*user_handler)(Event, Context*) = NULL;
 Context* __am_irq_handle(Context *c) {
  // printf("---------------AM : enter am_irq_handle------------\n");
 
-  if (user_handler) {
+  if (user_handler) { 
     Event ev = {0};
-    //printf("AM: c->mcause = %d \n", c->mcause);
-    switch (c->mcause) {  //执行流切换的原因打包成事件
-      case -1: ev.event = EVENT_YIELD; break;
-      case  0: ev.event = EVENT_SYSCALL; break;
-      case  1: ev.event = EVENT_SYSCALL; break;
-      case  2: ev.event = EVENT_SYSCALL; break;
-      case  3: ev.event = EVENT_SYSCALL; break;
-      case  4: ev.event = EVENT_SYSCALL; break;
-      case  7: ev.event = EVENT_SYSCALL; break;
-      case  8: ev.event = EVENT_SYSCALL; break;
-      case  9: ev.event = EVENT_SYSCALL; break;
-      case 13: ev.event = EVENT_SYSCALL; break;
-      case 19: ev.event = EVENT_SYSCALL; break;
-      default: ev.event = EVENT_ERROR; break;
+    //printf("c->mcause = %lx GPR1 = %lx \n", c->mcause ,c->GPR1);
+    switch (c->mcause) {
+      case 0x8000000000000007:
+        ev.event = EVENT_IRQ_TIMER;
+        break;
+      case 11: 
+          if( c->GPR1 == -1 ){
+              ev.event = EVENT_YIELD;
+              c->mepc = c->mepc + 4;
+          }
+          else {
+              ev.event = EVENT_SYSCALL;
+              c->mepc = c->mepc + 4;
+          }
+          break;
+      default: ev.event = EVENT_ERROR; printf("find error ,c->mcause = (%lx) \n" ,c->mcause); break;
+    }
+    c = user_handler(ev, c);
+    assert(c != NULL);
   }
-  c = user_handler(ev, c);
-  assert(c != NULL);
-  }
+
   return c;
 }
 
