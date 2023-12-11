@@ -7,6 +7,7 @@
 #include <stdio.h>
 
 void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect) {
+  //printf("-----------------enter SDL_BlitSurface --------------------------\n");
   assert(dst && src);
   assert(dst->format->BitsPerPixel == src->format->BitsPerPixel);
   uint16_t w,h;
@@ -41,9 +42,11 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
     }
   }
   else assert(0);
+  //printf("+++++++++++++++++++++ Out SDL_BlitSurface ++++++++++++++++++++++++\n");
 }
 
 void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
+  //printf("-----------------enter SDL_FillRect --------------------------\n");
   uint16_t h ,w;
   int16_t x , y;
   if(dstrect == NULL){

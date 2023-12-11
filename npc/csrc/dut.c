@@ -78,7 +78,7 @@ bool isa_difftest_checkregs(CPU_state *ref_r, uint32_t pc) {
     if(ref_r->gpr[i] != cpu_gpr[i]){
       Log("nemu_%s = %lx",regs[i],ref_r->gpr[i]);
       Log("npc_%s = %lx",regs[i],cpu_gpr[i]);
-      //Log("npc_pc =  %x",inst_finishpc);
+
       if( (ref_r->pc) - 4 != inst_finishpc) {
         Log("nemu_pc = %lx",(ref_r->pc - 4) );
         Log("npc_pc =  %x",inst_finishpc);
@@ -87,24 +87,13 @@ bool isa_difftest_checkregs(CPU_state *ref_r, uint32_t pc) {
       find_diff = true;
     }
   }
-/*   if(ref_r->pc != WBreg_pc) {
-    Log("nemu_pc = %lx",ref_r->pc);
-    Log("npc_pc =  %x",WBreg_pc);
-    find_diff = true;
-  } */
-  //printf("nemu->pc = %x \n" ,ref_r->pc);
   return find_diff;
 }
 
 static void checkregs(CPU_state *ref, uint32_t pc) {
   if (isa_difftest_checkregs(ref, pc)) {
     Log("!!!!!!!!!!!!!!!!!!!!!!   find deffferent at pc = %x  !!!!!!!!!!!!!!!!\n" ,pc);
-/*     dump_gpr();
-    for(int i = 0; i < 32; i++){
-      printf("nemu-ref[%d] = %lx\n" ,i,ref->gpr[i]);
-    } */
     dut_find_difftest = true;
-    //assert(0);
   }
 }
 
