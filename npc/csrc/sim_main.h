@@ -3,10 +3,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+//#define USE_TRACE
 
 #include <Vtop.h>
 #include <verilated.h>
+#ifdef USE_TRACE
 #include <verilated_vcd_c.h>
+#endif
 #include "verilated_dpi.h"
 #include "svdpi.h"
 

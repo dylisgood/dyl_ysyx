@@ -4,8 +4,7 @@
 #include <time.h>
 #include "utils.h"
 
-
-#define TIMER_HZ 60
+#define TIMER_HZ 30
 
 void send_key(uint8_t, bool);
 void vga_update_screen();

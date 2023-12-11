@@ -31,16 +31,6 @@ reg div32_go;
 reg div64_go;
 reg div_ready_t;
 
-wire [31:0]dividend_32;
-assign dividend_32 = {27'b0,div32_index};
-import "DPI-C" function void get_dividend_value(int dividend_32);
-always@(*) get_dividend_value(dividend_32);
-
-wire [31:0]divisor_32;
-assign divisor_32 = {31'b0,div32_over};
-import "DPI-C" function void get_divisor_value(int divisor_32);
-always@(*) get_divisor_value(divisor_32);
-
 always @(posedge clock)begin
     if(reset)begin
         sign_quotient <= 1'b0;

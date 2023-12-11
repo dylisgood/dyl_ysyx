@@ -243,6 +243,8 @@ always @(posedge clock)begin
 
                 if( !valid ) begin             //finish and no new request
                     state <= IDLE;
+                    hit_way0 <= 1'b0;
+                    hit_way1 <= 1'b0;
                     ADDR_OK <= 1'b0;
                     
                 end
@@ -394,6 +396,7 @@ assign sram3_wen = ram4_WEN;
 assign sram3_wmask = ram4_bwen;
 assign sram3_wdata = ram4_wdata;
 
+/* 
 wire [31:0]cache_state_32;
 assign cache_state_32 = {28'b0,state};
 import "DPI-C" function void get_cache_state_32_value(int cache_state_32);
@@ -431,11 +434,11 @@ wire [31:0]rdata_32;
 assign rdata_32 = Bus_retdata[31:0];
 import "DPI-C" function void get_cache_rdata_32_value(int rdata_32);
 always@(*) get_cache_rdata_32_value(rdata_32);
-
-wire [31:0]hit_32;
+*/
+/* wire [31:0]hit_32;
 assign hit_32 = { 30'b0,hit_way1,hit_way0};
 import "DPI-C" function void get_hit_32_value(int hit_32);
-always@(*) get_hit_32_value(hit_32);
+always@(*) get_hit_32_value(hit_32); */
 
 endmodule
 

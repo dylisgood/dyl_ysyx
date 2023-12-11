@@ -454,7 +454,6 @@ module ysyx_22050854 (
         else if(IDreg_pc_enable && AXI_Flash_ret_valid)
             IDreg_pc <= Flash_PC;
     end
-    //ysyx_22050854_Reg #(32,32'h80000000) IDreg_gen1 (clock, reset, pc_record, IDreg_pc, IDreg_pc_enable);
 
     //----------------------------------          ID           -----------------------//
     wire [4:0]rs1,rs2;
@@ -541,16 +540,10 @@ module ysyx_22050854 (
     wire CSRwr_t;
     wire CSR_Write1;
     wire CSR_Write2;
-    ysyx_22050854_MuxKey #(6,10,1) csrwr_t_gen (CSRwr_t, {IDreg_inst[14:12],IDreg_inst[6:0]}, {
-        10'b0011110011,1'b1,
-        10'b0101110011,1'b1,
-        10'b0111110011,1'b1,
-        10'b1011110011,1'b1,
-        10'b1101110011,1'b1,
-        10'b1111110011,1'b1
-    });
+    assign CSRwr_t = ( IDreg_inst[6:0] == 7'b1110011 ) && ( IDreg_inst[14:12] != 3'b000 ); //bug: 100 
+
     assign CSRwr1 = ( Insrtuction_ecall | handle_timer_intr ) ? 1'b1 : CSRwr_t; //mret and ebreak
-    assign CSRwr2 = ( Insrtuction_ecall | handle_timer_intr ) ? 1'b1 : 1'b0;   //only ecall need to write two csr
+    assign CSRwr2 = ( Insrtuction_ecall | handle_timer_intr ) ? 1'b1 : 1'b0;   //only ecall/time_intr need to write two csr
     assign CSR_Write1 = CSRwr1 & IDreg_valid & ~Suspend_ALU & ~Suspend_LSU & ~Data_Conflict_block;
     assign CSR_Write2 = CSRwr2 & IDreg_valid & ~Suspend_ALU & ~Suspend_LSU & ~Data_Conflict_block;
     //CSR   写地址
@@ -559,15 +552,23 @@ module ysyx_22050854 (
     assign csr_waddr2 = ( Insrtuction_ecall | handle_timer_intr ) ? 12'h342 : IDreg_inst[31:20]; //if ecall, mcause
     //写数据
     wire [63:0]csr_wdata1,csr_wdata2;
-    wire [63:0]csrwdata_t;
-    ysyx_22050854_MuxKey #(6,10,64) csrwdata_gen (csrwdata_t, {IDreg_inst[14:12],IDreg_inst[6:0]}, {
-        10'b0011110011, New_src1,
-        10'b0101110011, csr_rdata | New_src1,
-        10'b0111110011, csr_rdata & ~New_src1,
-        10'b1011110011, {59'd0,IDreg_inst[19:15]},
-        10'b1101110011, csr_rdata | {59'd0,IDreg_inst[19:15]},
-        10'b1111110011, csr_rdata & ~{59'd0,IDreg_inst[19:15]}
-    });
+    reg [63:0]csrwdata_t;
+
+    always @(*) begin
+        if(reset)
+            csrwdata_t = 64'd0;
+        else begin
+            case({IDreg_valid,IDreg_inst[14:12],IDreg_inst[6:0]})
+                11'b10011110011: csrwdata_t = New_src1;
+                11'b10101110011: csrwdata_t = csr_rdata | New_src1;
+                11'b10111110011: csrwdata_t = csr_rdata & ~New_src1;
+                11'b11011110011: csrwdata_t = {59'd0,IDreg_inst[19:15]};
+                11'b11101110011: csrwdata_t = csr_rdata | {59'd0,IDreg_inst[19:15]};
+                11'b11111110011: csrwdata_t = csr_rdata & ~{59'd0,IDreg_inst[19:15]};
+                default: csrwdata_t = 64'd0;
+            endcase    
+        end
+    end
     assign csr_wdata1 = ( Insrtuction_ecall | handle_timer_intr ) ? ( { 32'd0, IDreg_pc } ) : csrwdata_t; //ecall->mepc
     assign csr_wdata2 = handle_timer_intr ? 64'h8000000000000007 : Insrtuction_ecall ? 64'd11 :  64'h0;  //ecall->mcause
 
@@ -598,12 +599,8 @@ module ysyx_22050854 (
     .handle_timer_intr(handle_timer_intr)
     );
     
-    wire CSR_gprRd;  //for conflict judge
-    ysyx_22050854_MuxKey #(3,10,1) CSR_gprRd_gen (CSR_gprRd, {IDreg_inst[14:12],IDreg_inst[6:0]}, {
-        10'b0011110011, 1'b1,
-        10'b0101110011, 1'b1,
-        10'b0111110011, 1'b1
-    });
+    wire CSR_gprRd;  //for conflict judge  CSR inst and read gpr
+    assign CSR_gprRd = ( {IDreg_inst[14:12],IDreg_inst[6:0]} == 10'b0011110011 ) | ( {IDreg_inst[14:12],IDreg_inst[6:0]} == 10'b0101110011 ) | ( {IDreg_inst[14:12],IDreg_inst[6:0]} == 10'b0111110011 );
 
     //handle timer interrupt
     wire handle_timer_intr;
@@ -729,16 +726,6 @@ module ysyx_22050854 (
             New_src2 = src2;
     end   
 
-    //根据store命令的格式 获得正确的存入内存的数据
-    //即使没有冲突，从src2读取出来的数据 我提前给他格式化一下应该是没问题的，因为在C语言的写内存函数中还是要将wdata按照掩码格式化
-    wire [63:0]real_storememdata_right;
-    ysyx_22050854_MuxKey #(4,3,64) gen_real_storememdata_right (real_storememdata_right,MemOP,{
-        3'b000,{56'b0,New_src2[7:0]},  // sb   000
-        3'b001,{48'b0,New_src2[15:0]},  // sh
-        3'b010,{32'b0,New_src2[31:0]},  // sw
-        3'b011,{New_src2}   // sd
-    });
-
     //-------------- GEN readmemaddr -----------//在译码级就计算出load的地址
     wire [31:0]readmemaddr;
     assign readmemaddr = MemRd | MemWr ? ( alu_src1[31:0] + alu_src2[31:0] ) : 32'd0;
@@ -782,7 +769,7 @@ module ysyx_22050854 (
         if(reset)
             mtime <= 64'b0;
         else if(Write_mtime)
-            mtime <= real_storememdata_right;
+            mtime <= New_src2;
         else if( tick_count == 8'd10 )
             mtime <= mtime + 64'd1;
     end
@@ -790,7 +777,7 @@ module ysyx_22050854 (
         if(reset)
             mtimecmp <= 64'h10000;
         else if(Write_mtimecmp)
-            mtimecmp <= real_storememdata_right;
+            mtimecmp <= New_src2;
     end
     wire mtime_bigger_mtimecmp;
     assign mtime_bigger_mtimecmp = ( mtime >= mtimecmp ) ? 1'b1 : 1'b0;
@@ -918,57 +905,32 @@ module ysyx_22050854 (
 
     //--------------------------------------------- MEM_reg ---------------------------------------------//
     reg MEMreg_valid;
-    wire MEMreg_inst_enable;
     reg [31:0]MEMreg_inst;
-    wire MEMreg_pc_enable;
     reg [31:0]MEMreg_pc;
-    wire MEMreg_aluout_enable;
     reg [63:0]MEMreg_aluout;
-    wire MEMreg_regwr_enable;
     reg MEMreg_regwr;
-    wire MEMreg_rd_enable;
     reg [4:0]MEMreg_rd;
-    wire MEMreg_memrd_enable;
     reg MEMreg_memrd;
-    wire MEMreg_memop_enable;
     reg [2:0]MEMreg_memop;  //for get right data from 64bits data(from cache)
-    wire MEMreg_memtoreg_enable;
     reg MEMreg_memtoreg;
-    wire MEMreg_CSRrd_enable;
     reg MEMreg_CSRrd;
-    wire MEMreg_CSRrdata_enable;
     reg [63:0]MEMreg_CSRrdata;
-    wire MEMreg_CLINT_enable;
     reg MEMreg_read_CLINT;
     reg [63:0]MEMreg_CLINT_value;
 
-    assign MEMreg_inst_enable = 1'b1;
-    assign MEMreg_pc_enable = 1'b1;
-    assign MEMreg_aluout_enable = 1'b1;
-    assign MEMreg_regwr_enable = 1'b1;
-    assign MEMreg_rd_enable = 1'b1;
-    assign MEMreg_memrd_enable = 1'b1;
-    assign MEMreg_memop_enable = 1'b1;
-    assign MEMreg_memtoreg_enable = 1'b1;
-    assign MEMreg_CSRrd_enable = 1'b1;
-    assign MEMreg_CSRrdata_enable = 1'b1;
-    assign MEMreg_CLINT_enable = 1'b1;
-
     ysyx_22050854_Reg #(1,1'b0) MEMreg_gen0 (clock, reset, ( EXEreg_valid & ~Suspend_ALU & ~Suspend_LSU ), MEMreg_valid, 1'b1); //如果ALU出现暂停信号，那么下周期MEMreg无效,如果LSU出现暂停，下周期MEMreg也无效
-    ysyx_22050854_Reg #(32,32'b0) MEMreg_geninst (clock, reset, EXEreg_inst, MEMreg_inst, MEMreg_inst_enable);
-    ysyx_22050854_Reg #(32,32'h0) MEMreg_genPC (clock, reset, EXEreg_pc, MEMreg_pc, MEMreg_pc_enable);  
-    ysyx_22050854_Reg #(64,64'b0) MEMreg_gen1 (clock, reset, alu_out, MEMreg_aluout, MEMreg_aluout_enable);
-    ysyx_22050854_Reg #(1,1'b0) MEMreg_gen2 (clock, reset, EXEreg_regWr, MEMreg_regwr, MEMreg_regwr_enable);
-    ysyx_22050854_Reg #(5,5'b0) MEMreg_gen3 (clock, reset, EXEreg_Rd, MEMreg_rd, MEMreg_rd_enable);
-    ysyx_22050854_Reg #(1,1'b0) MEMreg_gen5 (clock, reset, EXEreg_memRd, MEMreg_memrd, MEMreg_memrd_enable);
-    ysyx_22050854_Reg #(3,3'b0) MEMreg_gen6 (clock, reset, EXEreg_memop, MEMreg_memop, MEMreg_memop_enable);
-    ysyx_22050854_Reg #(1,1'b0) MEMreg_gen7 (clock, reset, EXEreg_memtoreg, MEMreg_memtoreg, MEMreg_memtoreg_enable);
-    ysyx_22050854_Reg #(1,1'b0) MEMreg_gen8 (clock, reset, EXEreg_CSRrd, MEMreg_CSRrd, MEMreg_CSRrd_enable);
-    ysyx_22050854_Reg #(64,64'b0) MEMreg_gen9 (clock, reset, EXEreg_CSRrdata, MEMreg_CSRrdata, MEMreg_CSRrdata_enable);
-    ysyx_22050854_Reg #(1,1'b0) MEMreg_gen10 (clock, reset, EXEreg_read_CLINT, MEMreg_read_CLINT, MEMreg_CLINT_enable);
-    ysyx_22050854_Reg #(64,64'b0) MEMreg_gen11 (clock, reset, EXEreg_CLINT_value, MEMreg_CLINT_value, MEMreg_CLINT_enable);
-
-    wire [63:0] rdata;
+    ysyx_22050854_Reg #(32,32'b0) MEMreg_geninst (clock, reset, EXEreg_inst, MEMreg_inst, 1'b1);
+    ysyx_22050854_Reg #(32,32'h0) MEMreg_genPC (clock, reset, EXEreg_pc, MEMreg_pc, 1'b1);  
+    ysyx_22050854_Reg #(64,64'b0) MEMreg_gen1 (clock, reset, alu_out, MEMreg_aluout, 1'b1);
+    ysyx_22050854_Reg #(1,1'b0) MEMreg_gen2 (clock, reset, EXEreg_regWr, MEMreg_regwr, 1'b1);
+    ysyx_22050854_Reg #(5,5'b0) MEMreg_gen3 (clock, reset, EXEreg_Rd, MEMreg_rd, 1'b1);
+    ysyx_22050854_Reg #(1,1'b0) MEMreg_gen5 (clock, reset, EXEreg_memRd, MEMreg_memrd, 1'b1);
+    ysyx_22050854_Reg #(3,3'b0) MEMreg_gen6 (clock, reset, EXEreg_memop, MEMreg_memop, 1'b1);
+    ysyx_22050854_Reg #(1,1'b0) MEMreg_gen7 (clock, reset, EXEreg_memtoreg, MEMreg_memtoreg, 1'b1);
+    ysyx_22050854_Reg #(1,1'b0) MEMreg_gen8 (clock, reset, EXEreg_CSRrd, MEMreg_CSRrd, 1'b1);
+    ysyx_22050854_Reg #(64,64'b0) MEMreg_gen9 (clock, reset, EXEreg_CSRrdata, MEMreg_CSRrdata, 1'b1);
+    ysyx_22050854_Reg #(1,1'b0) MEMreg_gen10 (clock, reset, EXEreg_read_CLINT, MEMreg_read_CLINT, 1'b1);
+    ysyx_22050854_Reg #(64,64'b0) MEMreg_gen11 (clock, reset, EXEreg_CLINT_value, MEMreg_CLINT_value, 1'b1);
     
     wire [63:0] Dcache_ret_data;
     wire [6:0]Data_cache_index;
@@ -979,31 +941,24 @@ module ysyx_22050854 (
     assign Data_cache_tag = readmemaddr[31:11];
     wire Data_cache_Data_ok;
     wire [7:0]Dcache_wr_wstb;
-    ysyx_22050854_MuxKey #(4,3,8) gen_Dcache_wr_wstb (Dcache_wr_wstb,MemOP,{
-        3'b000,8'b00000001,  // sb   000
-        3'b001,8'b00000011,  // sh
-        3'b010,8'b00001111,  // sw
-        3'b011,8'b11111111   // sd
-    });
+    assign Dcache_wr_wstb = MemOP == 3'b000 ? 8'b00000001 :
+                            MemOP == 3'b001 ? 8'b00000011 :
+                            MemOP == 3'b010 ? 8'b00001111 :
+                            MemOP == 3'b011 ? 8'b11111111 :
+                                              8'b00000000;
 
     wire [7:0]Device_wr_wstb;
     assign Device_wr_wstb = Dcache_wr_wstb << readmemaddr[2:0];
 
     wire [31:0]write_device_data_32;
-    ysyx_22050854_MuxKey #(4,8,32) gen_device_data_32 (write_device_data_32,Dcache_wr_wstb,{
-        8'b00000001,{ real_storememdata_right[7:0], real_storememdata_right[7:0], real_storememdata_right[7:0], real_storememdata_right[7:0] },  // sb   000
-        8'b00000011,{ real_storememdata_right[15:0], real_storememdata_right[15:0] },  // sh
-        8'b00001111,real_storememdata_right[31:0],  // sw
-        8'b11111111,real_storememdata_right[31:0]   // sd
-    });
+    assign write_device_data_32 = MemOP == 3'b000 ? { New_src2[7:0], New_src2[7:0], New_src2[7:0], New_src2[7:0] } :
+                                  MemOP == 3'b001 ? { New_src2[15:0], New_src2[15:0] } :
+                                  MemOP == 3'b010 ? New_src2[31:0] :
+                                  MemOP == 3'b011 ? New_src2[31:0] :
+                                                    32'b0;
 
     wire [2:0]awsize;
-    ysyx_22050854_MuxKey #(4,3,3) gen_awsize (awsize,MemOP,{
-        3'b000,3'b000,  // sb   000
-        3'b001,3'b001,  // sh
-        3'b010,3'b010,  // sw
-        3'b011,3'b011   // sd
-    });
+    assign awsize = MemOP;  //just coincidence
 
     wire AXI_Dcache_rd_req;
     wire [31:0]AXI_Dcache_rd_addr;
@@ -1035,7 +990,7 @@ module ysyx_22050854 (
         .tag(Data_cache_tag),
         .offset(Data_cache_offset),
         .wstrb(Dcache_wr_wstb),
-        .wdata(real_storememdata_right),
+        .wdata(New_src2),
         .data_ok(Data_cache_Data_ok),
         .rdata(Dcache_ret_data),
         .unshoot(Suspend_MEM),
@@ -1157,7 +1112,7 @@ module ysyx_22050854 (
         end
         else if( AXI_device_wr_req ) begin
             //AXI_wr_data_temp <= { 64'b0,write_device_data_32, write_device_data_32 }; //Soc
-            AXI_wr_data_temp <= { 96'b0, real_storememdata_right[31:0] };       //npc
+            AXI_wr_data_temp <= { 96'b0, New_src2[31:0] };       //npc
             AXI_wstb_temp <= Device_wr_wstb;
         end
     end
@@ -1264,115 +1219,96 @@ module ysyx_22050854 (
             Data_while_SuspendLSU <= read_mem_data;
     end
 
-    //因为从存储器读出的数据总是8字节的,所以要根据地址以及位数获得不同的数据
-    //至于这里为什么暂停时取得的数还能用Mem的控制字，因为即使暂停，Mem也会从Exe跟新，只不过无效，但这里不管无效还是有效
-    wire [63:0]read_mem_data;
+    wire [63:0] rdata;
     assign rdata = ( Data_cache_Data_ok ) ? Dcache_ret_data : io_master_rdata;
-    ysyx_22050854_MuxKey #(41,6,64) gen_read_mem_data (read_mem_data,{ MEMreg_aluout[2:0],MEMreg_memop },{
-        6'b000000, {{56{rdata[7]}},rdata[7:0]},  //1 bytes signed extend  lb 000
-        6'b000001, {{48{rdata[15]}},rdata[15:0]}, //2 bytes signed extend  lh
-        6'b000010, {{32{rdata[31]}},rdata[31:0]}, //4 bytes signed extend  lw
-        6'b000011, rdata,                 //8 bytes ld
-        6'b000100, {56'b0,rdata[7:0]},    // 1 bytes unsigned extend lbu
-        6'b000101, {48'b0,rdata[15:0]},   // 2 bytes unsigned extend lhu
-        6'b000110, {32'b0,rdata[31:0]},   // 4 bytes unsigned extend lwu
+    reg [63:0]read_mem_data;
+    //从mem读出的数据总是8字节的,所以要根据地址以及读操作数获得正确的数据
+    //为什么暂停时取得的数还能用Mem的控制字，因为即使暂停，Mem也会从Exe跟新，只不过无效，但这里不管无效还是有效
+    always@(*)begin
+        case({MEMreg_aluout[2:0],MEMreg_memop})
+            6'b000000: read_mem_data = {{56{rdata[7]}},rdata[7:0]};  //1 bytes signed extend  lb 000
+            6'b000001: read_mem_data = {{48{rdata[15]}},rdata[15:0]}; //2 bytes signed extend  lh
+            6'b000010: read_mem_data = {{32{rdata[31]}},rdata[31:0]}; //4 bytes signed extend  lw
+            6'b000011: read_mem_data = rdata;                 //8 bytes ld
+            6'b000100: read_mem_data = {56'b0,rdata[7:0]};    // 1 bytes unsigned extend lbu
+            6'b000101: read_mem_data = {48'b0,rdata[15:0]};   // 2 bytes unsigned extend lhu
+            6'b000110: read_mem_data = {32'b0,rdata[31:0]};   // 4 bytes unsigned extend lwu
 
-        6'b001000, {{56{rdata[15]}},rdata[15:8]},  //1 bytes signed extend  lb 001
-        6'b001001, {{48{rdata[23]}},rdata[23:8]}, //2 bytes signed extend  lh
-        6'b001010, {{32{rdata[39]}},rdata[39:8]}, //4 bytes signed extend  lw
-        6'b001100, {56'b0,rdata[15:8]},    // 1 bytes unsigned extend lbu
-        6'b001101, {48'b0,rdata[23:8]},   // 2 bytes unsigned extend lhu
-        6'b001110, {32'b0,rdata[39:8]},   // 4 bytes unsigned extend lwu
+            6'b001000: read_mem_data =  {{56{rdata[15]}},rdata[15:8]};  //1 bytes signed extend  lb 001
+            6'b001001: read_mem_data =  {{48{rdata[23]}},rdata[23:8]}; //2 bytes signed extend  lh
+            6'b001010: read_mem_data =  {{32{rdata[39]}},rdata[39:8]}; //4 bytes signed extend  lw
+            6'b001100: read_mem_data =  {56'b0,rdata[15:8]};    // 1 bytes unsigned extend lbu
+            6'b001101: read_mem_data =  {48'b0,rdata[23:8]};   // 2 bytes unsigned extend lhu
+            6'b001110: read_mem_data =  {32'b0,rdata[39:8]};   // 4 bytes unsigned extend lwu
 
-        6'b010000, {{56{rdata[23]}},rdata[23:16]},  //1 bytes signed extend  lb 010
-        6'b010001, {{48{rdata[31]}},rdata[31:16]}, //2 bytes signed extend  lh
-        6'b010010, {{32{rdata[47]}},rdata[47:16]}, //4 bytes signed extend  lw
-        6'b010100, {56'b0,rdata[23:16]},    // 1 bytes unsigned extend lbu
-        6'b010101, {48'b0,rdata[31:16]},   // 2 bytes unsigned extend lhu
-        6'b010110, {32'b0,rdata[47:16]},   // 4 bytes unsigned extend lwu
+            6'b010000: read_mem_data = {{56{rdata[23]}},rdata[23:16]};  //1 bytes signed extend  lb 010
+            6'b010001: read_mem_data = {{48{rdata[31]}},rdata[31:16]}; //2 bytes signed extend  lh
+            6'b010010: read_mem_data = {{32{rdata[47]}},rdata[47:16]}; //4 bytes signed extend  lw
+            6'b010100: read_mem_data = {56'b0,rdata[23:16]};   // 1 bytes unsigned extend lbu
+            6'b010101: read_mem_data = {48'b0,rdata[31:16]};   // 2 bytes unsigned extend lhu
+            6'b010110: read_mem_data = {32'b0,rdata[47:16]};   // 4 bytes unsigned extend lwu
 
-        6'b011000, {{56{rdata[31]}},rdata[31:24]},  //1 bytes signed extend  lb 011
-        6'b011001, {{48{rdata[39]}},rdata[39:24]}, //2 bytes signed extend  lh
-        6'b011010, {{32{rdata[55]}},rdata[55:24]}, //4 bytes signed extend  lw
-        6'b011100, {56'b0,rdata[31:24]},    // 1 bytes unsigned extend lbu
-        6'b011101, {48'b0,rdata[39:24]},   // 2 bytes unsigned extend lhu
-        6'b011110, {32'b0,rdata[55:24]},   // 4 bytes unsigned extend lwu
+            6'b011000: read_mem_data = {{56{rdata[31]}},rdata[31:24]};  //1 bytes signed extend  lb 011
+            6'b011001: read_mem_data = {{48{rdata[39]}},rdata[39:24]}; //2 bytes signed extend  lh
+            6'b011010: read_mem_data = {{32{rdata[55]}},rdata[55:24]}; //4 bytes signed extend  lw
+            6'b011100: read_mem_data = {56'b0,rdata[31:24]};    // 1 bytes unsigned extend lbu
+            6'b011101: read_mem_data = {48'b0,rdata[39:24]};   // 2 bytes unsigned extend lhu
+            6'b011110: read_mem_data = {32'b0,rdata[55:24]};   // 4 bytes unsigned extend lwu
 
-        6'b100000, {{56{rdata[39]}},rdata[39:32]},  //1 bytes signed extend  lb 100
-        6'b100001, {{48{rdata[47]}},rdata[47:32]}, //2 bytes signed extend  lh
-        6'b100010, {{32{rdata[63]}},rdata[63:32]}, //4 bytes signed extend  lw
-        6'b100100, {56'b0,rdata[39:32]},   // 1 bytes unsigned extend lbu
-        6'b100101, {48'b0,rdata[47:32]},   // 2 bytes unsigned extend lhu
-        6'b100110, {32'b0,rdata[63:32]},   // 4 bytes unsigned extend lwu
+            6'b100000: read_mem_data = {{56{rdata[39]}},rdata[39:32]};  //1 bytes signed extend  lb 100
+            6'b100001: read_mem_data = {{48{rdata[47]}},rdata[47:32]}; //2 bytes signed extend  lh
+            6'b100010: read_mem_data = {{32{rdata[63]}},rdata[63:32]}; //4 bytes signed extend  lw
+            6'b100100: read_mem_data = {56'b0,rdata[39:32]};   // 1 bytes unsigned extend lbu
+            6'b100101: read_mem_data = {48'b0,rdata[47:32]};   // 2 bytes unsigned extend lhu
+            6'b100110: read_mem_data = {32'b0,rdata[63:32]};   // 4 bytes unsigned extend lwu
 
-        6'b101000, {{56{rdata[47]}},rdata[47:40]},  //1 bytes signed extend  lb 101
-        6'b101001, {{48{rdata[55]}},rdata[55:40]}, //2 bytes signed extend  lh
-        6'b101100, {56'b0,rdata[47:40]},    // 1 bytes unsigned extend lbu
-        6'b101101, {48'b0,rdata[55:40]},   // 2 bytes unsigned extend lhu
+            6'b101000: read_mem_data = {{56{rdata[47]}},rdata[47:40]};  //1 bytes signed extend  lb 101
+            6'b101001: read_mem_data = {{48{rdata[55]}},rdata[55:40]}; //2 bytes signed extend  lh
+            6'b101100: read_mem_data = {56'b0,rdata[47:40]};    // 1 bytes unsigned extend lbu
+            6'b101101: read_mem_data = {48'b0,rdata[55:40]};   // 2 bytes unsigned extend lhu
 
-        6'b110000, {{56{rdata[55]}},rdata[55:48]},  //1 bytes signed extend  lb 110
-        6'b110001, {{48{rdata[63]}},rdata[63:48]},  //2 bytes signed extend  lh
-        6'b110100, {56'b0,rdata[55:48]},    // 1 bytes unsigned extend lbu
-        6'b110101, {48'b0,rdata[63:48]},   // 2 bytes unsigned extend lhu
+            6'b110000: read_mem_data = {{56{rdata[55]}},rdata[55:48]};  //1 bytes signed extend  lb 110
+            6'b110001: read_mem_data = {{48{rdata[63]}},rdata[63:48]};  //2 bytes signed extend  lh
+            6'b110100: read_mem_data = {56'b0,rdata[55:48]};    // 1 bytes unsigned extend lbu
+            6'b110101: read_mem_data = {48'b0,rdata[63:48]};   // 2 bytes unsigned extend lhu
 
-        6'b111000, {{56{rdata[63]}},rdata[63:56]},  //1 bytes signed extend  lb 111
-        6'b111100, {56'b0,rdata[63:56]}    // 1 bytes unsigned extend lbu
-    });
+            6'b111000: read_mem_data = {{56{rdata[63]}},rdata[63:56]};  //1 bytes signed extend  lb 111
+            6'b111100: read_mem_data = {56'b0,rdata[63:56]};    // 1 bytes unsigned extend lbu
+            default: read_mem_data = 64'b0;
+        endcase
+    end
 
     wire [63:0]Memdata_to_WBreg;
     assign Memdata_to_WBreg = Data_cache_Data_ok ? read_mem_data : Data_while_SuspendLSU;  //如果Dcache没有命中，那么需要暂停，此时读内存的数据就应该是之前记录的暂停期间读到的数
 
     //----------------------------------- WBreg -------------------------------------------------------------//
     reg WBreg_valid;
-    wire WBreg_inst_enable;
     reg [31:0]WBreg_inst;
-    wire WBreg_pc_enable;
     reg [31:0]WBreg_pc;
-    wire WBreg_readmemdata_enable;
     reg [63:0]WBreg_readmemdata;
-    wire WBreg_regwr_enable;
     reg WBreg_regwr;
-    wire WBreg_rd_enable;
     reg [4:0]WBreg_rd;
-    wire WBreg_aluout_enable;
     reg [63:0]WBreg_aluout;
-    wire WBreg_memRd_enable;
     reg WBreg_memRd;
-    wire WBreg_memtoreg_enable;
     reg WBreg_memtoreg;
-    wire WBreg_CSRrd_enable;
     reg WBreg_CSRrd;
-    wire WBreg_CSRrdata_enable;
     reg [63:0]WBreg_CSRrdata;
-    wire WBreg_CLINT_enable;
     reg WBreg_read_CLINT;
     reg [63:0]WBreg_CLINT_value;
 
-    assign WBreg_inst_enable = 1'b1;
-    assign WBreg_pc_enable = 1'b1;
-    assign WBreg_readmemdata_enable = 1'b1;
-    assign WBreg_regwr_enable = 1'b1;
-    assign WBreg_rd_enable = 1'b1;
-    assign WBreg_memtoreg_enable = 1'b1;
-    assign WBreg_aluout_enable = 1'b1;
-    assign WBreg_memRd_enable = 1'b1;
-    assign WBreg_CSRrd_enable = 1'b1;
-    assign WBreg_CSRrdata_enable = 1'b1;
-    assign WBreg_CLINT_enable = 1'b1;
-
-    ysyx_22050854_Reg #(32,32'b0) WBreg_geninst (clock, reset, MEMreg_inst, WBreg_inst, WBreg_inst_enable);
-    ysyx_22050854_Reg #(32,32'h0) WBreg_genPC (clock, reset, MEMreg_pc, WBreg_pc, WBreg_pc_enable);
+    ysyx_22050854_Reg #(32,32'b0) WBreg_geninst (clock, reset, MEMreg_inst, WBreg_inst, 1'b1);
+    ysyx_22050854_Reg #(32,32'h0) WBreg_genPC (clock, reset, MEMreg_pc, WBreg_pc, 1'b1);
     ysyx_22050854_Reg #(1,1'b0) WBreg_gen0 (clock, reset, MEMreg_valid, WBreg_valid, 1'b1);
-    ysyx_22050854_Reg #(64,64'b0) WBreg_gen1 (clock, reset, Memdata_to_WBreg, WBreg_readmemdata, WBreg_readmemdata_enable);
-    ysyx_22050854_Reg #(1,1'b0) WBreg_gen2 (clock, reset, MEMreg_regwr, WBreg_regwr, WBreg_regwr_enable);
-    ysyx_22050854_Reg #(5,5'b0) WBreg_gen3 (clock, reset, MEMreg_rd, WBreg_rd, WBreg_rd_enable);
-    ysyx_22050854_Reg #(64,64'b0) WBreg_gen4 (clock, reset, MEMreg_aluout, WBreg_aluout, WBreg_aluout_enable);
-    ysyx_22050854_Reg #(1,1'b0) WBreg_gen5 (clock, reset, MEMreg_memtoreg, WBreg_memtoreg, WBreg_memtoreg_enable);
-    ysyx_22050854_Reg #(1,1'b0) WBreg_gen6 (clock, reset, MEMreg_memrd, WBreg_memRd, WBreg_memRd_enable);
-    ysyx_22050854_Reg #(1,1'b0) WBreg_gen7 (clock, reset, MEMreg_CSRrd, WBreg_CSRrd, WBreg_CSRrd_enable);
-    ysyx_22050854_Reg #(64,64'b0) WBreg_gen8 (clock, reset, MEMreg_CSRrdata, WBreg_CSRrdata, WBreg_CSRrdata_enable);
-    ysyx_22050854_Reg #(1,1'b0) WBreg_gen9 (clock, reset, MEMreg_read_CLINT, WBreg_read_CLINT, WBreg_CLINT_enable);
-    ysyx_22050854_Reg #(64,64'b0) WBreg_gen10 (clock, reset, MEMreg_CLINT_value, WBreg_CLINT_value, WBreg_CLINT_enable);
+    ysyx_22050854_Reg #(64,64'b0) WBreg_gen1 (clock, reset, Memdata_to_WBreg, WBreg_readmemdata, 1'b1);
+    ysyx_22050854_Reg #(1,1'b0) WBreg_gen2 (clock, reset, MEMreg_regwr, WBreg_regwr, 1'b1);
+    ysyx_22050854_Reg #(5,5'b0) WBreg_gen3 (clock, reset, MEMreg_rd, WBreg_rd, 1'b1);
+    ysyx_22050854_Reg #(64,64'b0) WBreg_gen4 (clock, reset, MEMreg_aluout, WBreg_aluout, 1'b1);
+    ysyx_22050854_Reg #(1,1'b0) WBreg_gen5 (clock, reset, MEMreg_memtoreg, WBreg_memtoreg, 1'b1);
+    ysyx_22050854_Reg #(1,1'b0) WBreg_gen6 (clock, reset, MEMreg_memrd, WBreg_memRd, 1'b1);
+    ysyx_22050854_Reg #(1,1'b0) WBreg_gen7 (clock, reset, MEMreg_CSRrd, WBreg_CSRrd, 1'b1);
+    ysyx_22050854_Reg #(64,64'b0) WBreg_gen8 (clock, reset, MEMreg_CSRrdata, WBreg_CSRrdata, 1'b1);
+    ysyx_22050854_Reg #(1,1'b0) WBreg_gen9 (clock, reset, MEMreg_read_CLINT, WBreg_read_CLINT, 1'b1);
+    ysyx_22050854_Reg #(64,64'b0) WBreg_gen10 (clock, reset, MEMreg_CLINT_value, WBreg_CLINT_value, 1'b1);
 
     //写回寄存器的数据，总共有4 种可能 1.ALU计算值  2.LSU( memory/device )  3.从CSR读出的数据  4.mtime/mtimecmp
     wire [63:0]wr_reg_data;
@@ -1381,11 +1317,7 @@ module ysyx_22050854 (
                             WBreg_read_CLINT ?  WBreg_CLINT_value : 
                                                 WBreg_aluout;
 
-
-
 //以下代码为了调试使用
-
-
     //for difftest
     reg inst_finish;
     ysyx_22050854_Reg #(1,1'b0) inst_finish_gen (clock, reset, WBreg_valid, inst_finish, 1'b1);
@@ -1404,22 +1336,15 @@ module ysyx_22050854 (
     wire [31:0]Data_Conflict_32;
     assign Data_Conflict_32 = {22'b0,ret_conflict_EXE,ret_conflict_MEM,ret_conflict_WB,store_conflict_EXE,store_conflict_MEM,store_conflict_WB,reg_Conflict_WB,reg_Conflict_MEM,reg_Conflict_EXE,Data_Conflict_block};
 
+/*     
     import "DPI-C" function void get_next_pc_value(int next_pc);
     always@(*) get_next_pc_value(next_pc);
-    import "DPI-C" function void get_pc_value(int pc_real);
-    always@(*) get_pc_value(pc_real);
-    import "DPI-C" function void get_inst_value(int inst);
-    always@(*) get_inst_value(inst);
 
     wire [31:0]test_one;
     assign test_one = { 27'b0,  Last_LSU_IFU_Suspend , Last_ALUsuspend_IFUsuspend    ,Last_Jump_Suspend   ,Last_DataBlock_Suspend    ,Last_JumpAndBlock_Suspend };
     import "DPI-C" function void get_PC_JUMP_Suspend_value(int test_one);
     always@(*) get_PC_JUMP_Suspend_value(test_one);
 
-    wire [31:0]IDreg_valid_32;
-    assign IDreg_valid_32 = {31'b0,IDreg_valid};
-    import "DPI-C" function void get_IDreg_valid_value(int IDreg_valid_32);
-    always@(*) get_IDreg_valid_value(IDreg_valid_32);
     import "DPI-C" function void get_IDreginst_value(int IDreg_inst);
     always@(*) get_IDreginst_value(IDreg_inst);
 
@@ -1428,11 +1353,6 @@ module ysyx_22050854 (
     assign Suspend_IFU_32 = { 31'b0 , Suspend_IFU };
     import "DPI-C" function void get_Suspend_IFU_value(int Suspend_IFU_32);
     always@(*) get_Suspend_IFU_value( Suspend_IFU_32 );
-
-    wire [31:0]IFU_valid_32;
-    assign IFU_valid_32 = { 31'b0 , IFU_Icache_valid };
-    import "DPI-C" function void get_IFU_valid_value(int IFU_valid_32);
-    always@(*) get_IFU_valid_value( IFU_valid_32 );
 
     import "DPI-C" function void get_IDregpc_value(int IDreg_pc);
     always@(*) get_IDregpc_value(IDreg_pc);
@@ -1450,14 +1370,6 @@ module ysyx_22050854 (
     always@(*) get_EXEreginst_value(EXEreg_inst);
     import "DPI-C" function void get_EXEreg_pc_value(int EXEreg_pc);
     always@(*) get_EXEreg_pc_value(EXEreg_pc);
-    wire [31:0]alusrc1;
-    wire [31:0]alusrc2;
-    assign alusrc1 = EXEreg_alusrc1[31:0];
-    assign alusrc2 = EXEreg_alusrc2[31:0];
-    import "DPI-C" function void get_EXEreg_alusrc1_value(int alusrc1);
-    always@(*) get_EXEreg_alusrc1_value(alusrc1);
-    import "DPI-C" function void get_EXEreg_alusrc2_value(int alusrc2);
-    always@(*) get_EXEreg_alusrc2_value(alusrc2);
     wire [31:0]EXEreg_valid_32;
     assign EXEreg_valid_32 = {31'b0,EXEreg_valid};
     import "DPI-C" function void get_EXEreg_valid_value(int EXEreg_valid_32);
@@ -1509,15 +1421,12 @@ module ysyx_22050854 (
     import "DPI-C" function void get_Dcache_ret_data_value(int Dcache_ret_data_32);
     always@(*) get_Dcache_ret_data_value(Dcache_ret_data_32);
 
-    wire [31:0]Data_cache_valid_32;
-    assign Data_cache_valid_32 = { 31'b0 , LSU_access_valid };
-    import "DPI-C" function void get_Data_cache_valid_value(int Data_cache_valid_32);
-    always@(*) get_Data_cache_valid_value( Data_cache_valid_32 );
 
-    wire [31:0]real_storememdata_right_32;
-    assign real_storememdata_right_32 = real_storememdata_right[31:0];
-    import "DPI-C" function void get_real_storememdata_right_value(int real_storememdata_right_32);
-    always@(*) get_real_storememdata_right_value(real_storememdata_right_32);
+
+    wire [31:0]New_src2_32;
+    assign New_src2_32 = New_src2[31:0];
+    import "DPI-C" function void get_New_src2_value(int New_src2_32);
+    always@(*) get_New_src2_value(New_src2_32);
 
     wire [31:0]Dcache_addr;
     assign Dcache_addr = readmemaddr;
@@ -1532,15 +1441,8 @@ module ysyx_22050854 (
     import "DPI-C" function void get_AXI_Dcache_data_64_value(int AXI_Dcache_data_32);
     always@(*) get_AXI_Dcache_data_64_value(AXI_Dcache_data_32);
 
-    wire [31:0]ebreak_32;
-    assign ebreak_32 = { 31'b0,Insrtuction_ebreak };
-    import "DPI-C" function void get_ebreak_value(int ebreak_32);
-    always@(*) get_ebreak_value(ebreak_32);
 
-    import "DPI-C" function void get_WBreginst_value(int WBreg_inst);
-    always@(*) get_WBreginst_value(WBreg_inst);
-    import "DPI-C" function void get_WBreg_pc_value(int WBreg_pc);
-    always@(*) get_WBreg_pc_value(WBreg_pc);
+
     wire [31:0]wbreg;
     assign wbreg = WBreg_aluout[31:0];
     import "DPI-C" function void get_WBreg_aluout_value(int wbreg);
@@ -1554,18 +1456,54 @@ module ysyx_22050854 (
     import "DPI-C" function void get_WBreg_valid_value(int WBreg_valid_32);
     always@(*) get_WBreg_valid_value(WBreg_valid_32);
 
-    wire [31:0]inst_finish_32;
-    assign inst_finish_32 = {31'b0,inst_finish};
-    import "DPI-C" function void get_inst_finish_value(int inst_finish_32);
-    always@(*) get_inst_finish_value(inst_finish_32);
-    import "DPI-C" function void get_inst_finishpc_value(int inst_finish_pc);
-    always@(*) get_inst_finishpc_value(inst_finish_pc);
+
+    */
+
+/*     import "DPI-C" function void get_inst_value(int inst);
+    always@(*) get_inst_value(inst);
+
+    wire [31:0]Data_cache_valid_32;
+    assign Data_cache_valid_32 = { 31'b0 , LSU_access_valid };
+    import "DPI-C" function void get_Data_cache_valid_value(int Data_cache_valid_32);
+    always@(*) get_Data_cache_valid_value( Data_cache_valid_32 );
+
+    wire [31:0]IDreg_valid_32;
+    assign IDreg_valid_32 = {31'b0,IDreg_valid};
+    import "DPI-C" function void get_IDreg_valid_value(int IDreg_valid_32);
+    always@(*) get_IDreg_valid_value(IDreg_valid_32); */
+
+/*     wire [31:0]IFU_valid_32;
+    assign IFU_valid_32 = { 31'b0 , IFU_Icache_valid };
+    import "DPI-C" function void get_IFU_valid_value(int IFU_valid_32);
+    always@(*) get_IFU_valid_value( IFU_valid_32 );
+
+    import "DPI-C" function void get_WBreg_pc_value(int WBreg_pc);
+    always@(*) get_WBreg_pc_value(WBreg_pc);
+    import "DPI-C" function void get_WBreginst_value(int WBreg_inst);
+    always@(*) get_WBreginst_value(WBreg_inst);
+
     wire [31:0]is_device_32;
     assign is_device_32 = {31'b0,is_accessdevice};
     import "DPI-C" function void get_is_device_value(int is_device_32);
     always@(*) get_is_device_value(is_device_32);
     import "DPI-C" function void get_instruction_finsh_value(int instruction_finsh);
     always@(*) get_instruction_finsh_value(instruction_finsh);
+*/
+
+    import "DPI-C" function void get_pc_value(int pc_real);
+    always@(*) get_pc_value(pc_real);
+
+    wire [31:0]ebreak_32;
+    assign ebreak_32 = { 31'b0,Insrtuction_ebreak };
+    import "DPI-C" function void get_ebreak_value(int ebreak_32);
+    always@(*) get_ebreak_value(ebreak_32);
+
+    wire [31:0]inst_finish_32;
+    assign inst_finish_32 = {31'b0,inst_finish};
+    import "DPI-C" function void get_inst_finish_value(int inst_finish_32);
+    always@(*) get_inst_finish_value(inst_finish_32);
+    import "DPI-C" function void get_inst_finishpc_value(int inst_finish_pc);
+    always@(*) get_inst_finishpc_value(inst_finish_pc);
 
 //
 

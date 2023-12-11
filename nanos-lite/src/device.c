@@ -75,11 +75,12 @@ size_t w_w, w_h;
 size_t fb_write(const void *buf, size_t offset, size_t len) {
   //offset ----> x y 
   //printf("---------------nanos-lite : enter fb_write---------------\n");
-  offset = offset / 4;
-  //printf("offset = %d len = %d i = %d\n" ,offset , len / 4);
+  //offset = offset / 4;
+  offset = offset >> 2;
+  size_t len_t = len >> 2;
   size_t y = offset / 400;
   size_t x = offset % 400;
-  io_write(AM_GPU_FBDRAW, x, y, (uint32_t *)buf, len / 4, 1, true);
+  io_write(AM_GPU_FBDRAW, x, y, (uint32_t *)buf, len_t, 1, true);
   return 0;
 }
 

@@ -6,22 +6,7 @@
 struct timeval currentTime;
 static uint32_t system_start_us;
 
-uint64_t *cpu_gpr = NULL;
-extern "C" void set_gpr_ptr(const svOpenArrayHandle r) {
-  cpu_gpr = (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());
-}
-
-uint64_t *cpu_csr = NULL;
-extern "C" void set_csr_ptr(const svOpenArrayHandle r){
-  cpu_csr = (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());
-}
-
-uint32_t verilog_pc = 0;
-extern "C" void get_pc_value(int data)
-{
-  verilog_pc = data;
-}
-
+/* 
 uint32_t Dcache_FenceI = 0;
 extern "C" void get_fencei_value(int data)
 {
@@ -88,19 +73,6 @@ extern "C" void get_Dcache_AXI_ret_data_value(int data)
   Dcache_AXI_ret_data = data;
 }
 
-uint32_t Dcache_Hitway = 0;
-extern "C" void get_Dcache_Hitway_value(int data)
-{
-  Dcache_Hitway = data;
-}
-
-
-uint32_t Dcache_valid = 0;
-extern "C" void get_Data_cache_valid_value(int data)
-{
-  Dcache_valid = data;
-}
-
 uint32_t writeDcache_data = 0;
 extern "C" void get_RB_wdata_value(int data)
 {
@@ -111,18 +83,6 @@ uint32_t Dcache_addr = 0;
 extern "C" void get_Dcache_addr_value(int data)
 {
   Dcache_addr = data;
-}
-
-uint32_t PCsrc1 = 0;
-extern "C" void get_PCsrc1_value(int data)
-{
-  PCsrc1 = data;
-}
-
-uint32_t PCsrc2 = 0;
-extern "C" void get_PCsrc2_value(int data)
-{
-  PCsrc2 = data;
 }
 
 uint32_t Replace_cache_data_32;
@@ -209,24 +169,6 @@ extern "C" void get_Suspend_IFU_value(int data)
   Suspend_IFU_32 = data;
 }
 
-uint32_t hit_32 = 0;
-extern "C" void get_hit_32_value(int data)
-{
-  hit_32 = data;
-}
-
-uint32_t IFU_valid_32 = 0;
-extern "C" void get_IFU_valid_value(int data)
-{
-  IFU_valid_32 = data;
-}
-
-uint32_t verilog_inst = 0;
-extern "C" void get_inst_value(int data)
-{
-  verilog_inst = data;
-}
-
 uint32_t verilog_IDinst = 0;
 extern "C" void get_IDreginst_value(int data)
 {
@@ -257,22 +199,10 @@ extern "C" void get_MEMreg_pc_value(int data)
   MEMreg_pc = data;
 }
 
-uint32_t WBreg_pc = 0;
-extern "C" void get_WBreg_pc_value(int data)
-{
-  WBreg_pc = data;
-}
-
 uint32_t verilog_EXEinst = 0;
 extern "C" void get_EXEreginst_value(int data)
 {
   verilog_EXEinst = data;
-}
-
-uint32_t verilog_WBinst = 0;
-extern "C" void get_WBreginst_value(int data)
-{
-  verilog_WBinst = data;
 }
 
 uint32_t verilog_MEMinst = 0;
@@ -299,46 +229,16 @@ extern "C" void get_WBreg_rd_value(uint32_t data)
   WBreg_rd = data;
 }
 
-uint32_t EXEreg_alusrc1 = 0;
-extern "C" void get_EXEreg_alusrc1_value(uint32_t data)
-{
-  EXEreg_alusrc1 = data;
-}
-
-uint32_t EXEreg_alusrc2 = 0;
-extern "C" void get_EXEreg_alusrc2_value(uint32_t data)
-{
-  EXEreg_alusrc2 = data;
-}
-
 uint32_t MEMreg_memwr = 0;
 extern "C" void get_MEMreg_memwr_value(uint32_t data)
 {
   MEMreg_memwr = data;
 }
 
-uint32_t MEMreg_writememdata = 0;
-extern "C" void get_MEMreg_writememdata_value(uint32_t data)
-{
-  MEMreg_writememdata = data;
-}
-
-uint32_t EXEreg_writememdata = 0;
-extern "C" void get_EXEreg_writememdata_value(uint32_t data)
-{
-  EXEreg_writememdata = data;
-}
-
 uint32_t Dcache_wdata = 0;
 extern "C" void get_real_storememdata_right_value(uint32_t data)
 {
   Dcache_wdata = data;
-}
-
-uint32_t dsram_rresp = 0;
-extern "C" void get_dsram_rresp_value(uint32_t data)
-{
-  dsram_rresp = data;
 }
 
 uint32_t wr_reg_data = 0;
@@ -351,12 +251,6 @@ uint32_t read_mem_data = 0;
 extern "C" void get_rdata_value(uint32_t data)
 {
   read_mem_data = data;
-}
-
-uint32_t ramA = 0;
-extern "C" void get_ramA_value(uint32_t data)
-{
-  ramA = data;
 }
 
 uint32_t  next_pc= 0;
@@ -377,12 +271,6 @@ extern "C" void get_WBreg_valid_value(uint32_t data)
   WBreg_valid = data;
 }
 
-uint32_t IDreg_valid = 0;
-extern "C" void get_IDreg_valid_value(uint32_t data)
-{
-  IDreg_valid = data;
-}
-
 uint32_t EXEreg_valid = 0;
 extern "C" void get_EXEreg_valid_value(uint32_t data)
 {
@@ -395,57 +283,10 @@ extern "C" void get_MEMreg_valid_value(uint32_t data)
   MEMreg_valid = data;
 }
 
-uint32_t inst_finish = 0;
-extern "C" void get_inst_finish_value(uint32_t data)
-{
-  inst_finish = data;
-}
-
-uint32_t instruction_finsh = 0;
-extern "C" void get_instruction_finsh_value(uint32_t data)
-{
-  instruction_finsh = data;
-}
-
-uint32_t is_device = 0;
-extern "C" void get_is_device_value(uint32_t data)
-{
-  is_device = data;
-}
-
-uint32_t inst_finishpc = 0;
-extern "C" void get_inst_finishpc_value(uint32_t data)
-{
-  inst_finishpc = data;
-}
-
 uint32_t Suspend_alu = 0;
 extern "C" void get_Suspend_alu_value(uint32_t data)
 {
   Suspend_alu = data;
-}
-
-uint32_t div_doing = 0;
-extern "C" void get_div_doing_value(uint32_t data)
-{
-  div_doing = data;
-}
-
-uint32_t dividend = 0;
-extern "C" void get_dividend_value(uint32_t data)
-{
-  dividend = data;
-}
-
-uint32_t divisor = 0;
-extern "C" void get_divisor_value(uint32_t data)
-{
-  divisor = data;
-}
-
-extern "C" void v_printf(int data)
-{
-  printf("data = %x \n" ,data);
 }
 
 uint32_t cache_state_32 = 0;
@@ -464,6 +305,96 @@ uint32_t rd_addr = 0;
 extern "C" void get_rd_addr_value(uint32_t data)
 {
   rd_addr = data;
+}
+*/
+
+
+//////////////////////////////////////////////////////////
+//for cache shoot rate 
+/* uint32_t Dcache_Hitway = 0;
+extern "C" void get_Dcache_Hitway_value(int data)
+{
+  Dcache_Hitway = data;
+}
+
+uint32_t Dcache_valid = 0;
+extern "C" void get_Data_cache_valid_value(int data)
+{
+  Dcache_valid = data;
+}
+
+uint32_t IDreg_valid = 0;
+extern "C" void get_IDreg_valid_value(uint32_t data)
+{
+  IDreg_valid = data;
+}
+
+uint32_t hit_32 = 0;
+extern "C" void get_hit_32_value(int data)
+{
+  hit_32 = data;
+}
+
+uint32_t IFU_valid_32 = 0;
+extern "C" void get_IFU_valid_value(int data)
+{
+  IFU_valid_32 = data;
+}  */
+
+
+//difftest 
+/* uint32_t instruction_finsh = 0;
+extern "C" void get_instruction_finsh_value(uint32_t data)
+{
+  instruction_finsh = data;
+}
+
+uint32_t is_device = 0;
+extern "C" void get_is_device_value(uint32_t data)
+{
+  is_device = data;
+}
+
+
+//Itrace
+uint32_t verilog_inst = 0;
+extern "C" void get_inst_value(int data)
+{
+  verilog_inst = data;
+}
+uint32_t verilog_WBinst = 0;
+extern "C" void get_WBreginst_value(int data)
+{
+  verilog_WBinst = data;
+}
+uint32_t WBreg_pc = 0;
+extern "C" void get_WBreg_pc_value(int data)
+{
+  WBreg_pc = data;
+}  */
+
+
+uint64_t *cpu_gpr = NULL;
+extern "C" void set_gpr_ptr(const svOpenArrayHandle r) {
+  cpu_gpr = (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());
+}
+
+uint32_t inst_finish = 0;
+extern "C" void get_inst_finish_value(uint32_t data)
+{
+  inst_finish = data;
+}
+
+uint32_t inst_finishpc = 0; //dut alse use
+extern "C" void get_inst_finishpc_value(uint32_t data)
+{
+  inst_finishpc = data;
+} 
+
+uint32_t verilog_pc = 0; //pc_real
+extern "C" void get_pc_value(int data)
+{
+  verilog_pc = data;
 }
 
 uint32_t ebreak_cpu = 0;
@@ -559,13 +490,14 @@ extern "C" void v_pmem_write(long long waddr, long long wdata, long long wmask) 
     access_device = false;
     pmem_write(waddr & ~0x7ull, 8, (wdata << (n << 3)),wmask);
   }
-  else if( ( waddr >= 0xa1000000 )  && ( waddr < ( 0xa1000000 + 400 * 300 * 4)) ){  //vga
+  else if( ( waddr >= 0xa1000000 )  && ( waddr < ( 0xa1000000 + 400 * 300 * 4)) ){      //vga
     uint32_t vmem_addr = waddr - 0xa1000000;
     //printf("vmem_addr = %x, vmem_data = %lx, wmask = %lx \n",vmem_addr ,vmem_data, wmask);
     vmem[vmem_addr + 0] = (uint8_t) ( (uint32_t)wdata & 0x000000ff );
     vmem[vmem_addr + 1] = (uint8_t) ( ( (uint32_t)wdata & 0x0000ff00 ) >> 8 ); 
     vmem[vmem_addr + 2] = (uint8_t) ( ( (uint32_t)wdata & 0x00ff0000 ) >> 16 ); 
-    vmem[vmem_addr + 3] = (uint8_t) ( ( (uint32_t)wdata & 0xff000000 ) >> 24 ); 
+    vmem[vmem_addr + 3] = (uint8_t) ( ( (uint32_t)wdata & 0xff000000 ) >> 24 );
+    //vmem[vmem_addr] = (uint32_t)wdata; 
   }
   else if( waddr == 0xa0000104){
     //printf("find sync\n");
@@ -587,7 +519,8 @@ void dump_gpr() {
 void dump_csr() {
   int i = 0;
   for( i = 0; i < 4; i++){
-    printf("%d = 0x%lx\n", i, cpu_csr[i]);
+    printf("sorry not surropt csr\n");
+    //printf("%d = 0x%lx\n", i, cpu_csr[i]);
   }
 }
 
@@ -612,12 +545,17 @@ void init_keymap();
 
 VerilatedContext* contextp = new VerilatedContext; //构造一个结构体以保持仿真时间
 Vtop* top = new Vtop{contextp};  //构造一个verialted模型 来自于Vtop.h(产生于verialting top.v)
+#ifdef USE_TRACE
 VerilatedVcdC* tfp = new VerilatedVcdC;
+#endif
+
 
 void sim_exit(){
   top->eval();
-  contextp->timeInc(1); 
-  //tfp->dump(contextp->time());
+  contextp->timeInc(1);
+  #ifdef USE_TRACE
+  tfp->dump(contextp->time());
+  #endif
 }
 
 static void single_cycle(){
@@ -634,30 +572,38 @@ static void reset(int n){
 static uint64_t inst_start_time;
 static uint64_t inst_over_time;
 static uint64_t inst_last_time;
-int last_inst_ex = 0;
+uint32_t Access_Dcache_count = 0;
+uint32_t Access_Icache_count = 0;
+uint32_t Dcache_shoot_count = 0;
+uint32_t Icache_shoot_count = 0;
+
 void cpu_exec(int n){
   int this_cycle_inst = n;
   gettimeofday(&currentTime,NULL);
+
   //inst_start_time = currentTime.tv_sec * 1000000 + currentTime.tv_usec;
   inst_start_time = currentTime.tv_sec;
 
-  while((n || Execute) && !npc_stop){  //!contextp->gotFinish()
-    //如果执行到了ebreak 或指令条数 或发现差异 就停
+  while((n || Execute) && !npc_stop){        //!contextp->gotFinish()
+
+    // 如果执行到了ebreak 或指令条数 或发现差异 就停
     if( ebreak_cpu || (n-- == 0 && !Execute) || dut_find_difftest ) { break; }
 
     top->clock = 0; sim_exit();
     top->clock = 1; sim_exit();
 
-    uint64_t top_pc = WBreg_pc;
-    uint32_t top_inst = verilog_WBinst;
+/*     if(IFU_valid_32) Access_Icache_count += 1;
+    if(hit_32) Icache_shoot_count += 1;
+    if(IDreg_valid && Dcache_valid) Access_Dcache_count += 1;
+    if(Dcache_Hitway) Dcache_shoot_count += 1;  */
 
+    // record total cycle count and instruction count
     total_cycle = total_cycle + 1;
-
     if(inst_finish) total_inst_num += 1;
 
-    if(total_inst_num % 10000000 == 0){printf("total_inst_num = %d, total_cycle = %d\n",total_inst_num++,total_cycle);}
+    // if(total_inst_num % 10000000 == 0)  {printf("total_inst_num = %d, total_cycle = %d\n",total_inst_num++,total_cycle);}
 
-    if(this_cycle_inst < 51 && !Execute){
+/*     if(this_cycle_inst < 51 && !Execute){
     printf("total_cycle = %d ,valid inst num = %d\n" ,total_cycle ,total_inst_num);
     printf("pc_real = %lx,hit_cache = %d, IFU_valid = %d,PC_JUMP_Suspend = %x,AXI_arbiter_arvalid = %x\n,\
   Icache_state = %x , rd_req = %d, rd_addr = %x, AXI_slave_arvalid = %x, AXI_slave_araddr = %x, araddr_pc = %x,ret_valid = %d,ret_last = %x, AXI_ret_data = %x,Data_OK = %d, Cache_retdata = %x,Suspend_IFU = %d\n,\
@@ -676,27 +622,33 @@ WBreg_pc = %x,  WBreg_inst = %x, WBreg_aluout = 0x%lx ,WBreg_rd = %d ,wr_reg_dat
      ,MEMreg_pc,verilog_MEMinst,MEMreg_aluout,MEMreg_memwr,MEMreg_valid\
      ,WBreg_pc,verilog_WBinst,WBreg_aluout ,WBreg_rd,wr_reg_data,WBreg_valid);
     }
+ */
 
     #ifdef CONFIG_HAS_VGA
+      //if(total_inst_num % 250 == 0) 
       device_update();
     #endif
 
     #ifdef CONFIG_ITRACE
-    char logbuf[127];
-    char *p = logbuf;
-    
-    p += snprintf(p, sizeof(logbuf), "0x%016" PRIx64 ":", top_pc); //16进制PC 64位 
-    int ilen = 4;
-    int i;
-    uint8_t *inst = (uint8_t *)(&top_inst);
-    for (i = ilen - 1; i >= 0; i --) {
-      p += snprintf(p, 4, " %02x", inst[i]); 
-    }
-    memset(p, ' ', 1);
-    p += 1; 
-    disassemble(p, logbuf + sizeof(logbuf) - p, top_pc, (uint8_t *)&top_inst, 4);
-    writeIringbuf(iringbuf,logbuf);
-    if(!Execute && (this_cycle_inst < instr_num)) { puts(logbuf); printf("\n"); }
+
+
+      char logbuf[127];
+      char *p = logbuf;
+      
+      p += snprintf(p, sizeof(logbuf), "0x%016" PRIx64 ":", WBreg_pc); //16进制PC 64位 
+      int ilen = 4;
+      int i;
+      uint8_t *inst = (uint8_t *)(&verilog_WBinst);
+      for (i = ilen - 1; i >= 0; i --) {
+        p += snprintf(p, 4, " %02x", inst[i]); 
+      }
+      memset(p, ' ', 1);
+      p += 1; 
+      disassemble(p, logbuf + sizeof(logbuf) - p, WBreg_pc, (uint8_t *)&verilog_WBinst, 4);
+      writeIringbuf(iringbuf,logbuf);
+      if(!Execute && (this_cycle_inst < instr_num)) { puts(logbuf); printf("\n"); }
+
+
     #endif
 
     #ifdef CONFIG_WATCHPOINT 
@@ -757,20 +709,27 @@ WBreg_pc = %x,  WBreg_inst = %x, WBreg_aluout = 0x%lx ,WBreg_rd = %d ,wr_reg_dat
     difftest_step(inst_finishpc,inst_finishpc);
     }
     #endif
+
   }
 
   gettimeofday(&currentTime,NULL);
   inst_over_time = currentTime.tv_sec;
   inst_last_time = inst_over_time - inst_start_time;
+  uint32_t time_min = inst_last_time / 60;
 
   double inst_frequency = (double)total_inst_num / (double)inst_last_time;
   double Cycle_frequency = (double)total_cycle / (double)inst_last_time;
   double IPC = (double)total_inst_num / (double)total_cycle;
-
+  //double Icache_shoot_rate =(double)Icache_shoot_count / (double)Access_Icache_count;
+  //double Dcache_shoot_rate = (double)Dcache_shoot_count / (double)Access_Dcache_count;
+  
   if( (!x10_cpu && ebreak_cpu) || (npc_stop)){
+    //printf("Access_Icache_count = %d, Icache_shoot_count = %d\n",Access_Icache_count,Icache_shoot_count);
+    //printf("Access_Dcache_count = %d, Dcache_shoot_count = %d\n",Access_Dcache_count,Dcache_shoot_count);
     Log("NPC = %s at PC = 0x%x" ,ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN),verilog_pc);
     Log("Total guest Instructions = %d, total cycle = %ld, IPC = %.2f " ,total_inst_num ,total_cycle,IPC);
-    Log("Instruction Frequency = %.2f inst/s, Simulation frequency = %.2f inst/s, total time: %d s \n" ,inst_frequency,Cycle_frequency ,inst_last_time );
+    Log("Instruction Frequency = %.2f inst/s, Simulation frequency = %.2f K cycle/s, total time: %d s (%d min)" ,inst_frequency, Cycle_frequency/1000, inst_last_time, time_min );
+    //Log("Icache_shoot_rate = %.2f%%, Dcache_shoot_rate = %.2f%%\n" ,Icache_shoot_rate*100, Dcache_shoot_rate*100);
   }
   else if ( ebreak_cpu && x10_cpu != 0 ){
     Log("npc = %s at pc = 0x%x" ,ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED),verilog_pc);
@@ -786,16 +745,22 @@ WBreg_pc = %x,  WBreg_inst = %x, WBreg_aluout = 0x%lx ,WBreg_rd = %d ,wr_reg_dat
     #endif
     dut_find_difftest = false;
   }
-
-  //tfp->close();
+  #ifdef USE_TRACE
+  tfp->close();
+  #endif
   return;
 }
 
 int main(int argc, char** argv, char** env){
-  //contextp -> traceEverOn(true);
+  #ifdef USE_TRACE
+  contextp -> traceEverOn(true);
+  top->trace(tfp,0);
+  tfp->open("wave.vcd");
+  #else
+  contextp -> traceEverOn(false);
+  #endif
   contextp -> commandArgs(argc, argv);  //传递参数以便于verilated可以看到    
-  //top->trace(tfp,0);
-  //tfp->open("wave.vcd");
+
 
   top->reset = 0;
   top->clock = 0;

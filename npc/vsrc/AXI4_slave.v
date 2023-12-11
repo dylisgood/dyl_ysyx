@@ -52,13 +52,6 @@ module ysyx_22050854_AXI_SRAM_LSU (
     output [3:0]bid
 );
 
-import "DPI-C" function void v_pmem_read(
-input longint raddr, output longint rdata);
-
-import "DPI-C" function void v_pmem_write(
-input longint waddr, input longint wdata, input longint wmask);
-
-
 reg first_over;
 reg get_addr;
 reg [63:0]first_addr;
@@ -193,6 +186,14 @@ always @(posedge clock)begin
     end
 end
 
+import "DPI-C" function void v_pmem_read(
+input longint raddr, output longint rdata);
+
+import "DPI-C" function void v_pmem_write(
+input longint waddr, input longint wdata, input longint wmask);
+
+/* 
+
 wire [31:0]awvalid_32;
 assign awvalid_32 = { 31'b0, awvalid };
 import "DPI-C" function void get_awvalid_32_value(int awvalid_32);
@@ -217,5 +218,6 @@ wire [31:0]first_addr_32;
 assign first_addr_32 = first_addr[31:0];
 import "DPI-C" function void get_first_addr_32_value(int first_addr_32);
 always@(*) get_first_addr_32_value(first_addr_32);
+*/
 
 endmodule

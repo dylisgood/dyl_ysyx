@@ -11,14 +11,26 @@ module ysyx_22050854_imm_gen(
     assign immJ = {{44{instr[31]}},instr[19:12],instr[20],instr[30:21],1'b0};
     assign immCoushu = { 57'b0,instr[6:0] };
 
-    ysyx_22050854_MuxKeyWithDefault #(6,3,64) imm_gen (imm,ExtOP,64'b0,{
+    always @(*)begin
+        case(ExtOP)
+        3'b000: imm = immI;
+        3'b001: imm = immU;
+        3'b010: imm = immS;
+        3'b011: imm = immB;
+        3'b100: imm = immJ;
+        3'b101: imm = immCoushu;
+        default: imm = 64'b0;
+        endcase
+    end
+
+/*     ysyx_22050854_MuxKeyWithDefault #(6,3,64) imm_gen (imm,ExtOP,64'b0,{
         3'b000,immI,
         3'b001,immU,
         3'b010,immS,
         3'b011,immB,
         3'b100,immJ,
         3'b101,immCoushu
-    });
+    }); */
 
 endmodule
 

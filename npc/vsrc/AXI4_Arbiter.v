@@ -167,14 +167,11 @@ module ysyx_22050854_AXI_arbiter(
 
     end
 
+/*     
     wire [31:0]AXI_arbiter_arvalid_32;
     assign AXI_arbiter_arvalid_32 = { 24'b0,AXI_arbiter_arid,IFU_request,LSU_request,DEV_request,reg_DoubleRequest};
     import "DPI-C" function void get_AXI_arbiter_arvalid_32_value(int AXI_arbiter_arvalid_32);
     always@(*) get_AXI_arbiter_arvalid_32_value(AXI_arbiter_arvalid_32);
-/*     wire AXI_arbiter_arid_32;
-    assign AXI_arbiter_arid_32 = { 28'b0,AXI_arbiter_arid};
-    import "DPI-C" function void get_AXI_arbiter_arvalid_32_value(int AXI_arbiter_arvalid_32);
-    always@(*) get_AXI_arbiter_arvalid_32_value(AXI_arbiter_arvalid_32); */
-
+*/
 endmodule
 

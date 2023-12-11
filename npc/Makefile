@@ -3,8 +3,10 @@ NXDC_FILES = constr/top.nxdc
 INC_PATH ?=
 
 VERILATOR = verilator
-VERILATOR_CFLAGS += -MMD --build -cc --trace\
-				-O3 --x-assign fast --x-initial fast --noassert\
+#VERILATOR_CFLAGS += -MMD --build -cc --trace\
+				-O3 --x-assign fast --x-initial fast --noassert
+VERILATOR_CFLAGS += -MMD --build -cc \
+				-O3 --x-assign fast --x-initial fast --noassert #--prof-cfuncs #--trace
 
 BUILD_DIR = ./build
 OBJ_DIR = $(BUILD_DIR)/obj_dir
@@ -37,7 +39,7 @@ include $(NVBOARD_HOME)/scripts/nvboard.mk
 
 # rules for verilator
 INCFLAGS = $(addprefix -I, $(INC_PATH))
-CFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
+CFLAGS += -O2 $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
 #CFLAGS += fPIC
 CXXFLAGS += $(shell llvm-config-11 --cxxflags) -fPIE
 
@@ -47,9 +49,10 @@ LD2FLAGS += $(shell llvm-config-11 --ldflags)
 LD2FLAGS += $(shell llvm-config-11 --libs)
 
 #for difftest: dynamic link riscv
-#LD3FLAGS += -L/home/dyl/ysyx-workbench/nemu/build
-#LD3FLAGS += -l:riscv64-nemu-interpreter-so
+LD3FLAGS += -L/home/dyl/ysyx-workbench/nemu/build
+LD3FLAGS += -l:riscv64-nemu-interpreter-so
 LD4FLAGS += -L/usr/include/x86_64-linux-gnu/SDL2 -lSDL2
+
 #aurgument  to execute npc
 IMG ?= 
 override ARGS += -b
@@ -57,13 +60,12 @@ override ARGS += $(ARGS_DIFF)
 
 NPC_ECEC = $^ $(ARGS) $(IMG)
 
-$(BIN): $(VSRCS) $(CSRCS) #$(NVBOARD_ARCHIVE)
+$(BIN): $(VSRCS) $(CSRCS) #$(NVBOARD_ARCHIVE) $(addprefix -LDFLAGS , $(LD3FLAGS)) \ 
 	@rm -rf $(OBJ_DIR)
-	@$(VERILATOR) $(VERILATOR_CFLAGS) -j 6\
+	@$(VERILATOR) $(VERILATOR_CFLAGS) \
 		--top-module $(TOPNAME) $^ \
 		$(addprefix -CFLAGS , $(CFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
-		--Mdir $(OBJ_DIR) --exe -o $(abspath $(BIN))\
-		$(addprefix -LDFLAGS , $(LD3FLAGS))\
+		--Mdir $(OBJ_DIR) --exe -o $(abspath $(BIN)) \
 		$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LD2FLAGS)) $(addprefix -LDFLAGS , $(LD4FLAGS))
 		
 all: default

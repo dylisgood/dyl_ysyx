@@ -19,46 +19,67 @@ module ysyx_22050854_CSRegister  (
   input handle_timer_intr
 );
   reg [63:0] csrf [9:0]; //define 10 control status register
-  wire [3:0]csr_addr1;
-  wire [3:0]csr_addr2;
-  wire [3:0]csr_raddr;
+  reg [3:0]csr_addr1;
+  reg [3:0]csr_addr2;
+  reg [3:0]csr_raddr;
+  always @(*)begin
+    if(reset)
+      csr_addr1 = 4'd10;
+    else begin
+      case(waddr1)
+        12'h305: csr_addr1 = 4'd0;  //mtvec
+        12'h341: csr_addr1 = 4'd1;  //mepc
+        12'h300: csr_addr1 = 4'd2;  //mstatus
+        12'h342: csr_addr1 = 4'd3;  //mcause
+        12'h304: csr_addr1 = 4'd4;  //mie
+        12'h344: csr_addr1 = 4'd5;  //mip
+        12'hf14: csr_addr1 = 4'd6;  //mhartid
+        12'h340: csr_addr1 = 4'd7; //mscratch
+        default: csr_addr1 = 4'd10;
+      endcase
+    end
+  end
 
-  ysyx_22050854_MuxKeyWithDefault #(8,12,4) gen_csraddr1 (csr_addr1,waddr1,4'd10,{
-    12'h305,4'd0,  //mtvec
-    12'h341,4'd1,  //mepc
-    12'h300,4'd2,  //mstatus
-    12'h342,4'd3,  //mcause
-    12'h304,4'd4,  //mie
-    12'h344,4'd5,  //mip
-    12'hf14,4'd6,  //mhartid
-    12'h340,4'd7  //mscratch
-  });
+  always @(*)begin
+    if(reset)
+      csr_addr2 = 4'd10;
+    else begin
+      case(waddr2)
+        12'h305: csr_addr2 = 4'd0;  //mtvec
+        12'h341: csr_addr2 = 4'd1;  //mepc
+        12'h300: csr_addr2 = 4'd2;  //mstatus
+        12'h342: csr_addr2 = 4'd3;  //mcause
+        12'h304: csr_addr2 = 4'd4;  //mie
+        12'h344: csr_addr2 = 4'd5;  //mip
+        12'hf14: csr_addr2 = 4'd6;  //mhartid
+        12'h340: csr_addr2 = 4'd7; //mscratch
+        default: csr_addr2 = 4'd10;
+      endcase
+    end
+  end
 
-  ysyx_22050854_MuxKeyWithDefault #(8,12,4) gen_csraddr2 (csr_addr2,waddr2,4'd10,{
-    12'h305,4'd0,  //mtvec
-    12'h341,4'd1,  //mepc
-    12'h300,4'd2,  //mstatus
-    12'h342,4'd3,  //mcause
-    12'h304,4'd4,  //mie
-    12'h344,4'd5,  //mip
-    12'hf14,4'd6,  //mhartid
-    12'h340,4'd7   //mscratch
-  });
-
-  ysyx_22050854_MuxKeyWithDefault #(8,12,4) gen_csr_raddr (csr_raddr,raddr,4'd10,{
-    12'h305,4'd0,  //mtvec
-    12'h341,4'd1,  //mepc
-    12'h300,4'd2,  //mstatus
-    12'h342,4'd3,  //mcause
-    12'h304,4'd4,  //mie
-    12'h344,4'd5,  //mip
-    12'hf14,4'd6,  //mhartid read only
-    12'h340,4'd7  //mscratch
-  });
+  always @(*)begin
+    if(reset)
+      csr_raddr = 4'd10;
+    else begin
+      case(raddr)
+        12'h305: csr_raddr = 4'd0;  //mtvec
+        12'h341: csr_raddr = 4'd1;  //mepc
+        12'h300: csr_raddr = 4'd2;  //mstatus
+        12'h342: csr_raddr = 4'd3;  //mcause
+        12'h304: csr_raddr = 4'd4;  //mie
+        12'h344: csr_raddr = 4'd5;  //mip
+        12'hf14: csr_raddr = 4'd6;  //mhartid
+        12'h340: csr_raddr = 4'd7; //mscratch
+        default: csr_raddr = 4'd10;
+      endcase
+    end
+  end
 
   assign rdata = ren ? csrf[csr_raddr] : 64'd0;  //read csr
 
-  always @(posedge clock) begin        //write csr1
+  //write csr1
+  always @(posedge clock) begin        
     if(reset)
         csrf[6] <= 64'b0;  //mhartid
     else if( wen && ( csr_addr1 == 4'd6) )
@@ -67,7 +88,8 @@ module ysyx_22050854_CSRegister  (
         csrf[csr_addr1] <= wdata1;
   end
 
-  always @(posedge clock) begin        //write csr2
+  //write csr2
+  always @(posedge clock) begin        
     if(reset)
         csrf[6] <= 64'b0;  //mhartid
     else if( wen2 && ( csr_addr2 == 4'd6) )

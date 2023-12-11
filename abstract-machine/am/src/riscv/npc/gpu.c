@@ -1,7 +1,7 @@
 #include <am.h>
 #include "../riscv.h"
 #include <stdio.h>
-
+#include <klib.h>
 #define MMIO_BASE 0xa0000000
 #define FB_ADDR         (MMIO_BASE   + 0x1000000)
 #define DEVICE_BASE 0xa0000000
@@ -26,16 +26,23 @@ void __am_gpu_config(AM_GPU_CONFIG_T *cfg) {
 
 void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl) {   //每次往x,y处写w*h个像素点 实际是要写入FB_ADDR内存中
   uint32_t *fb = (uint32_t *)(uintptr_t)FB_ADDR;
-  int y_t = ctl->y;
-  int x_t = ctl->x;
   uint32_t *pix = ctl->pixels;
-  for(int y = ctl->y; y < (y_t + ctl->h); y++){
-    for(int x = ctl->x; x < ( x_t + ctl->w); x++){
-      //printf("x + y * 400 = %x\n" ,x + y * 400);
-      fb[x + y * 400] = *((pix));  //outl
-      pix++;
+/*   for(int l = 0; l < ctl->h; l++){             //write one line once
+    int dstOffset = ( ctl->y + l ) * 400 + ctl->x;
+    int srcOffset = ctl->w * l;
+    memcpy(&fb[dstOffset], &pix[srcOffset], ctl->w * sizeof(uint32_t));
+  } */
+
+  for(uint32_t y = ctl->y; y < (ctl->y + ctl->h); y++){
+    uint32_t y_offset = ( y << 8 ) + ( y << 7 ) + ( y << 4 ); //y * 400
+    //uint32_t x_offset = ctl->x + y_offset;
+    uint32_t *fb_row = &fb[y_offset + ctl->x];
+    for(int x = ctl->x; x < ( ctl->x + ctl->w ); x++){
+      //fb[x_offset++] = *((pix++));  //outl
+      *(fb_row++) = *((pix++));
     }
   }
+
   if(ctl->sync) { 
     outl(SYNC_ADDR, 1);
   }

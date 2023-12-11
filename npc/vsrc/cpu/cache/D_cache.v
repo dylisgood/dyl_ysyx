@@ -125,7 +125,7 @@ wire [7:0]offset_8;
 assign offset_8 = { 5'b0 , offset[2:0] };
 assign wstrb_to_bwen_64_t = { {8{wstrb[7]}}, {8{wstrb[6]}}, {8{wstrb[5]}}, {8{wstrb[4]}}, {8{wstrb[3]}}, {8{wstrb[2]}}, {8{wstrb[1]}}, {8{wstrb[0]}} };
 assign wstrb_to_bwen_64 = wstrb_to_bwen_64_t << ( offset_8 << 3 );
-assign wstrb_to_bwen_128 = offset[3] ? { ~wstrb_to_bwen_64 , 64'hffffffffffffffff } : { 64'hffffffffffffffff , ~wstrb_to_bwen_64 };
+assign wstrb_to_bwen_128 = op ? ( offset[3] ? { ~wstrb_to_bwen_64 , 64'hffffffffffffffff } : { 64'hffffffffffffffff , ~wstrb_to_bwen_64 } ) : 128'b0;
 
 wire [63:0]wdata_t;
 assign wdata_t = wdata << ( offset_8 << 3 );
@@ -175,7 +175,9 @@ always @(posedge clock)begin
     case(Fence_state)
     Fence_Idle:
         begin
-            if( Fence_wr )begin  //if from Fence_Write
+            if( !fencei && !Fence_wr)
+                Fence_state <= Fence_Idle;
+            else if( Fence_wr )begin  //if from Fence_Write
                 wr_req <= 1'b0;
                 wr_addr <= 32'b0;
                 wr_wstb <= 8'h0;
@@ -189,9 +191,7 @@ always @(posedge clock)begin
                 Fence_state <= Fence_Check;
                 unshoot <= 1'b1;
                 Fence_counter <= 9'b0;
-            end
-            else 
-                Fence_state <= Fence_Idle;    
+            end   
         end
     Fence_Check:
         begin
@@ -273,6 +273,7 @@ always @(posedge clock)begin
     endcase
 end
 
+reg Write_hit; //for debug shoot rate
 //state machine transition
 always @(posedge clock)begin
     if(reset)begin
@@ -325,6 +326,7 @@ always @(posedge clock)begin
 
         Way0_D <= 128'b0;
         Way1_D <= 128'b0;
+        Write_hit <= 1'b0;
     end
     else begin
     case(state)
@@ -349,6 +351,7 @@ always @(posedge clock)begin
                     RB_tag <= tag;
                     RB_offset <= offset[3];
                     RB_OP <= op;
+                    Write_hit <= 1'b0;
 
                     if( Way0_TagV[index] == {1'b1,tag} ) begin //hit way0
                         state <= LOOKUP;
@@ -396,6 +399,7 @@ always @(posedge clock)begin
 
                     if( Way0_TagV[index] == { 1'b1,tag } ) begin //hit way0
                         state <= IDLE;
+                        Write_hit <= 1'b1;
 
                         ram4_CEN <= ~index[6] ? 1'b0 : 1'b1;
                         ram4_WEN <= ~index[6] ? 1'b0 : 1'b1;
@@ -417,6 +421,7 @@ always @(posedge clock)begin
                     end
                     else if( Way1_TagV[index] == { 1'b1,tag } ) begin //hit way1
                         state <= IDLE;
+                        Write_hit <= 1'b1;
 
                         ram6_CEN <= ~index[6] ? 1'b0 : 1'b1;
                         ram6_WEN <= ~index[6] ? 1'b0 : 1'b1;
@@ -443,6 +448,7 @@ always @(posedge clock)begin
                         end
                         state <= MISS;
                         unshoot <= 1'b1;
+                        Write_hit <= 1'b0;
 
                         ram4_CEN <= 1'b1;
                         ram4_WEN <= 1'b1;
@@ -479,6 +485,7 @@ always @(posedge clock)begin
                     ram7_wdata <= 128'b0;
                     hit_way0 <= 1'b0;
                     hit_way1 <= 1'b0;
+                    Write_hit <= 1'b0;
                 end
             end
         LOOKUP:                      //only hit could enter state:LOOKUP
@@ -499,11 +506,13 @@ always @(posedge clock)begin
                     ram7_CEN <= 1'b1;
                     hit_way0 <= 1'b0;
                     hit_way1 <= 1'b0;
+                    Write_hit <= 1'b0;
                 end
                 else if( valid & !op) begin   // read
                     RB_index <= index;  
                     RB_tag <= tag;
                     RB_offset <= offset[3];
+                    Write_hit <= 1'b0;
                     if( Way0_TagV[index] == {1'b1,tag} ) begin //hit way0
                         state <= LOOKUP;
                         ram4_CEN <= ~index[6] ? 1'b0 : 1'b1;
@@ -555,6 +564,7 @@ always @(posedge clock)begin
 
                     if( Way0_TagV[index] == { 1'b1,tag } ) begin //hit way0
                         state <= IDLE;
+                        Write_hit <= 1'b1;
 
                         ram4_CEN <= ~index[6] ? 1'b0 : 1'b1;
                         ram4_WEN <= ~index[6] ? 1'b0 : 1'b1;
@@ -574,6 +584,7 @@ always @(posedge clock)begin
                     end
                     else if( Way1_TagV[index] == { 1'b1,tag } ) begin //hit way1
                         state <= IDLE;
+                        Write_hit <= 1'b1;
 
                         ram6_CEN <= ~index[6] ? 1'b0 : 1'b1;
                         ram6_WEN <= ~index[6] ? 1'b0 : 1'b1;
@@ -598,6 +609,7 @@ always @(posedge clock)begin
                         end
                         state <= MISS;
                         unshoot <= 1'b1;
+                        Write_hit <= 1'b0;
 
                         ram4_CEN <= 1'b1;           //for read, if last cycle read shoot but this cycle not shoot
                         ram5_CEN <= 1'b1;
@@ -833,7 +845,7 @@ assign sram7_wen = ram7_WEN;
 assign sram7_wmask = ram7_bwen;
 assign sram7_wdata = ram7_wdata;
 
-
+/* 
 wire [31:0]Dcache_state_32;
 assign Dcache_state_32 = {25'b0,state};
 import "DPI-C" function void get_Dcache_state_32_value(int Dcache_state_32);
@@ -844,10 +856,7 @@ assign Dcache_AXI_ret_data = ret_data[31:0];
 import "DPI-C" function void get_Dcache_AXI_ret_data_value(int Dcache_AXI_ret_data);
 always@(*) get_Dcache_AXI_ret_data_value(Dcache_AXI_ret_data);
 
-wire [31:0]Hitway_32;
-assign Hitway_32 = { 30'b0, hit_way1, hit_way0 };
-import "DPI-C" function void get_Dcache_Hitway_value(int Hitway_32);
-always@(*) get_Dcache_Hitway_value(Hitway_32);
+
 
 wire [31:0]RB_wdata_32;
 assign RB_wdata_32 = wstrb_to_bwen_128[95:64];
@@ -873,5 +882,11 @@ wire [31:0]Fence_state_32;
 assign Fence_state_32 = { 24'b0,Fence_ram4_CEN,Fence_ram5_CEN,Fence_ram6_CEN,Fence_ram7_CEN,Fence_state };
 import "DPI-C" function void get_Fence_state_32_value(int Fence_state_32);
 always@(*) get_Fence_state_32_value(Fence_state_32);
+ */
+
+/* wire [31:0]Hitway_32;
+assign Hitway_32 = { 29'b0,Write_hit ,hit_way1, hit_way0 };
+import "DPI-C" function void get_Dcache_Hitway_value(int Hitway_32);
+always@(*) get_Dcache_Hitway_value(Hitway_32); */
 
 endmodule
