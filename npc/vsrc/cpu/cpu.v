@@ -604,8 +604,8 @@ module ysyx_22050854 (
 
     //handle timer interrupt
     wire handle_timer_intr;
-    //assign handle_timer_intr = 1'b0;
-    assign handle_timer_intr = timer_interrupt && IDreg_valid && ~Suspend_ALU && ~Suspend_LSU & ~Data_Conflict_block;  //only when IDreg_valid can handle timer_interrupt
+    assign handle_timer_intr = 1'b0;
+    //assign handle_timer_intr = timer_interrupt && IDreg_valid && ~Suspend_ALU && ~Suspend_LSU & ~Data_Conflict_block;  //only when IDreg_valid can handle timer_interrupt
 
     //-------------------       判断数据冲突       --------------------------------//
     wire rs1_conflict_EXE;
@@ -1318,7 +1318,7 @@ module ysyx_22050854 (
                                                 WBreg_aluout;
 
 //以下代码为了调试使用
-    //for difftest
+    //for debug
     reg inst_finish;
     ysyx_22050854_Reg #(1,1'b0) inst_finish_gen (clock, reset, WBreg_valid, inst_finish, 1'b1);
     reg [31:0]inst_finish_pc;
@@ -1331,12 +1331,10 @@ module ysyx_22050854 (
     ysyx_22050854_Reg #(1,1'b0) DIFFreg_memrd_gen (clock, reset, WBreg_memRd, DIFFreg_memrd, 1'b1);
     wire is_accessdevice;
     assign is_accessdevice = ( DIFFreg_memrd ) ? ( ( access_mem_addr > 32'h8fffffff ) ? 1'b1 : 1'b0 ) : 1'b0;
-
-    //for debug
     wire [31:0]Data_Conflict_32;
     assign Data_Conflict_32 = {22'b0,ret_conflict_EXE,ret_conflict_MEM,ret_conflict_WB,store_conflict_EXE,store_conflict_MEM,store_conflict_WB,reg_Conflict_WB,reg_Conflict_MEM,reg_Conflict_EXE,Data_Conflict_block};
 
-/*     
+/*  DPI-C  
     import "DPI-C" function void get_next_pc_value(int next_pc);
     always@(*) get_next_pc_value(next_pc);
 
@@ -1353,9 +1351,6 @@ module ysyx_22050854 (
     assign Suspend_IFU_32 = { 31'b0 , Suspend_IFU };
     import "DPI-C" function void get_Suspend_IFU_value(int Suspend_IFU_32);
     always@(*) get_Suspend_IFU_value( Suspend_IFU_32 );
-
-    import "DPI-C" function void get_IDregpc_value(int IDreg_pc);
-    always@(*) get_IDregpc_value(IDreg_pc);
 
     import "DPI-C" function void get_Data_Conflict_value(int Data_Conflict_32);
     always@(*) get_Data_Conflict_value(Data_Conflict_32);
@@ -1441,8 +1436,6 @@ module ysyx_22050854 (
     import "DPI-C" function void get_AXI_Dcache_data_64_value(int AXI_Dcache_data_32);
     always@(*) get_AXI_Dcache_data_64_value(AXI_Dcache_data_32);
 
-
-
     wire [31:0]wbreg;
     assign wbreg = WBreg_aluout[31:0];
     import "DPI-C" function void get_WBreg_aluout_value(int wbreg);
@@ -1456,43 +1449,43 @@ module ysyx_22050854 (
     import "DPI-C" function void get_WBreg_valid_value(int WBreg_valid_32);
     always@(*) get_WBreg_valid_value(WBreg_valid_32);
 
+    import "DPI-C" function void get_WBreg_pc_value(int WBreg_pc);
+    always@(*) get_WBreg_pc_value(WBreg_pc);
 
-    */
+    import "DPI-C" function void get_pc_value(int pc_real);
+    always@(*) get_pc_value(pc_real);
 
-/*     import "DPI-C" function void get_inst_value(int inst);
-    always@(*) get_inst_value(inst);
+    import "DPI-C" function void get_inst_value(int IDreg_inst);
+    always@(*) get_inst_value(IDreg_inst);
+    wire [31:0]IDreg_valid_32;
+    assign IDreg_valid_32 = {31'b0,IDreg_valid};
+    import "DPI-C" function void get_IDreg_valid_value(int IDreg_valid_32);
+    always@(*) get_IDreg_valid_value(IDreg_valid_32);
+    import "DPI-C" function void get_IDregpc_value(int IDreg_pc);
+    always@(*) get_IDregpc_value(IDreg_pc);
+    import "DPI-C" function void get_WBreginst_value(int WBreg_inst);
+    always@(*) get_WBreginst_value(WBreg_inst);
+*/
 
+/*  //Cache shoot rate
     wire [31:0]Data_cache_valid_32;
     assign Data_cache_valid_32 = { 31'b0 , LSU_access_valid };
     import "DPI-C" function void get_Data_cache_valid_value(int Data_cache_valid_32);
     always@(*) get_Data_cache_valid_value( Data_cache_valid_32 );
 
-    wire [31:0]IDreg_valid_32;
-    assign IDreg_valid_32 = {31'b0,IDreg_valid};
-    import "DPI-C" function void get_IDreg_valid_value(int IDreg_valid_32);
-    always@(*) get_IDreg_valid_value(IDreg_valid_32); */
-
-/*     wire [31:0]IFU_valid_32;
+    wire [31:0]IFU_valid_32;
     assign IFU_valid_32 = { 31'b0 , IFU_Icache_valid };
     import "DPI-C" function void get_IFU_valid_value(int IFU_valid_32);
     always@(*) get_IFU_valid_value( IFU_valid_32 );
+*/
 
-    import "DPI-C" function void get_WBreg_pc_value(int WBreg_pc);
-    always@(*) get_WBreg_pc_value(WBreg_pc);
-    import "DPI-C" function void get_WBreginst_value(int WBreg_inst);
-    always@(*) get_WBreginst_value(WBreg_inst);
-
+    //difftest
     wire [31:0]is_device_32;
     assign is_device_32 = {31'b0,is_accessdevice};
     import "DPI-C" function void get_is_device_value(int is_device_32);
     always@(*) get_is_device_value(is_device_32);
-    import "DPI-C" function void get_instruction_finsh_value(int instruction_finsh);
-    always@(*) get_instruction_finsh_value(instruction_finsh);
-*/
 
-    import "DPI-C" function void get_pc_value(int pc_real);
-    always@(*) get_pc_value(pc_real);
-
+    //necessary
     wire [31:0]ebreak_32;
     assign ebreak_32 = { 31'b0,Insrtuction_ebreak };
     import "DPI-C" function void get_ebreak_value(int ebreak_32);
@@ -1504,6 +1497,8 @@ module ysyx_22050854 (
     always@(*) get_inst_finish_value(inst_finish_32);
     import "DPI-C" function void get_inst_finishpc_value(int inst_finish_pc);
     always@(*) get_inst_finishpc_value(inst_finish_pc);
+    import "DPI-C" function void get_instruction_finsh_value(int instruction_finsh);
+    always@(*) get_instruction_finsh_value(instruction_finsh);
 
 //
 

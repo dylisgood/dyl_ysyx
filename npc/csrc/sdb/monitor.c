@@ -4,12 +4,12 @@
 #include <../../csrc/mem.h>
 #include <../../csrc/utils.h>
 struct func_struct{
-  char name[20];
+  char name[32];
   uint64_t address;
   uint64_t size;
 };
 
-struct func_struct func_trace[10];
+struct func_struct func_trace[1024];
 
 static char *img_file = NULL;
 static char *elf_file = NULL;

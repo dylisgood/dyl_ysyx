@@ -26,8 +26,8 @@ static uint32_t screen_size() {
   return screen_width() * screen_height() * sizeof(uint32_t);
 }
 
-uint8_t vmem[400 * 300 * 4];              //显存
-//uint32_t vmem[400 * 300];
+//uint8_t vmem[400 * 300 * 4];              //显存
+uint32_t vmem[400 * 300];
 static uint32_t *vgactl_port_base = NULL; //vga端口控制器
 uint32_t sync_vmem = 0;
 

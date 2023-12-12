@@ -49,9 +49,7 @@ Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
 }
 
 void yield() {
-  printf("AM: ready to yield! \n");
   asm volatile("li a7, -1; ecall");
-  printf("AM: finish yield! \n");
 }
 
 bool ienabled() {
@@ -59,4 +57,12 @@ bool ienabled() {
 }
 
 void iset(bool enable) {
+  if(enable){
+    asm volatile("csrsi mstatus, 8");   //mstatus_MIE
+    asm volatile("csrs mie, %0" :: "r"(1 << 7)); //mie_MTIE
+  }
+  else {
+    asm volatile("csrsi mstatus, 0");   //mstatus_MIE
+    asm volatile("csrsi mie, 0");   //mstatus_MIE
+  }
 }

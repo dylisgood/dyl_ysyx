@@ -6,7 +6,7 @@ VERILATOR = verilator
 #VERILATOR_CFLAGS += -MMD --build -cc --trace\
 				-O3 --x-assign fast --x-initial fast --noassert
 VERILATOR_CFLAGS += -MMD --build -cc \
-				-O3 --x-assign fast --x-initial fast --noassert #--prof-cfuncs #--trace
+				-O3 --x-assign fast --x-initial fast --noassert #--trace #--prof-cfuncs
 
 BUILD_DIR = ./build
 OBJ_DIR = $(BUILD_DIR)/obj_dir

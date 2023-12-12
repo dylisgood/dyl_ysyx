@@ -175,12 +175,6 @@ extern "C" void get_IDreginst_value(int data)
   verilog_IDinst = data;
 }
 
-uint32_t verilog_IDpc = 0;
-extern "C" void get_IDregpc_value(int data)
-{
-  verilog_IDpc = data;
-}
-
 uint32_t jump = 0;
 extern "C" void get_jump_value(int data)
 {
@@ -306,6 +300,35 @@ extern "C" void get_rd_addr_value(uint32_t data)
 {
   rd_addr = data;
 }
+
+uint32_t verilog_WBinst = 0;
+extern "C" void get_WBreginst_value(int data)
+{
+  verilog_WBinst = data;
+}
+
+uint32_t IDreg_inst = 0;
+extern "C" void get_inst_value(int data)
+{
+  IDreg_inst = data;
+}
+uint32_t IDreg_valid = 0;
+extern "C" void get_IDreg_valid_value(uint32_t data)
+{
+  IDreg_valid = data;
+}
+uint32_t IDreg_pc = 0;
+extern "C" void get_IDregpc_value(int data)
+{
+  IDreg_pc = data;
+}
+
+uint32_t WBreg_pc = 0;
+extern "C" void get_WBreg_pc_value(int data)
+{
+  WBreg_pc = data;
+} 
+
 */
 
 
@@ -323,12 +346,6 @@ extern "C" void get_Data_cache_valid_value(int data)
   Dcache_valid = data;
 }
 
-uint32_t IDreg_valid = 0;
-extern "C" void get_IDreg_valid_value(uint32_t data)
-{
-  IDreg_valid = data;
-}
-
 uint32_t hit_32 = 0;
 extern "C" void get_hit_32_value(int data)
 {
@@ -339,41 +356,22 @@ uint32_t IFU_valid_32 = 0;
 extern "C" void get_IFU_valid_value(int data)
 {
   IFU_valid_32 = data;
-}  */
-
-
-//difftest 
-/* uint32_t instruction_finsh = 0;
-extern "C" void get_instruction_finsh_value(uint32_t data)
+}  
+uint32_t verilog_pc = 0; //pc_real actually
+extern "C" void get_pc_value(int data)
 {
-  instruction_finsh = data;
+  verilog_pc = data;
 }
+*/
 
+//difftest
 uint32_t is_device = 0;
 extern "C" void get_is_device_value(uint32_t data)
 {
   is_device = data;
 }
 
-
-//Itrace
-uint32_t verilog_inst = 0;
-extern "C" void get_inst_value(int data)
-{
-  verilog_inst = data;
-}
-uint32_t verilog_WBinst = 0;
-extern "C" void get_WBreginst_value(int data)
-{
-  verilog_WBinst = data;
-}
-uint32_t WBreg_pc = 0;
-extern "C" void get_WBreg_pc_value(int data)
-{
-  WBreg_pc = data;
-}  */
-
-
+//necessary
 uint64_t *cpu_gpr = NULL;
 extern "C" void set_gpr_ptr(const svOpenArrayHandle r) {
   cpu_gpr = (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());
@@ -391,10 +389,10 @@ extern "C" void get_inst_finishpc_value(uint32_t data)
   inst_finishpc = data;
 } 
 
-uint32_t verilog_pc = 0; //pc_real
-extern "C" void get_pc_value(int data)
+uint32_t instruction_finsh = 0;
+extern "C" void get_instruction_finsh_value(uint32_t data)
 {
-  verilog_pc = data;
+  instruction_finsh = data;
 }
 
 uint32_t ebreak_cpu = 0;
@@ -412,39 +410,34 @@ extern "C" void get_x10_value(uint32_t data)
 static bool access_device = false;
 uint32_t key_dequeue();
 void init_screen();
-extern uint8_t vmem[400 * 300 * 4];
+extern uint32_t vmem[400 * 300];
 extern "C" void v_pmem_read(long long raddr, long long *rdata) {
   //printf("the orign raddr is %lx \n ",raddr);
   //总是读取地址为`raddr & ~0x7ull`的8字节返回给`rdata`
-  if(raddr == 0xa0000048 || raddr == 0xa0000040)  //时钟  40 for Dcache
+  if(raddr == 0xa0000048)                             //clock
   {
     access_device = true;
-    
     gettimeofday(&currentTime,NULL);
     uint64_t time_pass = currentTime.tv_sec *1000000 + currentTime.tv_usec - system_start_us;
-    if(raddr == 0xa0000040) *rdata = 0;
     *rdata = time_pass; 
   }
-  else if( raddr == 0xa00003f8 || raddr == 0xa00003f0 )  //串口  for dcache, first read to Dcache, then wirte
+  else if( raddr == 0xa00003f8 )                      //serial port
   {
     access_device = true;
-    
     *rdata = 0;
   }
-  //内存
-  else if(raddr >= 0x80000000 && raddr <= 0x87ffffff)
+  else if(raddr >= 0x80000000 && raddr <= 0x87ffffff) //memory
   { 
     access_device = false;
     *rdata = pmem_read(raddr & ~0x7ull, 8);
   }
-  //键盘
-  else if(raddr == 0xa0000060){  
-    //printf("%d this a access kbd inst\n" ,i);
+  else if(raddr == 0xa0000060){                       //keyboard
     access_device = true;
     uint64_t kbd_code = key_dequeue();
-    static bool last_check_kbd = false;
+    *rdata = kbd_code;
+/*     static bool last_check_kbd = false;
     static uint64_t last_kbd_code;
-    if(last_check_kbd) { //检测上一次是不是按键 
+    if(last_check_kbd) { //检测上一次是不是按键           //之前有bug 必须连续两次读到键盘才算真正读到 所以有了这段代码 后来没这个bug了
       *rdata = last_kbd_code; //如果是 就存上一次的
       last_check_kbd = false;
     } 
@@ -455,15 +448,13 @@ extern "C" void v_pmem_read(long long raddr, long long *rdata) {
       last_kbd_code = kbd_code;
       }
       *rdata = kbd_code;
-    }
+    } */
   }
-  //vga
-  else if(raddr == 0xa0000100){
+  else if(raddr == 0xa0000100){         //vga
     access_device = true;
     *rdata = 0x0190012c;
   }
-  //无效地址
-  else
+  else                                 //invalid address
   {
     Log("The read address %lx  is invalid! \n",raddr);
     *rdata = 0x4444444466666666;
@@ -482,7 +473,6 @@ extern "C" void v_pmem_write(long long waddr, long long wdata, long long wmask) 
   if( waddr == 0xa00003f8 ||  waddr == 0xa00003f0)  //serial port
   {
     access_device = true;
-    //printf("get chuankou\n");
     putchar(wdata);
   }
   else if(waddr >= 0x80000000 && waddr <= 0x8fffffff) //memory
@@ -491,16 +481,10 @@ extern "C" void v_pmem_write(long long waddr, long long wdata, long long wmask) 
     pmem_write(waddr & ~0x7ull, 8, (wdata << (n << 3)),wmask);
   }
   else if( ( waddr >= 0xa1000000 )  && ( waddr < ( 0xa1000000 + 400 * 300 * 4)) ){      //vga
-    uint32_t vmem_addr = waddr - 0xa1000000;
-    //printf("vmem_addr = %x, vmem_data = %lx, wmask = %lx \n",vmem_addr ,vmem_data, wmask);
-    vmem[vmem_addr + 0] = (uint8_t) ( (uint32_t)wdata & 0x000000ff );
-    vmem[vmem_addr + 1] = (uint8_t) ( ( (uint32_t)wdata & 0x0000ff00 ) >> 8 ); 
-    vmem[vmem_addr + 2] = (uint8_t) ( ( (uint32_t)wdata & 0x00ff0000 ) >> 16 ); 
-    vmem[vmem_addr + 3] = (uint8_t) ( ( (uint32_t)wdata & 0xff000000 ) >> 24 );
-    //vmem[vmem_addr] = (uint32_t)wdata; 
+    uint32_t vmem_addr = ( waddr - 0xa1000000 ) >> 2;
+    vmem[vmem_addr] = (uint32_t)vmem_data;
   }
   else if( waddr == 0xa0000104){
-    //printf("find sync\n");
     sync_vmem = 1;
   }
   else Log("the write addr:%llx is invalid \n",waddr);
@@ -549,7 +533,6 @@ Vtop* top = new Vtop{contextp};  //构造一个verialted模型 来自于Vtop.h(�
 VerilatedVcdC* tfp = new VerilatedVcdC;
 #endif
 
-
 void sim_exit(){
   top->eval();
   contextp->timeInc(1);
@@ -586,22 +569,24 @@ void cpu_exec(int n){
 
   while((n || Execute) && !npc_stop){        //!contextp->gotFinish()
 
-    // 如果执行到了ebreak 或指令条数 或发现差异 就停
+    // 如果执行到了ebreak 或指定指令书目 或发现差异 就停止运行
     if( ebreak_cpu || (n-- == 0 && !Execute) || dut_find_difftest ) { break; }
 
+    //go one cycle and get data
     top->clock = 0; sim_exit();
     top->clock = 1; sim_exit();
-
-/*     if(IFU_valid_32) Access_Icache_count += 1;
-    if(hit_32) Icache_shoot_count += 1;
-    if(IDreg_valid && Dcache_valid) Access_Dcache_count += 1;
-    if(Dcache_Hitway) Dcache_shoot_count += 1;  */
 
     // record total cycle count and instruction count
     total_cycle = total_cycle + 1;
     if(inst_finish) total_inst_num += 1;
+    if(total_inst_num % 10000000 == 0)  {printf("Instruction = %d, Cycle = %d, IPC = %.3f\n",total_inst_num++,total_cycle, (double)total_inst_num / (double)(total_cycle) );}
 
-    // if(total_inst_num % 10000000 == 0)  {printf("total_inst_num = %d, total_cycle = %d\n",total_inst_num++,total_cycle);}
+/*   cache shoot rate  
+    if(IFU_valid_32) Access_Icache_count += 1;
+    if(hit_32) Icache_shoot_count += 1;
+    if(IDreg_valid && Dcache_valid) Access_Dcache_count += 1;
+    if(Dcache_Hitway) Dcache_shoot_count += 1;  
+*/
 
 /*     if(this_cycle_inst < 51 && !Execute){
     printf("total_cycle = %d ,valid inst num = %d\n" ,total_cycle ,total_inst_num);
@@ -622,159 +607,163 @@ WBreg_pc = %x,  WBreg_inst = %x, WBreg_aluout = 0x%lx ,WBreg_rd = %d ,wr_reg_dat
      ,MEMreg_pc,verilog_MEMinst,MEMreg_aluout,MEMreg_memwr,MEMreg_valid\
      ,WBreg_pc,verilog_WBinst,WBreg_aluout ,WBreg_rd,wr_reg_data,WBreg_valid);
     }
- */
+*/
 
-    #ifdef CONFIG_HAS_VGA
-      //if(total_inst_num % 250 == 0) 
-      device_update();
-    #endif
+#ifdef CONFIG_HAS_VGA
+    //if(total_inst_num % 250 == 0) 
+    device_update();
+#endif
 
-    #ifdef CONFIG_ITRACE
-
-
-      char logbuf[127];
-      char *p = logbuf;
-      
-      p += snprintf(p, sizeof(logbuf), "0x%016" PRIx64 ":", WBreg_pc); //16进制PC 64位 
+#ifdef CONFIG_ITRACE
+    char logbuf[127];
+    char *p = logbuf;
+    if(inst_finish){
+      p += snprintf(p, sizeof(logbuf), "0x%016" PRIx64 ":", inst_finishpc); //16进制PC 64位 
       int ilen = 4;
       int i;
-      uint8_t *inst = (uint8_t *)(&verilog_WBinst);
+      uint8_t *inst = (uint8_t *)(&instruction_finsh);
       for (i = ilen - 1; i >= 0; i --) {
         p += snprintf(p, 4, " %02x", inst[i]); 
       }
       memset(p, ' ', 1);
       p += 1; 
-      disassemble(p, logbuf + sizeof(logbuf) - p, WBreg_pc, (uint8_t *)&verilog_WBinst, 4);
+      disassemble(p, logbuf + sizeof(logbuf) - p, inst_finishpc, (uint8_t *)&instruction_finsh, 4);
       writeIringbuf(iringbuf,logbuf);
       if(!Execute && (this_cycle_inst < instr_num)) { puts(logbuf); printf("\n"); }
+    }
+#endif
 
-
-    #endif
-
-    #ifdef CONFIG_WATCHPOINT 
+#ifdef CONFIG_WATCHPOINT 
     wp_detect();
-    #endif
+#endif
 
-    #ifdef CONFIG_FTRACE
-    static int kong = 0;
-    int j = 0;
-    if( ((verilog_inst & 0x0ef) == 0x0ef) || ((verilog_inst & 0x0e7) == 0x0e7) \
-          || ((verilog_inst & 0x00078067) == 0x00078067) )  //jal && x1 || jalr && !x1
+#ifdef CONFIG_FTRACE
+  static int kong = 0;
+  int kong_j = 0;
+  //call function
+  if(inst_finish)
+  {
+    if( (( (instruction_finsh & 0x0ef) == 0x0ef) || ((instruction_finsh & 0x0e7) == 0x0e7) \
+          || ((instruction_finsh & 0x00078067) == 0x00078067)) )   //jal && x1 || jalr && !x1
     {
         for (int i = 0; i < func_num; i++) 
         {
-          if(verilog_pc >= func_trace[i].address && verilog_pc < (func_trace[i].address + func_trace[i].size) )
+          if(inst_finishpc >= func_trace[i].address && inst_finishpc < (func_trace[i].address + func_trace[i].size) )
           {
-            printf("0x%x: ",verilog_pc);
-            for(j = 0; j < kong; j++) printf(" ");
+            printf("0x%x: ",inst_finishpc);
+            for(kong_j = 0; kong_j < kong; kong_j++) printf(" ");
             kong++;
             printf("call %s[@%lx] \n",func_trace[i].name,func_trace[i].address);
           }
         }
     }
-    else if( ((verilog_inst & 0x00008067) == 0x00008067)  ) //jalr && x0 || jal && x0 
+  //return from function
+    else if( ( (instruction_finsh & 0x00008067) == 0x00008067 ) ) //jalr && x0 || jal && x0 
     {
       for (int i = 0; i < func_num; i++) 
       {
-        if(verilog_pc >= func_trace[i].address && verilog_pc < (func_trace[i].address + func_trace[i].size))
+        if(inst_finishpc >= func_trace[i].address && inst_finishpc < (func_trace[i].address + func_trace[i].size))
           {
-            printf("0x%x: ",verilog_pc);
-            for(j = 0; j< kong; j++) printf(" ");
+            printf("0x%x: ",inst_finishpc);
+            for(kong_j = 0; kong_j< kong; kong_j++) printf(" ");
             kong--;
             printf("ret %s \n",func_trace[i].name);
           }
       }
     }
-    #endif
+  }
+#endif
     
-    #ifdef CONFIG_DIFFTEST
-    if(inst_finish)
+#ifdef CONFIG_DIFFTEST
+    if(inst_finish) 
     {
-    //copy rtl gpr status to cpu  for difftest
-    for (int i = 0; i < 32; i++) {
-      cpu.gpr[i] = cpu_gpr[i];
-    }
-    cpu.pc = inst_finishpc; //用于比较，如果跳过比较，则需要让nemu 的 pc + 4
-    //异常指令跳过
-    if( (instruction_finsh & 0x707f) == 0x1073 || (instruction_finsh & 0x707f) == 0x73 || \
-        (instruction_finsh & 0x707f) == 0x2073 || (instruction_finsh & 0x707f) == 0x3073 ){
-        difftest_skip_ref();
-        cpu.pc = inst_finishpc + 4;
-    }
+      cpu.pc = inst_finishpc; //用于比较，如果跳过比较，则需要让nemu 的 pc + 4
 
-    //访问设备指令跳过
-    if(is_device)  { cpu.pc = inst_finishpc+4; difftest_skip_ref(); }
-    //fenceI跳过
-    //检测
-    difftest_step(inst_finishpc,inst_finishpc);
+      //跳过访问设备指令
+      if(is_device)  {
+        for (int i = 0; i < 32; i++) { //copy npc gpr to nemu
+          cpu.gpr[i] = cpu_gpr[i];
+        }
+        cpu.pc = inst_finishpc + 4; 
+        difftest_skip_ref(); 
+      }
+
+      //检测
+      difftest_step(inst_finishpc,inst_finishpc);
     }
-    #endif
+#endif
 
   }
 
+  //record time
   gettimeofday(&currentTime,NULL);
   inst_over_time = currentTime.tv_sec;
   inst_last_time = inst_over_time - inst_start_time;
   uint32_t time_min = inst_last_time / 60;
 
+  //get simulation frequency
   double inst_frequency = (double)total_inst_num / (double)inst_last_time;
   double Cycle_frequency = (double)total_cycle / (double)inst_last_time;
   double IPC = (double)total_inst_num / (double)total_cycle;
+
+  //caculate cache shoot rate
   //double Icache_shoot_rate =(double)Icache_shoot_count / (double)Access_Icache_count;
   //double Dcache_shoot_rate = (double)Dcache_shoot_count / (double)Access_Dcache_count;
-  
+
   if( (!x10_cpu && ebreak_cpu) || (npc_stop)){
     //printf("Access_Icache_count = %d, Icache_shoot_count = %d\n",Access_Icache_count,Icache_shoot_count);
     //printf("Access_Dcache_count = %d, Dcache_shoot_count = %d\n",Access_Dcache_count,Dcache_shoot_count);
-    Log("NPC = %s at PC = 0x%x" ,ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN),verilog_pc);
+    Log("NPC = %s at PC = 0x%x" ,ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN),inst_finishpc);
     Log("Total guest Instructions = %d, total cycle = %ld, IPC = %.2f " ,total_inst_num ,total_cycle,IPC);
     Log("Instruction Frequency = %.2f inst/s, Simulation frequency = %.2f K cycle/s, total time: %d s (%d min)" ,inst_frequency, Cycle_frequency/1000, inst_last_time, time_min );
     //Log("Icache_shoot_rate = %.2f%%, Dcache_shoot_rate = %.2f%%\n" ,Icache_shoot_rate*100, Dcache_shoot_rate*100);
   }
   else if ( ebreak_cpu && x10_cpu != 0 ){
-    Log("npc = %s at pc = 0x%x" ,ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED),verilog_pc);
+    Log("npc = %s at pc = 0x%x" ,ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED),inst_finishpc);
     Log("total guest instructions = %ld, total cycle = %ld" , total_inst_num,total_cycle); 
     #ifdef CONFIG_ITRACE 
       printIringbuf(iringbuf);
     #endif
   }
   else if( dut_find_difftest ){
-    printf("verilog_pc = %x , total_cycle = %d\n" ,verilog_pc ,total_cycle);
-    #ifdef CONFIG_ITRACE 
-      printIringbuf(iringbuf);
-    #endif
+    printf("inst_finishpc = %x , total_cycle = %d\n" ,inst_finishpc ,total_cycle);
+#ifdef CONFIG_ITRACE 
+    printIringbuf(iringbuf);
+#endif
     dut_find_difftest = false;
   }
-  #ifdef USE_TRACE
+
+#ifdef USE_TRACE
   tfp->close();
-  #endif
+#endif
   return;
 }
 
 int main(int argc, char** argv, char** env){
-  #ifdef USE_TRACE
+#ifdef USE_TRACE
   contextp -> traceEverOn(true);
   top->trace(tfp,0);
   tfp->open("wave.vcd");
-  #else
+#else
   contextp -> traceEverOn(false);
-  #endif
-  contextp -> commandArgs(argc, argv);  //传递参数以便于verilated可以看到    
+#endif
 
+  contextp -> commandArgs(argc, argv);  //传递参数以便于verilated可以看到    
 
   top->reset = 0;
   top->clock = 0;
   reset(2);
 
   cpu.pc = (uint64_t)0x80000000;
+
   init_monitor(argc,argv);
 
-  #ifdef CONFIG_HAS_KEYBOARD
-    init_keymap();
-  #endif
-  #ifdef CONFIG_HAS_VGA
-    init_screen();
-  #endif
+#ifdef CONFIG_HAS_KEYBOARD
+  init_keymap();
+#endif
+#ifdef CONFIG_HAS_VGA
+  init_screen();
+#endif
 
   //获得系统初始时间
   gettimeofday(&currentTime,NULL);

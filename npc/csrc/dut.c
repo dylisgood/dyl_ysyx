@@ -79,7 +79,7 @@ bool isa_difftest_checkregs(CPU_state *ref_r, uint32_t pc) {
       Log("nemu_%s = %lx",regs[i],ref_r->gpr[i]);
       Log("npc_%s = %lx",regs[i],cpu_gpr[i]);
 
-      if( (ref_r->pc) - 4 != inst_finishpc) {
+      if( (ref_r->pc) - 4 != inst_finishpc) { //nemu pc bigger 4, why?
         Log("nemu_pc = %lx",(ref_r->pc - 4) );
         Log("npc_pc =  %x",inst_finishpc);
       }
@@ -101,7 +101,6 @@ void difftest_step(uint32_t pc, uint32_t npc) {
   CPU_state ref_r;
   if( is_skip_ref ){
     ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF);
-    //printf("difftest_step: skip this difftest\n");
     is_skip_ref = false;
     return ;
   }

@@ -102,8 +102,8 @@ void wp_detect(){
     pb = head;
     while(pb != free_)
     {
-      //pb->cur_value = expr(pb->expr); 
-      pb->cur_value =  pmem_read(expr(pb->expr), 4);
+      //pb->cur_value = expr(pb->expr);                 //read register
+      pb->cur_value =  pmem_read(expr(pb->expr), 4);    //read memory
       if(pb->cur_value != pb->last_value && count !=0)
       {
         printf("The NO.%d Watchpoint %s change! \n",pb->NO,pb->expr);

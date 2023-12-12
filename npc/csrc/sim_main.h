@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+
 //#define USE_TRACE
 
 #include <Vtop.h>
@@ -60,8 +61,8 @@ void writeIringbuf(iringbuffer *iringbuf, char *logbuf){
 void printIringbuf(iringbuffer *iringbuf ){
     int n = 0;
     while(n++ < iringbuf->size){
-        printf("%s\n",iringbuf->buffer[iringbuf->head]);
-        iringbuf->head = (iringbuf->head + 1) % iringbuf->size;
+        printf("%s\n",iringbuf->buffer[iringbuf->tail]);
+        iringbuf->tail = (iringbuf->tail + 1) % iringbuf->size;
     }
 }
 iringbuffer *iringbuf = initIringbuf();
