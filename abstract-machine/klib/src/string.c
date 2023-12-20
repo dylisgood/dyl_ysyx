@@ -110,7 +110,7 @@ void *memcpy(void *out, const void *in, size_t n) {
 /*   unsigned char *dest = (unsigned char *)out;
   const unsigned char *src = (const unsigned char *)in;
     // Copy in 32-bit units
-  if((((long int)dest & 0x3) == 0) && (((long int)src & 0x3) == 0 )){
+  if((((long int)dest & 0x3) == 0) && (((long int)src & 0x3) == 0 )){ // both source and dest is 4 bytes lign
     unsigned int *dest_4bytes = (unsigned int *)out;
     const unsigned int *src_4bytes = (const unsigned int *)in;
     while( n>=4 ){
@@ -128,6 +128,14 @@ void *memcpy(void *out, const void *in, size_t n) {
   }
   else{  */
     char *ret = out;
+    while( n > 3)
+    {
+      *(char *)out++ = *(const char *)in++;
+      *(char *)out++ = *(const char *)in++;
+      *(char *)out++ = *(const char *)in++;
+      *(char *)out++ = *(const char *)in++;
+      n = n - 4;
+    }
     while(n--)
     {
       *(char *)out++ = *(const char *)in++;

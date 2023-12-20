@@ -69,7 +69,6 @@ size_t fs_read(int fd, void *buf, size_t len){
     read_len = file_table[fd].read(buf, file_table[fd].disk_offset + open_offset, len);
   }
   if(fd != 1 && fd != 2) open_offset += read_len;
-  //printf("open_offset = %d \n",open_offset);
   return read_len;
 }
 

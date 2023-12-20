@@ -34,7 +34,7 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
       }
     }
   }
-  else if(src->format->BytesPerPixel == 1){
+  else if(src->format->BytesPerPixel == 1){ 
     for(int l = 0; l < h; l++){
       int dstOffset = (y + l) * dst->w + x;
       int srcOffset = (srcrect_y + l) * src->w + srcrect_x;
@@ -84,15 +84,10 @@ void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
 
   else if(dst->format->BytesPerPixel == 1){
     //convert 32bits pixel to 8 bits pixels
-    uint8_t r, g, b;
-    r = ((color & dst->format->Rmask) >> dst->format->Rshift) << dst->format->Rloss;
-    g = ((color & dst->format->Gmask) >> dst->format->Gshift) << dst->format->Gloss;
-    b = ((color & dst->format->Bmask) >> dst->format->Bshift) << dst->format->Bloss;
-    uint8_t pixel8 = r | g | b;
-
+    uint8_t pixel8 = color & 0xff;
     if(dst->pixels != NULL)
     {
-      if(dstrect != NULL){ 
+      if(dstrect != NULL){
         for(int l = y; l < y + h; l++){
           memset( dst->pixels + (l * dst->w + x), pixel8, w);  //one line
         }

@@ -435,20 +435,6 @@ extern "C" void v_pmem_read(long long raddr, long long *rdata) {
     access_device = true;
     uint64_t kbd_code = key_dequeue();
     *rdata = kbd_code;
-/*     static bool last_check_kbd = false;
-    static uint64_t last_kbd_code;
-    if(last_check_kbd) { //检测上一次是不是按键           //之前有bug 必须连续两次读到键盘才算真正读到 所以有了这段代码 后来没这个bug了
-      *rdata = last_kbd_code; //如果是 就存上一次的
-      last_check_kbd = false;
-    } 
-    else   // 如果上一次没有按键
-    {
-      if(kbd_code != 0){ //第一条指令检测到键盘
-      last_check_kbd = true;
-      last_kbd_code = kbd_code;
-      }
-      *rdata = kbd_code;
-    } */
   }
   else if(raddr == 0xa0000100){         //vga
     access_device = true;

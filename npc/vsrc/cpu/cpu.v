@@ -1360,7 +1360,6 @@ module ysyx_22050854 (
     import "DPI-C" function void get_jump_value(int jump_32);
     always@(*) get_jump_value(jump_32);
 
-
     import "DPI-C" function void get_EXEreginst_value(int EXEreg_inst);
     always@(*) get_EXEreginst_value(EXEreg_inst);
     import "DPI-C" function void get_EXEreg_pc_value(int EXEreg_pc);
@@ -1369,8 +1368,6 @@ module ysyx_22050854 (
     assign EXEreg_valid_32 = {31'b0,EXEreg_valid};
     import "DPI-C" function void get_EXEreg_valid_value(int EXEreg_valid_32);
     always@(*) get_EXEreg_valid_value(EXEreg_valid_32);
-
-
 
     wire [31:0]Suspend_alu_32;
     assign Suspend_alu_32 = {31'b0,Suspend_ALU};
@@ -1415,8 +1412,6 @@ module ysyx_22050854 (
     assign Dcache_ret_data_32 = Dcache_ret_data[31:0];
     import "DPI-C" function void get_Dcache_ret_data_value(int Dcache_ret_data_32);
     always@(*) get_Dcache_ret_data_value(Dcache_ret_data_32);
-
-
 
     wire [31:0]New_src2_32;
     assign New_src2_32 = New_src2[31:0];

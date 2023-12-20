@@ -29,19 +29,19 @@ int NDL_PollEvent(char *buf, int len) {
   return i;
 }
 
+//get Canvas width and heigth
 void NDL_OpenCanvas(int *w, int *h) {
   int fp = open("/proc/dispinfo", O_RDONLY);
   assert( fp != -1 );
   char buf[64];
   int len = 32;
   int ret = read(fp, buf, len);
-/*   printf("NDL_OpenCanvas : buf = \n%s \n",buf); */
+  //printf("NDL_OpenCanvas : buf = \n%s \n",buf);
   const char* delimiter = ":";
   char *token;
   char* numbers[2];
   int i = 0;
   token = strtok((char *)buf, delimiter);
-
   while(token != NULL){
     token = strtok(NULL, delimiter);
     if(token != NULL){
@@ -50,14 +50,15 @@ void NDL_OpenCanvas(int *w, int *h) {
       i++;
     }
   }
+
   int s_w = atoi(numbers[0]);
   int s_h = atoi(numbers[1]);
   if(*w == 0 && *h == 0){
     *w = s_w;
     *h = s_h;
   }
-/*   printf("screen_w :%d \n", s_w);
-  printf("screen_h :%d \n", s_h); */
+  //printf("screen_w = %d \n", s_w);
+  //printf("screen_h = %d \n", s_h);
 
   for(int j = 0; j < 2; j++){
     free(numbers[j]);
@@ -99,11 +100,6 @@ void NDL_DrawRect(uint32_t *pixels, int x, int y, int w, int h) {
       len = write( fd, pixels + i * w, size);
       start_position += 400 * 4;
   }
-  //printf("----------------navy-apps: out NDL_DrawRect----------------\n");
-/*   fc = lseek(fd, 0, SEEK_SET);
-  assert(fc != -1);
-  int result = close(fd);
-  assert(result != -1); */
 }
 
 void NDL_OpenAudio(int freq, int channels, int samples) {
