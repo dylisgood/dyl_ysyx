@@ -102,12 +102,12 @@ typedef	__uint128_t fixedptud;
 
 #define FIXEDPT_VCSID "$Id$"
 
-#define FIXEDPT_FBITS	(FIXEDPT_BITS - FIXEDPT_WBITS)   //32 - 24 = 8 // 10-21   32 - 20 = 12
+#define FIXEDPT_FBITS	(FIXEDPT_BITS - FIXEDPT_WBITS)   //32 - 24 = 8
 #define FIXEDPT_FMASK	(((fixedpt)1 << FIXEDPT_FBITS) - 1)
 
 #define fixedpt_rconst(R) ((fixedpt)((R) * FIXEDPT_ONE + ((R) >= 0 ? 0.5 : -0.5))) //浮点数 ---> 定点数
 #define fixedpt_fromint(I) ((fixedptd)(I) << FIXEDPT_FBITS)	//整数 ---> 定点数
-#define fixedpt_toint(F) ((F) >> FIXEDPT_FBITS)
+#define fixedpt_toint(F) ((F) >> FIXEDPT_FBITS)             //定点数 ---> 整数
 #define fixedpt_add(A,B) ((A) + (B))
 #define fixedpt_sub(A,B) ((A) - (B))
 #define fixedpt_fracpart(A) ((fixedpt)(A) & FIXEDPT_FMASK)

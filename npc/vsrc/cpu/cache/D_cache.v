@@ -845,45 +845,6 @@ assign sram7_wen = ram7_WEN;
 assign sram7_wmask = ram7_bwen;
 assign sram7_wdata = ram7_wdata;
 
-/* 
-wire [31:0]Dcache_state_32;
-assign Dcache_state_32 = {25'b0,state};
-import "DPI-C" function void get_Dcache_state_32_value(int Dcache_state_32);
-always@(*) get_Dcache_state_32_value(Dcache_state_32);
-
-wire [31:0]Dcache_AXI_ret_data;
-assign Dcache_AXI_ret_data = ret_data[31:0];
-import "DPI-C" function void get_Dcache_AXI_ret_data_value(int Dcache_AXI_ret_data);
-always@(*) get_Dcache_AXI_ret_data_value(Dcache_AXI_ret_data);
-
-
-
-wire [31:0]RB_wdata_32;
-assign RB_wdata_32 = wstrb_to_bwen_128[95:64];
-import "DPI-C" function void get_RB_wdata_value(int RB_wdata_32);
-always@(*) get_RB_wdata_value(RB_wdata_32);
-
-wire [31:0]Replace_cache_data_32;
-assign Replace_cache_data_32 = Replace_cache_data[95:64];
-import "DPI-C" function void get_Replace_cache_data_value(int Replace_cache_data_32);
-always@(*) get_Replace_cache_data_value(Replace_cache_data_32);
-
-wire [31:0]Fence_32;
-assign Fence_32 = { 31'b0,fencei };
-import "DPI-C" function void get_fencei_value(int Fence_32);
-always@(*) get_fencei_value(Fence_32);
-
-wire [31:0]Fence_counter_32;
-assign Fence_counter_32 = { 23'b0,Fence_counter };
-import "DPI-C" function void get_Fence_counter_32_value(int Fence_counter_32);
-always@(*) get_Fence_counter_32_value(Fence_counter_32);
-
-wire [31:0]Fence_state_32;
-assign Fence_state_32 = { 24'b0,Fence_ram4_CEN,Fence_ram5_CEN,Fence_ram6_CEN,Fence_ram7_CEN,Fence_state };
-import "DPI-C" function void get_Fence_state_32_value(int Fence_state_32);
-always@(*) get_Fence_state_32_value(Fence_state_32);
- */
-
 /* wire [31:0]Hitway_32;
 assign Hitway_32 = { 29'b0,Write_hit ,hit_way1, hit_way0 };
 import "DPI-C" function void get_Dcache_Hitway_value(int Hitway_32);

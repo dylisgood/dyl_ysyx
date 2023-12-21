@@ -1,4 +1,3 @@
-//`include <defines.v>
 `define ysyx_22050854_FLASH_START_ADDR 32'h30000000
 `define ysyx_22050854_FLASH_END_ADDR 32'h37ffffff
 `define ysyx_22050854_MEMORY_START_ADDR 32'h80000000
@@ -148,10 +147,10 @@ module ysyx_22050854 (
     always @(posedge clock)begin
         if(reset)
             pc_test <= `ysyx_22050854_START_PC;
-/*      
+`ifdef SOC_SIMULATION    
         else if( ( next_pc == 32'h80000000 )  &&  IDreg_valid )  //For Soc simulation
             pc_test <= 32'h80000004; 
-*/
+`endif
         else if( jump | Data_Conflict_block | last_JumpAndDataBlock ) //If find jump, Datablock or last cycle is jumpAndDatablock
             pc_test <= next_pc + 32'd4;
         else if( last_Suspend_LSU & ~Suspend_LSU )begin  //When LSU suspend over and no other exception
@@ -188,46 +187,36 @@ module ysyx_22050854 (
             pc_test <= pc_test + 32'd4;
     end
 
-    //如果译码阶段发现是jump 但不阻塞 则可根据next_pc取指 
-    //如果译码阶段发现阻塞 但不是jump 则可根据next_pc取指 因为pc_test早两拍 而此后第一拍取到的指令不变 第二拍无效
-    //如果译码阶段发现既是jump又是阻塞，则不能取指，因为阻塞产生的jump并不准确 (取指的有效信号为0)
-    //如果上周期既是jump又是阻塞，则可以取指，因为本周期能计算出是否真正jump (arvalid_n_t)
-    //如果ALU发起了暂停，则下周期不取指，直到暂停取消 (t)
-    //如果IFU发起暂停，然后暂停取消后，指令已经放到了IDreg，根据译码出来的next_pc取指即可
-    //如果在译码阶段发现是jump且此时IFU发起了暂停，则需要记录正确的PC，并在IFU的暂停结束后重新取指
-    //如果在译码阶段发现是 单纯的数据阻塞，且此时IFU发起了暂停，则没关系，直接等取回来就好
-    //如果在译码阶段发现是 跳转的数据阻塞 则会等待一周期，之后判断是否为跳转 在等待的这一阶段不会发生取指 
-    //如果在执行阶段需要暂停，且此时IFU发起了暂停
     reg [31:0]pc_real;
     always @(*)begin
         if(reset)
             pc_real = `ysyx_22050854_START_PC;
-/*            
+`ifdef SOC_SIMULATION           
         else if( ( next_pc == `ysyx_22050854_MEMORY_START_ADDR )  &&  IDreg_valid ) // must before FLASH_PC
             pc_real = `ysyx_22050854_MEMORY_START_ADDR + 32'h4;
         else if( ( Flash_PC >= 32'h30000000 ) && ( Flash_PC <= 32'h3fffffff ) ) 
             pc_real = Flash_PC; 
-*/
-        else if( jump | Data_Conflict_block | last_JumpAndDataBlock )
+`endif
+        else if( jump | Data_Conflict_block | last_JumpAndDataBlock )    //跳转，堵塞，或上周期堵塞且跳转，则根据next_pc 取指
             pc_real = next_pc;
-        else if( last_Suspend_LSU & ~Suspend_LSU )
+        else if( last_Suspend_LSU & ~Suspend_LSU )                       // LSU suspend over 
             pc_real = EXEreg_pc + 32'd4;
-        else if( last_Suspend_IFU & !Suspend_IFU & IFUsuspend_with_Others ) //当SuspendLSU为0时，指令刚好进入IDreg
+        else if( last_Suspend_IFU & !Suspend_IFU & IFUsuspend_with_Others ) //IFU suspend over while no other exception
             pc_real = next_pc;
-        else if(  Last_Jump_Suspend & ~Suspend_IFU)
+        else if(  Last_Jump_Suspend & ~Suspend_IFU)           //IFU suspend over,while find jump
             pc_real = PC_Jump_Suspend;
-        else if( Last_DataBlock_Suspend & ~Suspend_IFU)
+        else if( Last_DataBlock_Suspend & ~Suspend_IFU)       //IFU suspend over,while find Datablock
             pc_real = PC_DataBlock_Suspend;
-        else if( Last_JumpAndBlock_Suspend & ~Suspend_IFU)
+        else if( Last_JumpAndBlock_Suspend & ~Suspend_IFU)    //IFU suspend over,while find JumpandDatablock
             pc_real = PC_JumpAndBlock_Suspend;
-        else if( last_Suspend_ALU & ~Suspend_ALU )
+        else if( last_Suspend_ALU & ~Suspend_ALU )            //ALU Suspend over and no IFU-suspend
             pc_real = EXEreg_pc + 32'd4;
-        else if( Last_ALUsuspend_IFUsuspend & ~Suspend_IFU)
+        else if( Last_ALUsuspend_IFUsuspend & ~Suspend_IFU)   //IFU Suspend over,while find ALU Suspend;  ALU suspend over and then IFU Suspend over 
             pc_real = PC_ALUsuspend_IFUsuspend;
-        else if( Last_LSU_IFU_Suspend & ~Suspend_IFU )
+        else if( Last_LSU_IFU_Suspend & ~Suspend_IFU )        //IFU Suspend over,while find LSU Suspend;  LSU suspend over and then IFU suspend over
             pc_real = PC_LSU_IFU_Suspend;
         else
-            pc_real = pc_test; 
+            pc_real = pc_test;                                //normal
     end
 
     wire Fench_from_mem;
@@ -260,7 +249,7 @@ module ysyx_22050854 (
             Flash_PC <= next_pc;
     end
 
-//IFU暂停时发生的异常，用于无效IFU取消暂停后的指令，并且指示下一个PC
+//记录IFU暂停时发生的异常，用于无效IFU暂停结束后的指令，并且指示下一个PC
 
     //如果发现jump的时候 IFU没有命中 那么原先的置后两个周期的指令无效不起作用
     //需要等到IFU取到指令无效（具体周期不确定），定义以下寄存器来确定
@@ -331,6 +320,7 @@ module ysyx_22050854 (
     //如果当前周期下是jalr 或者 beq指令 且发生了阻塞，则无法产生正确的next_pc,本周期不取指
     wire JumpAndDataBlock;
     assign JumpAndDataBlock = ( ( IDreg_inst[6:0] == 7'b1100011) | (IDreg_inst[6:0]) == 7'b1100111) & Data_Conflict_block;
+
     reg last_JumpAndDataBlock;
     ysyx_22050854_Reg #(1,1'b0) jumpandblock (clock, reset, JumpAndDataBlock, last_JumpAndDataBlock, 1'b1);
     reg last_Suspend_ALU;
@@ -434,8 +424,8 @@ module ysyx_22050854 (
     wire IDreg_inst_enable;
     wire IDreg_pc_enable;
     //如果更新前发现需要阻塞，就不更新了 如果ALU发起了暂停，IDreg也应该保持不变 //后来改了，ALU结束后重新取指，不过改不改不影响
-    assign IDreg_inst_enable = ( Icache_data_ok & (~Data_Conflict_block) & ~Suspend_ALU ) | AXI_Flash_ret_valid; 
-    assign IDreg_pc_enable = ( Icache_data_ok & (~Data_Conflict_block) & ~Suspend_ALU ) | AXI_Flash_ret_valid;
+    assign IDreg_inst_enable = ( Icache_data_ok & (~Data_Conflict_block) ) | AXI_Flash_ret_valid; 
+    assign IDreg_pc_enable = ( Icache_data_ok & (~Data_Conflict_block) ) | AXI_Flash_ret_valid;
     wire IFUsuspend_with_Others;
     assign IFUsuspend_with_Others = (~Last_Jump_Suspend) & (~Last_DataBlock_Suspend) & (~Last_ALUsuspend_IFUsuspend) & (~Last_JumpAndBlock_Suspend) & ~Last_LSU_IFU_Suspend;
     always@(posedge clock)begin
@@ -1222,7 +1212,7 @@ module ysyx_22050854 (
     wire [63:0] rdata;
     assign rdata = ( Data_cache_Data_ok ) ? Dcache_ret_data : io_master_rdata;
     reg [63:0]read_mem_data;
-    //从mem读出的数据总是8字节的,所以要根据地址以及读操作数获得正确的数据
+    //从mem读出的数据总是8字节的,需要根据地址以及读操作数获得正确的数据
     //为什么暂停时取得的数还能用Mem的控制字，因为即使暂停，Mem也会从Exe跟新，只不过无效，但这里不管无效还是有效
     always@(*)begin
         case({MEMreg_aluout[2:0],MEMreg_memop})
@@ -1318,7 +1308,7 @@ module ysyx_22050854 (
                                                 WBreg_aluout;
 
 //以下代码为了调试使用
-    //for debug
+
     reg inst_finish;
     ysyx_22050854_Reg #(1,1'b0) inst_finish_gen (clock, reset, WBreg_valid, inst_finish, 1'b1);
     reg [31:0]inst_finish_pc;
@@ -1334,135 +1324,12 @@ module ysyx_22050854 (
     wire [31:0]Data_Conflict_32;
     assign Data_Conflict_32 = {22'b0,ret_conflict_EXE,ret_conflict_MEM,ret_conflict_WB,store_conflict_EXE,store_conflict_MEM,store_conflict_WB,reg_Conflict_WB,reg_Conflict_MEM,reg_Conflict_EXE,Data_Conflict_block};
 
-/*  DPI-C  
-    import "DPI-C" function void get_next_pc_value(int next_pc);
-    always@(*) get_next_pc_value(next_pc);
-
-    wire [31:0]test_one;
-    assign test_one = { 27'b0,  Last_LSU_IFU_Suspend , Last_ALUsuspend_IFUsuspend    ,Last_Jump_Suspend   ,Last_DataBlock_Suspend    ,Last_JumpAndBlock_Suspend };
-    import "DPI-C" function void get_PC_JUMP_Suspend_value(int test_one);
-    always@(*) get_PC_JUMP_Suspend_value(test_one);
-
-    import "DPI-C" function void get_IDreginst_value(int IDreg_inst);
-    always@(*) get_IDreginst_value(IDreg_inst);
-
-    //Suspend_IFU
-    wire [31:0]Suspend_IFU_32;
-    assign Suspend_IFU_32 = { 31'b0 , Suspend_IFU };
-    import "DPI-C" function void get_Suspend_IFU_value(int Suspend_IFU_32);
-    always@(*) get_Suspend_IFU_value( Suspend_IFU_32 );
-
-    import "DPI-C" function void get_Data_Conflict_value(int Data_Conflict_32);
-    always@(*) get_Data_Conflict_value(Data_Conflict_32);
-
-    wire [31:0]jump_32;
-    assign jump_32 = {31'b0,jump};
-    import "DPI-C" function void get_jump_value(int jump_32);
-    always@(*) get_jump_value(jump_32);
-
-    import "DPI-C" function void get_EXEreginst_value(int EXEreg_inst);
-    always@(*) get_EXEreginst_value(EXEreg_inst);
-    import "DPI-C" function void get_EXEreg_pc_value(int EXEreg_pc);
-    always@(*) get_EXEreg_pc_value(EXEreg_pc);
-    wire [31:0]EXEreg_valid_32;
-    assign EXEreg_valid_32 = {31'b0,EXEreg_valid};
-    import "DPI-C" function void get_EXEreg_valid_value(int EXEreg_valid_32);
-    always@(*) get_EXEreg_valid_value(EXEreg_valid_32);
-
-    wire [31:0]Suspend_alu_32;
-    assign Suspend_alu_32 = {31'b0,Suspend_ALU};
-    import "DPI-C" function void get_Suspend_alu_value(int Suspend_alu_32);
-    always@(*) get_Suspend_alu_value(Suspend_alu_32);
-
-    import "DPI-C" function void get_MEMreginst_value(int MEMreg_inst);
-    always@(*) get_MEMreginst_value(MEMreg_inst);
-    import "DPI-C" function void get_MEMreg_pc_value(int MEMreg_pc);
-    always@(*) get_MEMreg_pc_value(MEMreg_pc);
-    wire [31:0]memreg;
-    assign memreg = MEMreg_aluout[31:0];
-    import "DPI-C" function void get_MEMreg_aluout_value(int memreg);
-    always@(*) get_MEMreg_aluout_value(memreg);
-
-    wire [31:0]MEMreg_valid_32;
-    assign MEMreg_valid_32 = {31'b0,MEMreg_valid};
-    import "DPI-C" function void get_MEMreg_valid_value(int MEMreg_valid);
-    always@(*) get_MEMreg_valid_value(MEMreg_valid_32);
-
-    wire [31:0]wr_reg_data_32;
-    assign wr_reg_data_32 = wr_reg_data[31:0];
-    import "DPI-C" function void get_wr_reg_data_value(int wr_reg_data_32);
-    always@(*) get_wr_reg_data_value(wr_reg_data_32);
-
-    wire [31:0]rdata_32;
-    assign rdata_32 = read_mem_data[31:0];
-    import "DPI-C" function void get_rdata_value(int rdata_32);
-    always@(*) get_rdata_value(rdata_32);
-
-    wire [31:0]Suspend_LSU_32;
-    assign Suspend_LSU_32 = { 31'b0 , Suspend_LSU };
-    import "DPI-C" function void get_Suspend_LSU_value(int Suspend_LSU_32);
-    always@(*) get_Suspend_LSU_value( Suspend_LSU_32 );
-
-    wire [31:0]Data_cache_Data_ok_32;
-    assign Data_cache_Data_ok_32 = { 31'b0 , Data_cache_Data_ok };
-    import "DPI-C" function void get_Data_cache_Data_ok_value(int Data_cache_Data_ok_32);
-    always@(*) get_Data_cache_Data_ok_value( Data_cache_Data_ok_32 );
-
-    wire [31:0]Dcache_ret_data_32;
-    assign Dcache_ret_data_32 = Dcache_ret_data[31:0];
-    import "DPI-C" function void get_Dcache_ret_data_value(int Dcache_ret_data_32);
-    always@(*) get_Dcache_ret_data_value(Dcache_ret_data_32);
-
-    wire [31:0]New_src2_32;
-    assign New_src2_32 = New_src2[31:0];
-    import "DPI-C" function void get_New_src2_value(int New_src2_32);
-    always@(*) get_New_src2_value(New_src2_32);
-
-    wire [31:0]Dcache_addr;
-    assign Dcache_addr = readmemaddr;
-    import "DPI-C" function void get_Dcache_addr_value(int Dcache_addr);
-    always@(*) get_Dcache_addr_value(Dcache_addr);
-
-    import "DPI-C" function void get_AXI_Dcache_wr_addr_value(int AXI_Dcache_wr_addr);
-    always@(*) get_AXI_Dcache_wr_addr_value(AXI_Dcache_wr_addr);
-
-    wire [31:0]AXI_Dcache_data_32;
-    assign AXI_Dcache_data_32 = AXI_Dcache_data_64[31:0];
-    import "DPI-C" function void get_AXI_Dcache_data_64_value(int AXI_Dcache_data_32);
-    always@(*) get_AXI_Dcache_data_64_value(AXI_Dcache_data_32);
-
-    wire [31:0]wbreg;
-    assign wbreg = WBreg_aluout[31:0];
-    import "DPI-C" function void get_WBreg_aluout_value(int wbreg);
-    always@(*) get_WBreg_aluout_value(wbreg);
-    wire [31:0]wbrd_32;
-    assign wbrd_32 = {27'b0,WBreg_rd};
-    import "DPI-C" function void get_WBreg_rd_value(int wbrd_32);
-    always@(*) get_WBreg_rd_value(wbrd_32);
-    wire [31:0]WBreg_valid_32;
-    assign WBreg_valid_32 = {31'b0,WBreg_valid};
-    import "DPI-C" function void get_WBreg_valid_value(int WBreg_valid_32);
-    always@(*) get_WBreg_valid_value(WBreg_valid_32);
-
-    import "DPI-C" function void get_WBreg_pc_value(int WBreg_pc);
-    always@(*) get_WBreg_pc_value(WBreg_pc);
-
-    import "DPI-C" function void get_pc_value(int pc_real);
-    always@(*) get_pc_value(pc_real);
-
-    import "DPI-C" function void get_inst_value(int IDreg_inst);
-    always@(*) get_inst_value(IDreg_inst);
-    wire [31:0]IDreg_valid_32;
+    //Cache shoot rate
+/*     wire [31:0]IDreg_valid_32;
     assign IDreg_valid_32 = {31'b0,IDreg_valid};
     import "DPI-C" function void get_IDreg_valid_value(int IDreg_valid_32);
     always@(*) get_IDreg_valid_value(IDreg_valid_32);
-    import "DPI-C" function void get_IDregpc_value(int IDreg_pc);
-    always@(*) get_IDregpc_value(IDreg_pc);
-    import "DPI-C" function void get_WBreginst_value(int WBreg_inst);
-    always@(*) get_WBreginst_value(WBreg_inst);
-*/
 
-/*  //Cache shoot rate
     wire [31:0]Data_cache_valid_32;
     assign Data_cache_valid_32 = { 31'b0 , LSU_access_valid };
     import "DPI-C" function void get_Data_cache_valid_value(int Data_cache_valid_32);
@@ -1471,8 +1338,7 @@ module ysyx_22050854 (
     wire [31:0]IFU_valid_32;
     assign IFU_valid_32 = { 31'b0 , IFU_Icache_valid };
     import "DPI-C" function void get_IFU_valid_value(int IFU_valid_32);
-    always@(*) get_IFU_valid_value( IFU_valid_32 );
-*/
+    always@(*) get_IFU_valid_value( IFU_valid_32 ); */
 
     //difftest
     wire [31:0]is_device_32;
@@ -1485,7 +1351,6 @@ module ysyx_22050854 (
     assign ebreak_32 = { 31'b0,Insrtuction_ebreak };
     import "DPI-C" function void get_ebreak_value(int ebreak_32);
     always@(*) get_ebreak_value(ebreak_32);
-
     wire [31:0]inst_finish_32;
     assign inst_finish_32 = {31'b0,inst_finish};
     import "DPI-C" function void get_inst_finish_value(int inst_finish_32);

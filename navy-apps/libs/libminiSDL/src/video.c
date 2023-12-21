@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 
+//performs a fast blit from the source surface to the destination surface
 void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect) {
   //printf("-----------------enter SDL_BlitSurface --------------------------\n");
   assert(dst && src);
@@ -13,9 +14,12 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
   uint16_t w,h;
   int16_t x,y;
   int32_t srcrect_y,srcrect_x;
+
+  // The width and height in srcrect determine the size of the copied rectangle
   if(srcrect == NULL){ w = src->w; h = src->h; srcrect_y = 0; srcrect_x = 0; }
   else{ w = srcrect->w; h = srcrect->h; srcrect_y = srcrect->y; srcrect_x = srcrect->x; }
 
+  //the position is used in the dstrect 
   if(dstrect == NULL){ x = 0; y = 0; }
   else{ x = dstrect->x; y = dstrect->y; }
 
@@ -45,6 +49,7 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
   //printf("+++++++++++++++++++++ Out SDL_BlitSurface ++++++++++++++++++++++++\n");
 }
 
+//performs a fast fill of the given rectangle with some color
 void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
   //printf("-----------------enter SDL_FillRect --------------------------\n");
   uint16_t h ,w;
@@ -116,6 +121,7 @@ void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
   //printf("-----------------Out SDL_FillRect --------------------------\n");
 }
 
+//Makes sure the given area is updated on the given screen.
 void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) {
   //printf("-----------------enter SDL_UpdateRect --------------------------\n");
   uint8_t update_whole_srceen = 0;
@@ -141,7 +147,6 @@ void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) {
    }
     NDL_DrawRect(pixels32, x, y, w, h);
   }
-
   else if( s->format->BytesPerPixel == 1){
     SDL_Palette* palette = s->format->palette;
     int sw = s->w;
@@ -161,10 +166,10 @@ void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) {
 
       *pixels32_ptr++ = pixel32;
     }
-
     NDL_DrawRect(pixels32, x, y, w, h);
   }
   else assert(0);
+
   free(pixels32);
   //printf("-----------------Out SDL_UpdateRect --------------------------\n");
 }

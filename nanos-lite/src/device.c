@@ -22,10 +22,11 @@ size_t serial_write(const void *buf, size_t offset, size_t len) {
   return len;
 }
 
-static bool  has_kbd;
+//get keyboard input
 size_t events_read(void *buf, size_t offset, size_t len) {
   const char *down = "kd ";
   const char *up = "ku ";
+  bool  has_kbd;
   AM_INPUT_KEYBRD_T ev;
   ev.keycode = AM_KEY_NONE; 
   has_kbd  = io_read(AM_INPUT_CONFIG).present;
@@ -53,8 +54,8 @@ size_t events_read(void *buf, size_t offset, size_t len) {
     return 0;
 }
 
-size_t screen_w;
-size_t screen_h;
+//get canvas width and height
+size_t screen_w,screen_h;
 size_t dispinfo_read(void *buf, size_t offset, size_t len) {
   char str1[20];
   char str2[20]; 
@@ -71,6 +72,7 @@ size_t dispinfo_read(void *buf, size_t offset, size_t len) {
   return sizeof(str2);
 }
 
+//write pixel to Graphics memory
 size_t fb_write(const void *buf, size_t offset, size_t len) {
   //printf("---------------nanos-lite : enter fb_write---------------\n");
   offset = offset >> 2;

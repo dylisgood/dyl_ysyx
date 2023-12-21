@@ -396,45 +396,6 @@ assign sram3_wen = ram4_WEN;
 assign sram3_wmask = ram4_bwen;
 assign sram3_wdata = ram4_wdata;
 
-/* 
-wire [31:0]cache_state_32;
-assign cache_state_32 = {28'b0,state};
-import "DPI-C" function void get_cache_state_32_value(int cache_state_32);
-always@(*) get_cache_state_32_value(cache_state_32);
-
-wire [31:0]rd_req_32;
-assign rd_req_32 = {30'b0,RB_offset,rd_req};
-import "DPI-C" function void get_rd_req_32_value(int rd_req_32);
-always@(*) get_rd_req_32_value(rd_req_32);
-
-import "DPI-C" function void get_rd_addr_value(int rd_addr);
-always@(*) get_rd_addr_value(rd_addr);
-
-wire [31:0]ret_valid_32;
-assign ret_valid_32 = {31'b0,ret_valid};
-import "DPI-C" function void get_ret_valid_32_value(int ret_valid_32);
-always@(*) get_ret_valid_32_value(ret_valid_32);
-
-wire [31:0]ret_last_32;
-assign ret_last_32 = {31'b0,ret_last};
-import "DPI-C" function void get_ret_last_32_value(int ret_last_32);
-always@(*) get_ret_last_32_value(ret_last_32);
-
-wire [31:0]ret_data_32;
-assign ret_data_32 = ret_data[31:0];
-import "DPI-C" function void get_ret_data_32_value(int ret_data_32);
-always@(*) get_ret_data_32_value(ret_data_32);
-
-wire [31:0]Data_OK_32;
-assign Data_OK_32 = {31'b0,Data_OK};
-import "DPI-C" function void get_Data_OK_32_value(int Data_OK_32);
-always@(*) get_Data_OK_32_value(Data_OK_32);
-
-wire [31:0]rdata_32;
-assign rdata_32 = Bus_retdata[31:0];
-import "DPI-C" function void get_cache_rdata_32_value(int rdata_32);
-always@(*) get_cache_rdata_32_value(rdata_32);
-*/
 /* wire [31:0]hit_32;
 assign hit_32 = { 30'b0,hit_way1,hit_way0};
 import "DPI-C" function void get_hit_32_value(int hit_32);

@@ -22,7 +22,7 @@
 #include <memory/paddr.h>
 
 static int is_batch_mode = false;
-int enter_difftest_mode = false;
+int enter_difftest_mode = true;  //default open difftest
 
 void init_regex();
 void init_wp_pool();

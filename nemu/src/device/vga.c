@@ -31,7 +31,7 @@ static uint32_t screen_size() {
   return screen_width() * screen_height() * sizeof(uint32_t);
 }
 
-static void *vmem = NULL;              //这个应该就是显存
+static void *vmem = NULL;                 //Graphics memory
 static uint32_t *vgactl_port_base = NULL; //vga端口控制器
 
 #ifdef CONFIG_VGA_SHOW_SCREEN
@@ -80,7 +80,7 @@ void vga_update_screen() {
 }
 
 void init_vga() {
-  vgactl_port_base = (uint32_t *)new_space(8);                     //开辟了64位的内存 应该是存放屏幕大小
+  vgactl_port_base = (uint32_t *)new_space(8);
   vgactl_port_base[0] = (screen_width() << 16) | screen_height();  //高16位存宽度 低16位存高度
   vgactl_port_base[1] = 0;                                         //高32位作为同步寄存器
 #ifdef CONFIG_HAS_PORT_IO

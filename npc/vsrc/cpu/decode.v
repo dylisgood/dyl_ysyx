@@ -112,8 +112,6 @@ module ysyx_22050854_IDU(
     assign MemRd = op == 7'b0000011 ? 1'b1 : 1'b0;
 
     //generate MemOP 如何写存储器
-
-
     always @(*) begin
         case({op[6:2],func3})
             8'b00000000: MemOP = 3'b000;  //lb
@@ -234,7 +232,6 @@ module ysyx_22050854_IDU(
 
     //generate ALUctr according to op funct3,funct7
     reg [3:0]ALUctr_temp;
-
     always @(*) begin
         case({op[6:2],func3,func7_5 })
             9'b001000000: ALUctr_temp = 4'b0000;  // + addi

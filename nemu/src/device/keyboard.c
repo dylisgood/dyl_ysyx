@@ -83,13 +83,11 @@ static uint32_t key_dequeue() {
 
 static uint32_t *i8042_data_port_base = NULL;
 
+//put data from deivce
 static void i8042_data_io_handler(uint32_t offset, int len, bool is_write) {
   assert(!is_write);      
   assert(offset == 0);
   uint32_t temp = key_dequeue();
-/*   if(temp != 0){
-    printf("temp = %d \n" ,temp);
-  } */
   i8042_data_port_base[0] = temp; 
 }
 

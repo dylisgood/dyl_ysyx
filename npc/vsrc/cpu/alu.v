@@ -27,7 +27,6 @@ module ysyx_22050854_alu(
     end
 
     reg [63:0]alu_temp;
-
     always @(*)begin
         if(reset)
             alu_temp = 64'd0;
@@ -80,7 +79,7 @@ module ysyx_22050854_alu(
             endcase
         end
     end
-    `ifdef ysyx_22050854_USE_MULTIPLIER_1
+`ifdef ysyx_22050854_USE_MULTIPLIER_1
     ysyx_22050854_multiplier_v1 shiftadd_multiplier (
         .clock(clock),
         .reset(reset),
@@ -95,7 +94,7 @@ module ysyx_22050854_alu(
         .result_hi(mul_result_hi),
         .result_lo(mul_result_lo)
     );
-    `else
+`else
     ysyx_22050854_multiplier_v2 use_multiplier_2 (
         .clock(clock),
         .reset(reset),
@@ -110,7 +109,7 @@ module ysyx_22050854_alu(
         .result_hi(mul_result_hi),
         .result_lo(mul_result_lo)
     );
-    `endif
+`endif
 
     wire op_div;
     wire div_valid;

@@ -20,6 +20,7 @@ uint32_t NDL_GetTicks() { //return ms
   return (now_time - NDL_start_time) / 1000;
 }
 
+//read events to buf
 int NDL_PollEvent(char *buf, int len) {
   int fp = open("/dev/events", O_RDONLY);
   assert( fp != -1 );
@@ -94,9 +95,9 @@ void NDL_DrawRect(uint32_t *pixels, int x, int y, int w, int h) {
   int len = 0;
   int size = w << 2;
   int start_position = (y * 400 + x) * 4;
-  for(int i = 0; i < h; i++){ // write one line at a time
+  for(int i = 0; i < h; i++){       // write one line at a time
       fc = lseek(fd, start_position, SEEK_SET);
-      //assert(fc != -1);
+      assert(fc != -1);
       len = write( fd, pixels + i * w, size);
       start_position += 400 * 4;
   }

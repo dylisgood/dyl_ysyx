@@ -7,7 +7,6 @@
     9.13优化 结束运算的另一个标志是乘数为0
 */
 
-
 module ysyx_22050854_multiplier_v1(
     input clock,
     input reset,

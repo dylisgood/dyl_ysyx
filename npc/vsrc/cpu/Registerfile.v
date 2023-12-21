@@ -13,7 +13,8 @@ module ysyx_22050854_RegisterFile  (
     if(waddr==5'd0)
       rf[waddr] <= 64'd0;
     else begin
-      if(wen) begin
+      if(wen) 
+      begin
         rf[waddr] <= wdata;
       end
     end
@@ -22,10 +23,6 @@ module ysyx_22050854_RegisterFile  (
   import "DPI-C" function void set_gpr_ptr(input logic [63:0] a []);
   initial set_gpr_ptr(rf);  // rf为通用寄存器的二维数组变量
   
-  always @(*) begin
-    rf[5'b0] = 64'b0;
-  end
-
   always@(*)begin
     if(raddra == 5'd0)
       rdata1 = 64'd0;

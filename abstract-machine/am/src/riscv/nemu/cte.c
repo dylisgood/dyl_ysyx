@@ -4,10 +4,7 @@
 
 static Context* (*user_handler)(Event, Context*) = NULL;
 
-//c 是从哪来的，返回到哪里去？ 这个函数是由trap.s调用的  但是汇编语言怎么传递参数
 Context* __am_irq_handle(Context *c) {
- // printf("---------------AM : enter am_irq_handle------------\n");
-
   if (user_handler) { 
     Event ev = {0};
     //printf("c->mcause = %lx GPR1 = %lx \n", c->mcause ,c->GPR1);

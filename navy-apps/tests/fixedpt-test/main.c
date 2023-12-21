@@ -16,7 +16,7 @@ int main() {
 
     fixedpt g = fixedpt_abs(a1);
     fixedpt h = fixedpt_mul(a1,a2);
-    fixedpt i = fixedpt_div(a2,a1);   // 
+    fixedpt i = fixedpt_div(a2,a1); 
 
     printf("----------------------  a1 = %x , a2 = %x, floor = %x, ceil = %x add = %x  abs = %x ,mul = %x div = %x  ------------------------------------\n",a1,a2 ,floor ,ceil ,add ,g ,h,i);
     return 0;

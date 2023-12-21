@@ -192,32 +192,4 @@ input longint raddr, output longint rdata);
 import "DPI-C" function void v_pmem_write(
 input longint waddr, input longint wdata, input longint wmask);
 
-/* 
-
-wire [31:0]awvalid_32;
-assign awvalid_32 = { 31'b0, awvalid };
-import "DPI-C" function void get_awvalid_32_value(int awvalid_32);
-always@(*) get_awvalid_32_value(awvalid_32);
-
-wire [31:0]dsram_write_addr_32;
-assign dsram_write_addr_32 = dsram_write_addr[31:0];
-import "DPI-C" function void get_dsram_write_addr_value(int dsram_write_addr_32);
-always@(*) get_dsram_write_addr_value(dsram_write_addr_32);
-
-wire [31:0]dsram_wdata_32;
-assign dsram_wdata_32 = wdata[31:0];
-import "DPI-C" function void get_dsram_wdata_32_value(int dsram_wdata_32);
-always@(*) get_dsram_wdata_32_value(dsram_wdata_32);
-
-wire [31:0]arvalid_32;
-assign arvalid_32 = { 20'b0, 2'b0,rresp,2'b0,reg_arburst,3'b0,arvalid};
-import "DPI-C" function void get_arvalid_32_value(int arvalid_32);
-always@(*) get_arvalid_32_value(arvalid_32);
-
-wire [31:0]first_addr_32;
-assign first_addr_32 = first_addr[31:0];
-import "DPI-C" function void get_first_addr_32_value(int first_addr_32);
-always@(*) get_first_addr_32_value(first_addr_32);
-*/
-
 endmodule

@@ -23,15 +23,6 @@ module ysyx_22050854_imm_gen(
         endcase
     end
 
-/*     ysyx_22050854_MuxKeyWithDefault #(6,3,64) imm_gen (imm,ExtOP,64'b0,{
-        3'b000,immI,
-        3'b001,immU,
-        3'b010,immS,
-        3'b011,immB,
-        3'b100,immJ,
-        3'b101,immCoushu
-    }); */
-
 endmodule
 
 

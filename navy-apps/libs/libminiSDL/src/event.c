@@ -17,14 +17,13 @@ int SDL_PushEvent(SDL_Event *ev) {
   return 0;
 }
 
+//check if have key
 int SDL_PollEvent(SDL_Event *ev) {
   char buf[128];
   if (NDL_PollEvent(buf, sizeof(buf))) {
     char *key, *value;
     key = strtok(buf, " ");
     value = strtok(NULL, "\n");
-    //printf("keyyy = %s\n" ,key);
-    //printf("value = %s\n" ,value);
     if(!strcmp(key,"kd")){
       ev->type = SDL_KEYDOWN;
       for(int i = 0; i < 83; i++)
@@ -50,35 +49,36 @@ int SDL_PollEvent(SDL_Event *ev) {
   return 0;
 }
 
+//wait a key
 int SDL_WaitEvent(SDL_Event *event) {
   char buf[64];
   while(1){
-  if (NDL_PollEvent(buf, sizeof(buf))) {
-    char *key, *value;
-    key = strtok(buf, " ");
-    value = strtok(NULL, "\n");
-    if(!strcmp(key,"kd")){
-      event->type = SDL_KEYDOWN;
-      for(int i = 0; i < 83; i++)
-      {
-        if(!strcmp(keyname[i], value)){
-          event->key.keysym.sym = i;
-          break;
-        }
-      } 
-    }
-    else if(!strcmp(key, "ku")){
-      event->type = SDL_KEYUP;      
-      for(int i = 0; i < 83; i++)
-      {
-        if(!strcmp(keyname[i],value)){
-          event->key.keysym.sym = i;
-          break;
+    if(NDL_PollEvent(buf, sizeof(buf))) {
+      char *key, *value;
+      key = strtok(buf, " ");
+      value = strtok(NULL, "\n");
+      if(!strcmp(key,"kd")){
+        event->type = SDL_KEYDOWN;
+        for(int i = 0; i < 83; i++)
+        {
+          if(!strcmp(keyname[i], value)){
+            event->key.keysym.sym = i;
+            break;
+          }
+        } 
+      }
+      else if(!strcmp(key, "ku")){
+        event->type = SDL_KEYUP;      
+        for(int i = 0; i < 83; i++)
+        {
+          if(!strcmp(keyname[i],value)){
+            event->key.keysym.sym = i;
+            break;
+          }
         }
       }
+      return 1;
     }
-    return 1;
-  }
   }
 }
 
@@ -87,16 +87,9 @@ int SDL_PeepEvents(SDL_Event *ev, int numevents, int action, uint32_t mask) {
   return 0;
 }
 
+//return key's number
 uint8_t* SDL_GetKeyState(int *numkeys) {
   int num = sizeof(keyname) / sizeof(keyname[0]);
-  //printf("num = %d \n" ,num);
-  if(numkeys != NULL)
-    *numkeys = num;
-/*   for(int i = 0; i < num; i++){
-    if(i != key)
-      keyStates[i] = 0;
-  } */
-  //printf("key = %d \n" ,key);
-  //assert(0);
+  if(numkeys != NULL)  *numkeys = num;
   return keyStates;
 }
