@@ -107,34 +107,12 @@ void *memmove(void *dst, const void *src, size_t n) {
 }
 
 void *memcpy(void *out, const void *in, size_t n) {
-  unsigned char *dest = (unsigned char *)out;
-  const unsigned char *src = (const unsigned char *)in;
-    // Copy in 32-bit units
-  if((((long int)dest & 0x3) == 0) && (((long int)src & 0x3) == 0 )){ // both source and dest is 4 bytes lign
-    unsigned int *dest_4bytes = (unsigned int *)out;
-    const unsigned int *src_4bytes = (const unsigned int *)in;
-    while( n>=4 ){
-        *dest_4bytes++ = *src_4bytes++;
-        n -= 4;
-    }
-    // Copy any remaining bytes
-    unsigned char *dest_byte = (unsigned char *)dest;
-    const unsigned char *src_byte = (const unsigned char *)src;
-    while (n > 0) {
-        *dest_byte++ = *src_byte++;
-        --n;
-    }
-    return out;
+  char *ret = out;
+  while(n--)
+  {
+    *(char *)out++ = *(const char *)in++;
   }
-  else{ 
-    char *ret = out;
-    while(n--)
-    {
-      *(char *)out++ = *(const char *)in++;
-    }
-    return ret;
-  }
-  
+  return ret;
 }
 
 int memcmp(const void *s1, const void *s2, size_t n) {
