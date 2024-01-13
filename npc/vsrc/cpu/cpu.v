@@ -414,7 +414,7 @@ module ysyx_22050854 (
     assign inst_from_flash = io_master_rdata[31:0];
     wire [63:0]inst_64;
     wire [31:0]inst;
-    assign inst_64 = (Icache_data_ok == 1'b1) ? Icache_ret_data : 64'h6666666666666666;
+    assign inst_64 = (Icache_data_ok == 1'b1) ? Icache_ret_data : 64'h0;
     assign inst = Icache_data_ok ? ( ( pc_record_2[2:0] == 3'b000 ) ? inst_64[31:0] : inst_64[63:32] ) : ( AXI_Flash_ret_valid ? inst_from_flash : 32'b0 );
 
     //---------------------------------------------                      ID_reg                             -----------------------------------------//

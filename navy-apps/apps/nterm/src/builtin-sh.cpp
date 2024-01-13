@@ -64,7 +64,7 @@ static void sh_handle_cmd(const char *cmd) {
     setenv("PATH","/bin",0);
     //setenv("PATH","/home/dyl/ysyx-workbench/navy-apps/fsimg/bin",0);
     //sh_printf("sh> ");
-    if(execvp(bin_to_exec,NULL)==-1){
+    if( execvp(bin_to_exec,NULL) == -1 ){
       sh_printf("Cannot find %s\n",bin_to_exec);
     }
   }

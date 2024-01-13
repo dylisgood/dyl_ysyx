@@ -22,7 +22,7 @@
 # define Elf_Phdr Elf32_Phdr
 #endif
 
-static uintptr_t loader(PCB *pcb, const char *filename) {
+uintptr_t loader(PCB *pcb, const char *filename) {
   //printf("-----------------------------enter loader! filename = %s------------------------------------------\n",filename);
   int fd = 0;
   fd = fs_open(filename, 0, 0);
@@ -92,7 +92,8 @@ static uintptr_t loader(PCB *pcb, const char *filename) {
 
 void naive_uload(PCB *pcb, const char *filename) {
   uintptr_t entry = loader(pcb, filename);
-  asm volatile("fence.i");
+  //asm volatile("fence.i");
+
   Log("Jump to entry = %lx", entry);
   ((void(*)())entry) ();
 }

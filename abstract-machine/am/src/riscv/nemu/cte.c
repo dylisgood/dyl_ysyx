@@ -41,8 +41,14 @@ bool cte_init(Context*(*handler)(Event, Context*)) {
   return true;
 }
 
-Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
-  return NULL;
+//创建内核线程的上下文
+Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {  //创建内核线程的上下文  其中kstack是栈的范围, entry是内核线程的入口, arg则是内核线程的参数
+  Context* c = (Context*)kstack.end - 1;
+  
+  c->mepc = (uintptr_t)entry;
+  c->GPR2 = (uintptr_t)arg;
+
+  return c;
 }
 
 void yield() {

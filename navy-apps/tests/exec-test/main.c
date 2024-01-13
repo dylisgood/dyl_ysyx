@@ -4,6 +4,7 @@
 #include <unistd.h>
 
 int main(int argc, char *argv[]) {
+  //printf("navy-apps: exec-test,argc = %d\n" ,argc);
   int n = (argc >= 2 ? atoi(argv[1]) : 1);
   printf("%s: argv[1] = %d\n", argv[0], n);
 

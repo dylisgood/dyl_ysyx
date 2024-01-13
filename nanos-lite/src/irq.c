@@ -1,11 +1,16 @@
 #include <common.h>
 
 void do_syscall(Context* c);
+Context* schedule(Context *prev);
 
 //Event handler callback function
 static Context* do_event(Event e, Context* c) {
   switch (e.event) {
-    case 1: printf("nanos-lite: find EVENT_YIELD  e.event = %d \n", e.event); break;
+    case 1: //printf("nanos-lite: find EVENT_YIELD  e.event = %d \n", e.event);
+            //printf("before c = %x  ",c); 
+            c = schedule(c);
+            //printf("after c = %x \n",c);
+            break;
     case 2: //printf("nanos-lite: find EVENT_SYSCALL  e.event = %d \n", e.event); 
             do_syscall(c);
             break;

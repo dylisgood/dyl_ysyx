@@ -31,7 +31,7 @@ int main() {
 
 #ifdef HAS_CTE
   printf("nanos-lite: ready to yield\n");
-  yield();
+  //yield();
   printf("nanos-lite: finish yield\n");
 #endif
 

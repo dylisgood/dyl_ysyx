@@ -75,7 +75,10 @@ static void exec_once(Decode *s, vaddr_t pc) {
       (inst_csr & 0x707f) == 0x2073 || (inst_csr & 0x707f) == 0x3073 ){
     difftest_skip_ref();
   }
-
+  if(inst_csr == 0b00110000001000000000000001110011)
+  {
+    //isa_reg_display();
+  }
 #ifdef CONFIG_FTRACE
   static int kong = 0;
   int j = 0;

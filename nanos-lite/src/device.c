@@ -15,6 +15,7 @@ static const char *keyname[256] __attribute__((used)) = {
 };
 
 size_t serial_write(const void *buf, size_t offset, size_t len) {
+  //yield();  //simulate access device slowly
   for(int i = 0; i < len; i++){
     putch(*(char *)buf);
     buf++;
@@ -24,6 +25,7 @@ size_t serial_write(const void *buf, size_t offset, size_t len) {
 
 //get keyboard input
 size_t events_read(void *buf, size_t offset, size_t len) {
+  //yield();
   const char *down = "kd ";
   const char *up = "ku ";
   bool  has_kbd;
@@ -74,6 +76,7 @@ size_t dispinfo_read(void *buf, size_t offset, size_t len) {
 
 //write pixel to Graphics memory
 size_t fb_write(const void *buf, size_t offset, size_t len) {
+  //yield();
   //printf("---------------nanos-lite : enter fb_write---------------\n");
   offset = offset >> 2;
   size_t len_temp = len >> 2;

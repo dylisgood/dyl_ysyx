@@ -3,7 +3,8 @@
 static void *pf = NULL;
 
 void* new_page(size_t nr_page) {
-  return NULL;
+  pf = pf + nr_page * PGSIZE;
+  return pf;
 }
 
 #ifdef HAS_VME
@@ -22,7 +23,7 @@ int mm_brk(uintptr_t brk) {
 }
 
 void init_mm() {
-  pf = (void *)ROUNDUP(heap.start, PGSIZE);
+  pf = (void *)ROUNDUP(heap.start, PGSIZE);       //find heap_start 4KB align next address
   Log("free physical pages starting from %p", pf);
 
 #ifdef HAS_VME

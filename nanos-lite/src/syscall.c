@@ -5,7 +5,8 @@
 #include <proc.h>
 //#define STRACE 1
 
-void naive_uload(PCB *pcb, const char *filename);
+uintptr_t sys_execve(const char *fname, char * const argv[], char *const envp[]);
+
 size_t ramdisk_read(void *buf, size_t offset, size_t len);
 size_t ramdisk_write(const void *buf, size_t offset, size_t len);
 extern char fs_name[64];
@@ -53,16 +54,6 @@ uintptr_t sys_gettimeofday(struct timeval*tv, struct timezone *tz ){
   return 0;
 }
 
-uintptr_t sys_execve(const char *fname, char * const argv[], char *const envp[]){
-  int fd = fs_open(fname,0,0);
-  if(fd == -1){
-    return -1;
-  }
-  fs_close(fd);
-  naive_uload(NULL,fname);
-  return 1;
-}
-
 void do_syscall(Context *c) {
   uintptr_t a[4];
   a[0] = c->GPR1;
@@ -101,8 +92,8 @@ void do_syscall(Context *c) {
                     break;
     case SYS_gettimeofday: c->GPRx = sys_gettimeofday((struct timeval *)c->GPR2, (struct timezone *)c->GPR3);break;
                     //printf("Call SYS_gettimeofday! ret value = %d\n",c->GPRx); break;
-    case SYS_execve: c->GPRx = sys_execve( (const char *)c->GPR2, (char * const *)c->GPR2, (char * const *)c->GPR3 ); break;
-                    //printf("Call SYS_execve! ret value = %d\n, c->GPRx"); break;
+    case SYS_execve: c->GPRx = sys_execve( (const char *)c->GPR2, (char **)c->GPR3, (char **)c->GPR4 ); //break;
+                    printf("Call SYS_execve! ret value = %d\n", c->GPRx); break;
     default: panic("Unhandled syscall ID = %d", a[0]);
   }
 }
