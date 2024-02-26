@@ -156,7 +156,7 @@ module ysyx_22050854 (
         else if( last_Suspend_LSU & ~Suspend_LSU )begin  //When LSU suspend over and no other exception
             pc_test <= EXEreg_pc + 32'd8;
         end
-        else if ( last_Suspend_IFU & ~Suspend_IFU & IFUsuspend_with_Others ) begin //While IFU suspend over and no other Exception   //当IFU从暂停到结束且 期间没发生其他异常 共五组异常 有跳转，阻塞，阻塞且跳转，ALU提前结束暂停，LSU提前结束暂停
+        else if ( last_Suspend_IFU & ~Suspend_IFU & IFUsuspend_without_others ) begin //While IFU suspend over and no other Exception   //当IFU从暂停到结束且 期间没发生其他异常 共五组异常 有跳转，阻塞，阻塞且跳转，ALU提前结束暂停，LSU提前结束暂停
             pc_test <= next_pc + 32'd4;
         end
         else if( Last_Jump_Suspend & ~Suspend_IFU)begin      //While IFU suspend, find jump
@@ -201,7 +201,7 @@ module ysyx_22050854 (
             pc_real = next_pc;
         else if( last_Suspend_LSU & ~Suspend_LSU )                       // LSU suspend over 
             pc_real = EXEreg_pc + 32'd4;
-        else if( last_Suspend_IFU & !Suspend_IFU & IFUsuspend_with_Others ) //IFU suspend over while no other exception
+        else if( last_Suspend_IFU & !Suspend_IFU & IFUsuspend_without_others ) //IFU suspend over while no other exception
             pc_real = next_pc;
         else if(  Last_Jump_Suspend & ~Suspend_IFU)           //IFU suspend over,while find jump
             pc_real = PC_Jump_Suspend;
@@ -426,13 +426,15 @@ module ysyx_22050854 (
     //如果更新前发现需要阻塞，就不更新了 如果ALU发起了暂停，IDreg也应该保持不变 //后来改了，ALU结束后重新取指，不过改不改不影响
     assign IDreg_inst_enable = ( Icache_data_ok & (~Data_Conflict_block) ) | AXI_Flash_ret_valid; 
     assign IDreg_pc_enable = ( Icache_data_ok & (~Data_Conflict_block) ) | AXI_Flash_ret_valid;
-    wire IFUsuspend_with_Others;
-    assign IFUsuspend_with_Others = (~Last_Jump_Suspend) & (~Last_DataBlock_Suspend) & (~Last_ALUsuspend_IFUsuspend) & (~Last_JumpAndBlock_Suspend) & ~Last_LSU_IFU_Suspend;
+    wire IFUsuspend_without_others;
+    assign IFUsuspend_without_others = (~Last_Jump_Suspend) & (~Last_DataBlock_Suspend) & (~Last_ALUsuspend_IFUsuspend) & (~Last_JumpAndBlock_Suspend) & ~Last_LSU_IFU_Suspend;
+    wire Icache_inst_valid;
+    assign Icache_inst_valid = ( Icache_data_ok & ~jump & ~EXEreg_jump & ~EXEreg_Datablock & ~Suspend_ALU & ~Suspend_LSU & IFUsuspend_without_others );
     always@(posedge clock)begin
         if(reset)
             IDreg_valid <= 1'b0;
         else
-            IDreg_valid <=  ( Icache_data_ok & (~jump) & (~EXEreg_jump) & (~EXEreg_Datablock) & (~Suspend_ALU) & IFUsuspend_with_Others & ~Suspend_LSU ) | Data_Conflict_block | AXI_Flash_ret_valid;
+            IDreg_valid <= Icache_inst_valid | Data_Conflict_block | AXI_Flash_ret_valid;
     end                                                                                                          
 
     ysyx_22050854_Reg #(32,32'b0) IDreg_gen0 (clock, (reset), inst, IDreg_inst, IDreg_inst_enable);
@@ -602,12 +604,12 @@ module ysyx_22050854 (
     wire rs2_conflict_EXE;
     wire reg_Conflict_EXE;
     wire store_conflict_EXE; //还有一种冲突是当store指令的源操作数(要写入内存的数据)与之前指令的目的寄存器重合时（如ld 之后 sd / add 之后 sd）
-    wire ret_conflict_EXE;
+    wire ret_conflict_EXE;  //jalr
     assign rs1_conflict_EXE = (( ALUsrc1 == 1'b0 ) & ( rs1 == EXEreg_Rd ) & ( EXEreg_Rd != 0)); //当且仅当alu操作数是寄存器，且前一条指令要写回， 且写回地址不是x0时 ,rd = rs 才冲突
     assign rs2_conflict_EXE = (( ALUsrc2 == 2'b00 ) & ( rs2 == EXEreg_Rd) & ( EXEreg_Rd != 0));
     assign reg_Conflict_EXE = IDreg_valid & EXEreg_valid & EXEreg_regWr  & ( rs1_conflict_EXE | rs2_conflict_EXE ); //与前一条指令冲突
     assign store_conflict_EXE = IDreg_valid & MemWr & (rs2 == EXEreg_Rd) & (EXEreg_Rd != 0) & (EXEreg_valid) & (EXEreg_regWr);
-    assign ret_conflict_EXE = IDreg_valid & (IDreg_inst[6:0] == 7'b1100111) & (rs1 == EXEreg_Rd) & EXEreg_regWr & EXEreg_valid & (EXEreg_Rd != 0);
+    assign ret_conflict_EXE = IDreg_valid & (IDreg_inst[6:0] == 7'b1100111) & (rs1 == EXEreg_Rd) & EXEreg_regWr & EXEreg_valid & (EXEreg_Rd != 0); //jalr ALUsrc=1'b1 && use New_src1; jal no use
 
     wire rs1_conflict_MEM;
     wire rs2_conflict_MEM;
@@ -622,7 +624,6 @@ module ysyx_22050854 (
 
     wire rs1_conflict_WB;
     wire rs2_conflict_WB;
-    wire ret_conflict_WB;
     wire reg_Conflict_WB;
     wire store_conflict_WB;
     wire ret_conflict_WB;
@@ -636,7 +637,7 @@ module ysyx_22050854 (
     wire CSRsrc1_conflict_EXE;
     wire CSRsrc1_conflict_MEM;
     wire CSRsrc1_conflict_WB;
-    assign CSRsrc1_conflict_EXE = IDreg_valid & CSR_gprRd & (rs1 == EXEreg_Rd) & ( EXEreg_Rd != 0 ) & (EXEreg_valid) & (EXEreg_regWr);
+    assign CSRsrc1_conflict_EXE = IDreg_valid & CSR_gprRd & (rs1 == EXEreg_Rd) & ( EXEreg_Rd != 0 ) & EXEreg_valid & EXEreg_regWr;
     assign CSRsrc1_conflict_MEM = IDreg_valid & CSR_gprRd & (rs1 == MEMreg_rd) & ( MEMreg_rd != 0 ) & MEMreg_valid & MEMreg_regwr;
     assign CSRsrc1_conflict_WB = IDreg_valid & CSR_gprRd & (rs1 == WBreg_rd) & ( WBreg_rd != 0) & WBreg_valid & WBreg_regwr;
     //only ecall use src2
@@ -653,6 +654,7 @@ module ysyx_22050854 (
     wire Data_Conflict_block;
     assign Data_Conflict_block = ( reg_Conflict_EXE | store_conflict_EXE | ret_conflict_EXE | CSRsrc_confilct_EXE ) & EXEreg_memRd & ~Suspend_LSU; //目前是只有上一条指令是load的情况才需要阻塞
 
+    // --------------------------------         流水线前递          ----------------------------------//
     wire src1_conflict_EXE;
     wire src1_conflict_MEM;
     wire src1_conflict_WB;
@@ -667,7 +669,6 @@ module ysyx_22050854 (
     assign src2_conflict_MEM = ( reg_Conflict_MEM & rs2_conflict_MEM ) | store_conflict_MEM | CSRsrc2_conflict_MEM;
     assign src2_conflict_WB = ( reg_Conflict_WB & rs2_conflict_WB ) | store_conflict_WB | CSRsrc2_conflict_WB;
 
-    // --------------------------------         流水线前递          ----------------------------------//
     reg [63:0]New_src1;
     reg [63:0]New_src2;
     always @(*)begin
@@ -719,7 +720,7 @@ module ysyx_22050854 (
     //-------------- GEN readmemaddr -----------//在译码级就计算出load的地址
     wire [31:0]readmemaddr;
     assign readmemaddr = MemRd | MemWr ? ( alu_src1[31:0] + alu_src2[31:0] ) : 32'd0;
-
+    //generate access memory/device control signal
     wire Is_access_mem;
     assign Is_access_mem = (readmemaddr >= `ysyx_22050854_MEMORY_START_ADDR && readmemaddr <= `ysyx_22050854_MEMORY_END_ADDR ) ? 1'b1 : 1'b0;   // npc
     wire LSU_access_valid;
@@ -732,6 +733,7 @@ module ysyx_22050854 (
     assign AXI_device_rd_req = LSU_access_valid & MemRd & ~( Is_access_mem | Read_CLINT );
     wire AXI_device_wr_req;
     assign AXI_device_wr_req = LSU_access_valid  & MemWr & ~( Is_access_mem | Write_mtime | Write_mtimecmp );
+
     wire Read_mtime;
     wire Write_mtime;
     wire Read_mtimecmp;
@@ -1151,7 +1153,7 @@ module ysyx_22050854 (
     assign io_master_wstrb = AXI_wstb;
     assign io_master_wlast = AXI_Dcache_wlast;
 
-    //write response channel
+    //----------write response channel ----------------//
     assign io_master_bready = 1'b1;
 
 
@@ -1177,7 +1179,7 @@ module ysyx_22050854 (
         .AXI_arbiter_arsize(io_master_arsize),
         .AXI_arbiter_arburst(io_master_arburst)
     );
-    //read data channel
+    //------------ read data channel ------------------//
     assign io_master_rready = 1'b1;
 
     wire AXI_Device_ret_valid;
@@ -1185,7 +1187,7 @@ module ysyx_22050854 (
     assign AXI_Device_ret_valid = io_master_rvalid &&  io_master_rlast && ( io_master_rid == `Device_AXI4_ID );
     assign AXI_Device_wr_resp = io_master_bvalid;
 
-    //因为访问设备肯定大于2周期，所以遇到访问设备的指令直接暂停，等到读回应/写回应之后再取消暂停
+    //因为访问设备肯定大于2周期，所以遇到访问设备的指令直接暂停，等到读有效/写回应之后再取消暂停
     reg Suspend_Device;
     always @(posedge clock)begin
         if(reset)
@@ -1203,14 +1205,14 @@ module ysyx_22050854 (
     always @(posedge clock)begin
         if(reset)
             Data_while_SuspendLSU <= 64'b0;
-        else if( Suspend_MEM & Data_cache_Data_ok)
+        else if( Suspend_MEM & Data_cache_Data_ok) // when Dcache_data_ok valid, Suspend_MEM still high 
             Data_while_SuspendLSU <= read_mem_data;
         else if( Suspend_Device && AXI_Device_ret_valid )
             Data_while_SuspendLSU <= read_mem_data;
     end
 
     wire [63:0] rdata;
-    assign rdata = ( Data_cache_Data_ok ) ? Dcache_ret_data : io_master_rdata;
+    assign rdata = ( Data_cache_Data_ok ) ? Dcache_ret_data : io_master_rdata; //either mem or device
     reg [63:0]read_mem_data;
     //从mem读出的数据总是8字节的,需要根据地址以及读操作数获得正确的数据
     //为什么暂停时取得的数还能用Mem的控制字，因为即使暂停，Mem也会从Exe跟新，只不过无效，但这里不管无效还是有效

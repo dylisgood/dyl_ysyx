@@ -9,7 +9,6 @@
 //#define CONFIG_WATCHPOINT  
 //#define CONFIG_FTRACE 
 
-
 #define CONFIG_HAS_KEYBOARD 1
 #define CONFIG_HAS_VGA 1
 

@@ -30,6 +30,7 @@ static uintptr_t loader(PCB *pcb, const char *filename) {
     Log("Cannot find file %s" ,filename);
     assert(0);
   }
+  // get elf_header
   Elf64_Ehdr  elf_header;
   int num_read = fs_read(fd, &elf_header, sizeof(Elf64_Ehdr)); 
   if(num_read == -1){

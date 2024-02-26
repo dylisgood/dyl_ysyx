@@ -134,7 +134,8 @@ void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) {
   uint32_t* pixels32 = (uint32_t *)malloc(w * h * sizeof(uint32_t));
   assert(pixels32);
 
-  if(s->format->BytesPerPixel == 4){
+  if(s->format->BytesPerPixel == 4)        //for 32bits pixel
+  {
     if(update_whole_srceen)
       memcpy(pixels32, s->pixels, w*h*4);
     else
@@ -147,7 +148,8 @@ void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) {
    }
     NDL_DrawRect(pixels32, x, y, w, h);
   }
-  else if( s->format->BytesPerPixel == 1){
+  else if( s->format->BytesPerPixel == 1)   //for 8 bits pixel
+  {
     SDL_Palette* palette = s->format->palette;
     int sw = s->w;
     uint32_t* pixels32_ptr = pixels32;

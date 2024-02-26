@@ -47,12 +47,12 @@ static void invoke_callback(io_callback_t c, paddr_t offset, int len, bool is_wr
 }
 
 void init_map() {
-  io_space = malloc(IO_SPACE_MAX);
+  io_space = malloc(IO_SPACE_MAX); //为外设寄存器开辟内存
   assert(io_space);
   p_space = io_space;
 }
 
-word_t map_read(paddr_t addr, int len, IOMap *map) {
+word_t map_read(paddr_t addr, int len, IOMap *map) { 
   assert(len >= 1 && len <= 8);
   check_bound(map, addr);
   paddr_t offset = addr - map->low;

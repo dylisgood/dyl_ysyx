@@ -225,7 +225,7 @@ static struct {
   { "d", "delete watchpoint", cmd_d},
   { "b", "set breakpoint", cmd_b},
   { "detach", "quit DiffTest", cmd_detach},
-  { "attach", "tnter DiffTest", cmd_attach},
+  { "attach", "enter DiffTest", cmd_attach},
   { "save", "save nemu status", cmd_save},
   { "load", "load nemu status", cmd_load},
 };

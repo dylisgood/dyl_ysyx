@@ -30,7 +30,7 @@ int NDL_PollEvent(char *buf, int len) {
   return i;
 }
 
-//get Canvas width and heigth
+//get Canvas width and height
 void NDL_OpenCanvas(int *w, int *h) {
   int fp = open("/proc/dispinfo", O_RDONLY);
   assert( fp != -1 );
@@ -38,6 +38,7 @@ void NDL_OpenCanvas(int *w, int *h) {
   int len = 32;
   int ret = read(fp, buf, len);
   //printf("NDL_OpenCanvas : buf = \n%s \n",buf);
+
   const char* delimiter = ":";
   char *token;
   char* numbers[2];

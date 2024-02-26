@@ -44,7 +44,7 @@ struct func_struct{
   uint64_t size;
 };
 
-struct func_struct func_trace[10];
+struct func_struct func_trace[10];    //max function num
 
 int func_num = 0;
 void init_ftrace() {
@@ -172,10 +172,10 @@ static int parse_args(int argc, char *argv[]) {
     switch (o) {
       case 'b': sdb_set_batch_mode(); break;
       case 'p': sscanf(optarg, "%d", &difftest_port); break;
-      case 'l': log_file = optarg; break;
-      case 'e': elf_file = optarg; break;
-      case 'd': diff_so_file = optarg; break;
-      case 1: img_file = optarg; return 0;
+      case 'l': log_file = optarg; break;    //for log
+      case 'e': elf_file = optarg; break;    //for function tracer
+      case 'd': diff_so_file = optarg; break; 
+      case 1: img_file = optarg; return 0;   //execution file
       default:
         printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
         printf("\t-b,--batch              run with batch mode\n");

@@ -20,11 +20,14 @@ int SDL_PushEvent(SDL_Event *ev) {
 //check if have key
 int SDL_PollEvent(SDL_Event *ev) {
   char buf[128];
-  if (NDL_PollEvent(buf, sizeof(buf))) {
+  if (NDL_PollEvent(buf, sizeof(buf)))  //if check key
+  { 
     char *key, *value;
     key = strtok(buf, " ");
     value = strtok(NULL, "\n");
-    if(!strcmp(key,"kd")){
+    
+    if(!strcmp(key,"kd"))       //if check key down
+    {     
       ev->type = SDL_KEYDOWN;
       for(int i = 0; i < 83; i++)
       {
@@ -34,7 +37,8 @@ int SDL_PollEvent(SDL_Event *ev) {
         }
       } 
     }
-    else if(!strcmp(key, "ku")){
+    else if( !strcmp(key, "ku") ) //else if check key down
+    {  
       ev->type = SDL_KEYUP;      
       for(int i = 0; i < 83; i++)
       {
