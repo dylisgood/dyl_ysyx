@@ -24,15 +24,17 @@ static inline int check_reg_idx(int idx) {
 }
 
 static inline int change_reg_sr_idx(int idx) {
-  if(idx == 0x305) return 0;         //mtvec
-  else if( idx == 0x300) return 2;   //mstatus
-  else if( idx == 0x341 ) return 1; //mepc
-  else if(idx == 0x342 ) return 3;  //mcause
-  else if(idx == 0x304) return 4;
+  if(idx == 0x305) return 0;          //mtvec
+  else if( idx == 0x300 ) return 2;   //mstatus
+  else if( idx == 0x341 ) return 1;   //mepc
+  else if( idx == 0x342 ) return 3;   //mcause
+  else if( idx == 0x304 ) return 4;   //mie
+  else if( idx == 0x180 ) return 5;   //satp
   else {
-    printf("idx = %x not implement \n",idx);
-    return 5;
-    //panic("sorry this sr is not implement!\n");
+    //printf("nemu/reg: idx[%x] not implement \n",idx);
+    panic("nemu: sorry this [%x] csr is not implement!\n",idx);
+    return 6;
+    
   }
 }
 

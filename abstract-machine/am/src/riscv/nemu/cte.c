@@ -4,7 +4,13 @@
 
 static Context* (*user_handler)(Event, Context*) = NULL;
 
+void __am_get_cur_as(Context *c);
+void __am_switch(Context *c);
+
 Context* __am_irq_handle(Context *c) {
+  //printf("\nenter am_irq_handle \n");
+  __am_get_cur_as(c); //将当前的地址空间描述符指针保存到上下文中 但此前上下文已经存入栈中
+
   if (user_handler) { 
     Event ev = {0};
     //printf("c->mcause = %lx GPR1 = %lx \n", c->mcause ,c->GPR1);
@@ -24,10 +30,13 @@ Context* __am_irq_handle(Context *c) {
           break;
       default: ev.event = EVENT_ERROR; printf("find error ,c->mcause = (%lx) \n" ,c->mcause); break;
     }
-    c = user_handler(ev, c);
+
+    c = user_handler(ev, c);  //pa4 中，如果是EVENT_YIELD nanos-lite返回的是另一个进程的上下文
     assert(c != NULL);
   }
 
+  __am_switch(c); //切换地址空间, 将被调度进程的地址空间落实到MMU中
+  //printf("out am_irq_handle \n\n");
   return c;
 }
 
@@ -47,6 +56,8 @@ Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {  //创建内�
   
   c->mepc = (uintptr_t)entry;
   c->GPR2 = (uintptr_t)arg;
+
+  c->pdir = NULL; //在kcontext()中将上下文的地址空间描述符指针设置为NULL, 来进行特殊的标记, 等到将来在__am_irq_handle()中调用__am_switch()时, 如果发现地址空间描述符指针为NULL, 就不进行虚拟地址空间的切换.
 
   return c;
 }

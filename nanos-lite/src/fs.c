@@ -114,6 +114,7 @@ int fs_close(int fd){
 
 void init_fs() {
   // TODO: initialize the size of /dev/fb
+  Log("Initializing file system...");
   file_table[FD_FB].size = screen_w * screen_h * sizeof(uint32_t);
   file_table[4].size = 64;
   file_table[5].size = 64;

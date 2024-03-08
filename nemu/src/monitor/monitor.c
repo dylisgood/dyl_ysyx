@@ -44,7 +44,7 @@ struct func_struct{
   uint64_t size;
 };
 
-struct func_struct func_trace[10];
+struct func_struct func_trace[1000];
 
 int func_num = 0;
 void init_ftrace() {

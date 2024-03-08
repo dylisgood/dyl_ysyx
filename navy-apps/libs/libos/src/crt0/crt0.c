@@ -1,13 +1,15 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <assert.h>
+//#include <stdio.h>
 
 int main(int argc, char *argv[], char *envp[]);
 extern char **environ;
 void call_main(uintptr_t *args) {
+  //printf("enter call main\n");
   int argc = *(args);
 
-  //get env 
+  //get argv 
   char **argv = (char **)malloc(argc * sizeof(char *));
   for(int i = 0; i < argc; i++){
     argv[i] = (char *)(*(args + i + 1));
@@ -27,7 +29,7 @@ void call_main(uintptr_t *args) {
 
   char *empty[] =  { NULL };
   environ = empty;
-
+  
   exit(main(argc, argv, env));
   assert(0);
 }

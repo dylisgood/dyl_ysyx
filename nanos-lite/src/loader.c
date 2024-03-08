@@ -74,16 +74,53 @@ uintptr_t loader(PCB *pcb, const char *filename) {
       printf("ph_table[%d].vaddr = %x \n",i, program_headers[i].p_vaddr);
       printf("ph_table[%d].memsz = %x \n",i, program_headers[i].p_memsz);
       printf("ph_table[%d].filesz = %x \n\n",i, program_headers[i].p_filesz); */
-      
-      if( fs_lseek(fd, program_headers[i].p_offset, SEEK_SET) == -1){
+
+      //将文件定位到要loader的程序头部                              
+      if( fs_lseek(fd, program_headers[i].p_offset, SEEK_SET) == -1){  
         panic("go to program_headers[i].p_offset fail ! \n");
       }
-      
-      fs_read(fd, (void *)program_headers[i].p_vaddr, program_headers[i].p_filesz); //2023.7.5 memsz->file_sz
-      if(program_headers[i].p_memsz > program_headers[i].p_filesz){
-        memset((void *)( program_headers[i].p_vaddr + program_headers[i].p_filesz ), 0, program_headers[i].p_memsz - program_headers[i].p_filesz);
+
+      void *va = (void *)( program_headers[i].p_vaddr & 0xfffff000 ); //va 按页对齐
+      uint64_t offset = program_headers[i].p_vaddr & 0xfff;
+      void *first_ptr = new_page(1);                                  //第一页
+      map(&pcb->as, va, first_ptr, 1);
+
+      if( offset + program_headers[i].p_filesz <= PGSIZE )  //一页放的下  或者说 program_headers[i].p_vaddr + program_headers[i].p_filesz >va += PGSIZE
+      {
+        fs_read(fd, first_ptr + offset, program_headers[i].p_filesz);  //只用放第一页
+        pcb->max_brk = (uintptr_t)va;
       }
-    }
+      else   //一页放不下
+      {
+        //先放第一页 因为第一页放置的大小跟其他不一样
+        fs_read(fd, first_ptr + offset, PGSIZE - offset);      
+
+        //再放剩下的
+        va += PGSIZE;
+        for( ; va < (void *)( program_headers[i].p_vaddr + program_headers[i].p_filesz ); va += PGSIZE  )
+        {
+          void *ptr = new_page(1);
+          map(&pcb->as, va, ptr, 1);
+          if( (va + PGSIZE) > (void *)(program_headers[i].p_vaddr + program_headers[i].p_filesz) )  //最后一页
+          {
+            fs_read(fd, ptr, (program_headers[i].p_vaddr + program_headers[i].p_filesz - (uint64_t)va ) );  //
+            pcb->max_brk = (uintptr_t)va;
+          }
+          else{
+            fs_read(fd, ptr, PGSIZE);
+          }
+        }
+      }
+
+      if(program_headers[i].p_memsz > program_headers[i].p_filesz){  //还要置零 但是在开辟新的一页时 已经置零 考虑到置零的复杂性 就不重复置零了
+        for( ; va < (void *)( program_headers[i].p_vaddr + program_headers[i].p_memsz ); va += PGSIZE  )
+        {
+          void *ptr = new_page(1);
+          map(&pcb->as, va, ptr, 1);
+          pcb->max_brk = (uintptr_t)va;   //for manange heap
+        }
+      }
+      }
   }
   //TODO();
   fs_close(fd);

@@ -5,11 +5,16 @@
 #include <proc.h>
 //#define STRACE 1
 
+extern PCB *current;
+
 uintptr_t sys_execve(const char *fname, char * const argv[], char *const envp[]);
 
 size_t ramdisk_read(void *buf, size_t offset, size_t len);
 size_t ramdisk_write(const void *buf, size_t offset, size_t len);
 extern char fs_name[64];
+
+extern uintptr_t program_max_vpn;
+int mm_brk(uintptr_t brk);
 
 uintptr_t sys_yield(){
   yield();
@@ -43,7 +48,13 @@ uintptr_t sys_close(int fd){
   return fs_close(fd);
 }
 
-uintptr_t sys_brk(int addr){
+//它接收一个参数addr, 用于指示新的program break的位置
+uintptr_t sys_brk(uintptr_t addr){
+  uintptr_t vpn_malloc = addr & ~0xfff;
+  if(vpn_malloc > current->max_brk) //
+  {
+    mm_brk(addr);
+  }
   return 0;
 }
 

@@ -3,8 +3,8 @@
 
 //#define FMT_WORD "0x%016"PRIx64
 
-//#define CONFIG_DIFFTEST
-//#define CONFIG_ITRACE
+#define CONFIG_DIFFTEST
+#define CONFIG_ITRACE
 //#define CONFIG_MTRACE   
 //#define CONFIG_WATCHPOINT  
 //#define CONFIG_FTRACE 

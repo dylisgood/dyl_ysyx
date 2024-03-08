@@ -174,7 +174,7 @@ extern int func_num;
 static uint64_t total_inst_num = 0;
 static uint64_t total_cycle = 0;
 extern bool dut_find_difftest;
-CPU_state cpu = {};
+CPU_state cpu = {};          //just for difftest
 bool npc_stop = false;
 
 void init_monitor(int argc, char** argv);

@@ -4,7 +4,7 @@ INC_PATH ?=
 
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc \
-				-O3 --x-assign fast --x-initial fast --noassert --trace #--prof-cfuncs
+				-O3 --x-assign fast --x-initial fast --noassert #--trace #--prof-cfuncs
 
 BUILD_DIR = ./build
 OBJ_DIR = $(BUILD_DIR)/obj_dir
@@ -26,6 +26,7 @@ CFLAGS += -O2 $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
 CXXFLAGS += $(shell llvm-config-11 --cxxflags) -fPIE
 
 LDFLAGS += -O2 -lSDL2_image -lreadline
+#disasm
 LD2FLAGS += $(shell llvm-config-11 --ldflags)
 LD2FLAGS += $(shell llvm-config-11 --libs)
 #SDL

@@ -10,7 +10,7 @@ struct Context {
   uintptr_t mstatus;
   uintptr_t mepc;
   
-  void *pdir;
+  void *pdir;  //当前进程虚拟地址空间一级页表？
 };
 
 #define GPR1 gpr[17] //a7

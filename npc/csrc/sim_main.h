@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#define USE_TRACE
+//#define USE_TRACE
 
 #include <Vtop.h>
 #include <verilated.h>

@@ -98,7 +98,7 @@ module ysyx_22050854_CSRegister  (
         csrf[csr_addr2] <= wdata2;
   end
 
-  //中断逻辑 根据条件判断是否产生计时器中断
+  //中断逻辑 根据条件判断是否产生计时器中断 mip
   always @(posedge clock) begin
     if(reset)begin
       csrf[5] <= 64'd0;

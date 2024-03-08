@@ -66,15 +66,12 @@ int _write(int fd, void *buf, size_t count) {
   return _syscall_(SYS_write, fd, (intptr_t )buf, count);
 }
 
-
-void *_sbrk(intptr_t increment) {
-  //char* program_break = &_end;
-  //void *pos = program_break;
-  static char* heap_end = &_end;
-  void *previous_end = heap_end;
-  if( !_syscall_(SYS_brk, increment, 0, 0) ){
-    heap_end += increment;
-    return previous_end;
+static void* program_break = &_end;
+void *_sbrk(intptr_t increment) {  
+  //void *previous_end = heap_end;
+  if( !_syscall_(SYS_brk, (intptr_t)program_break + increment, 0, 0) ){  //if success
+    program_break += increment;
+    return program_break - increment;
   }
   else
     return (void *)-1;

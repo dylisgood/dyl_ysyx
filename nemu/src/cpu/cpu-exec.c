@@ -30,7 +30,7 @@
 char iringbuf[10][128] = {};
 ///0xa0001800
 CPU_state cpu = {
-  .sr = { [2]=  0 } //initialize mstatus
+  .sr = { [2]=  0x0 } //initialize mstatus
 };
 uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
@@ -73,7 +73,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
   uint32_t inst_csr = s->isa.inst.val;
   if( (inst_csr & 0x707f) == 0x1073 || (inst_csr & 0x707f) == 0x73 || \
       (inst_csr & 0x707f) == 0x2073 || (inst_csr & 0x707f) == 0x3073 ){
-    difftest_skip_ref();
+      difftest_skip_ref();
   }
   if(inst_csr == 0b00110000001000000000000001110011)
   {
